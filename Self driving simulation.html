@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Autonomous 3D Perception Simulator</title>
+<style>
+:root{
+  --bg:#06101d;--panel:#0b1424;--panel2:#101b2e;--line:rgba(148,163,184,.2);--text:#eaf2ff;--muted:#93a4bb;
+  --cyan:#4ee7ff;--green:#42f58c;--yellow:#ffd166;--red:#ff5c7a;--violet:#a78bfa;--shadow:0 24px 70px rgba(0,0,0,.35)
+}
+*{box-sizing:border-box}html,body{height:100%;margin:0;overflow:hidden;background:radial-gradient(circle at 20% 0%,rgba(78,231,255,.12),transparent 35%),var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select{font:inherit}.app{height:100vh;width:100vw;display:grid;grid-template-columns:318px minmax(0,1fr);gap:16px;padding:16px}.sidebar{height:calc(100vh - 32px);overflow:auto;background:linear-gradient(180deg,rgba(14,24,42,.96),rgba(8,15,28,.96));border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);padding:16px}.brand{display:flex;gap:12px;align-items:center;padding-bottom:16px;border-bottom:1px solid var(--line)}.logo{width:42px;height:42px;border-radius:15px;background:radial-gradient(circle at 25% 22%,rgba(255,255,255,.8),transparent 13%),linear-gradient(145deg,#42f58c,#4ee7ff 50%,#a78bfa);box-shadow:0 0 28px rgba(78,231,255,.28)}.brand h1{margin:0;font-size:14px;letter-spacing:.18em;line-height:1;text-transform:uppercase}.brand p{margin:6px 0 0;color:var(--muted);font-size:11px}.section{padding:15px 0;border-bottom:1px solid var(--line)}.section:last-child{border-bottom:0}.section-title{margin:0 0 10px;font-size:12px;letter-spacing:.14em;text-transform:uppercase}.button-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.btn{height:42px;border:1px solid rgba(148,163,184,.28);border-radius:14px;background:rgba(255,255,255,.045);color:var(--text);cursor:pointer}.btn:hover,.btn.active{background:rgba(78,231,255,.11);border-color:rgba(78,231,255,.5)}.btn.primary{background:rgba(78,231,255,.13);border-color:rgba(78,231,255,.5)}label.small{display:block;margin:12px 0 7px;color:var(--muted);font-size:12px}.field{width:100%;height:44px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.055);color:var(--text);padding:0 12px;outline:none}select.field option{background:#101827;color:#eaf2ff}input[type=range]{width:100%;accent-color:var(--cyan)}.toggle-grid,.telemetry-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.pill{min-height:38px;display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:13px;background:rgba(255,255,255,.045);color:var(--muted);font-size:12px;cursor:pointer}.pill input{accent-color:var(--green)}.state-badge{display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border-radius:999px;border:1px solid rgba(66,245,140,.28);background:rgba(66,245,140,.08);font-size:13px}.dot{width:8px;height:8px;border-radius:99px;background:var(--green);box-shadow:0 0 15px var(--green)}.stat{min-height:62px;padding:10px;border:1px solid var(--line);border-radius:13px;background:rgba(255,255,255,.045);overflow:hidden}.stat span{display:block;font-size:11px;color:var(--muted);margin-bottom:6px}.stat strong{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hint{font-size:11px;color:var(--muted);line-height:1.45;margin:10px 0 0}.main{min-width:0;height:calc(100vh - 32px);display:grid;grid-template-rows:auto minmax(0,1fr)138px;gap:14px}.topbar,.log-panel,.stage{border:1px solid var(--line);border-radius:22px;background:rgba(8,16,30,.82);box-shadow:var(--shadow);backdrop-filter:blur(18px)}.topbar{min-height:82px;padding:14px 16px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center}.topbar h2{margin:0 0 6px;font-size:15px;letter-spacing:.04em}.topbar p{margin:0;color:var(--muted);font-size:12px;line-height:1.4}.chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.chip{display:inline-flex;align-items:center;gap:7px;min-height:31px;padding:7px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.045);font-size:12px;white-space:nowrap}.chip:before{content:"";width:7px;height:7px;border-radius:99px;background:var(--cyan);box-shadow:0 0 14px var(--cyan)}.chip.good:before{background:var(--green);box-shadow:0 0 14px var(--green)}.chip.warn:before{background:var(--yellow);box-shadow:0 0 14px var(--yellow)}.chip.bad:before{background:var(--red);box-shadow:0 0 14px var(--red)}.stage{position:relative;overflow:hidden;min-height:0;background:#0a111e}.stage canvas{display:block;width:100%;height:100%}.view-title{position:absolute;z-index:3;top:14px;left:14px;max-width:calc(100% - 28px);padding:10px 12px;border:1px solid rgba(148,163,184,.18);border-radius:14px;background:rgba(2,8,18,.66);backdrop-filter:blur(12px);pointer-events:none}.view-title strong{display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase}.view-title span{display:block;margin-top:4px;font-size:11px;color:var(--muted)}.camera-buttons{position:absolute;right:14px;bottom:14px;display:flex;gap:8px;z-index:5}.camera-buttons .btn{height:34px;padding:0 14px}.hud{position:absolute;left:14px;bottom:14px;z-index:5;display:flex;gap:8px;flex-wrap:wrap}.hud span{font-size:12px;padding:7px 10px;border:1px solid var(--line);border-radius:999px;background:rgba(2,8,18,.72)}.ego-hood{position:absolute;left:50%;bottom:-4px;transform:translateX(-50%);width:42%;height:112px;z-index:4;pointer-events:none;opacity:.92;background:linear-gradient(180deg,rgba(210,226,244,.18),rgba(170,190,210,.75) 58%,rgba(34,46,62,.98));border-radius:55% 55% 0 0/100% 100% 0 0;box-shadow:0 -10px 42px rgba(0,0,0,.34),inset 0 2px 0 rgba(255,255,255,.22)}.ego-hood:before{content:"";position:absolute;left:50%;top:18px;transform:translateX(-50%);width:48%;height:20px;border-radius:999px;background:rgba(17,24,39,.38);box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}.ego-hood.hidden{display:none}.overlay{position:absolute;inset:0;pointer-events:none;z-index:4}.detect-box{position:absolute;border:2px solid var(--green);border-radius:3px;background:rgba(66,245,140,.06);box-shadow:0 0 14px rgba(66,245,140,.22)}.detect-box.warn{border-color:var(--yellow);background:rgba(255,209,102,.07)}.detect-box.bad{border-color:var(--red);background:rgba(255,92,122,.08)}.detect-label{position:absolute;left:-2px;top:-24px;white-space:nowrap;background:rgba(0,0,0,.72);border-radius:6px;padding:4px 7px;font-size:11px;color:#f4fbff}.minimap{position:absolute;right:14px;top:14px;width:160px;height:150px;border:1px solid var(--line);border-radius:16px;background:rgba(2,8,18,.72);z-index:4;overflow:hidden}.minimap canvas{width:100%;height:100%}.log-panel{min-height:0;display:grid;grid-template-columns:190px minmax(0,1fr);gap:14px;padding:14px}.log-title h3{margin:0 0 8px;font-size:13px;letter-spacing:.12em;text-transform:uppercase}.log-title p{margin:0;color:var(--muted);font-size:12px;line-height:1.4}.log-feed{min-width:0;overflow:auto;display:grid;align-content:start;gap:7px;padding-right:3px}.log-item{display:grid;grid-template-columns:58px minmax(0,1fr);gap:10px;padding:7px 10px;border:1px solid rgba(148,163,184,.12);border-radius:12px;background:rgba(255,255,255,.035);font-size:12px}.log-time{color:var(--cyan);font-variant-numeric:tabular-nums}.error{position:absolute;inset:20px;z-index:20;background:#210b14;border:1px solid var(--red);border-radius:16px;padding:18px;color:white;white-space:pre-wrap}@media(max-width:1050px){.app{grid-template-columns:280px minmax(0,1fr);gap:12px;padding:12px}.sidebar,.main{height:calc(100vh - 24px)}.topbar{grid-template-columns:1fr}.chips{justify-content:flex-start}}@media(max-width:760px){html,body{overflow:auto}.app{height:auto;grid-template-columns:1fr}.sidebar,.main{height:auto}.main{grid-template-rows:auto 680px 190px}.log-panel{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><div class="logo"></div><div><h1>Autonomous<br>Perception Lab</h1><p>Three.js real 3D sensor camera</p></div></div>
+    <section class="section"><div class="button-row"><button id="startBtn" class="btn primary">Start</button><button id="pauseBtn" class="btn">Pause</button><button id="resetBtn" class="btn">Reset</button></div></section>
+    <section class="section"><h3 class="section-title">Driving State</h3><div class="state-badge"><span class="dot"></span><span id="stateText">Paused</span></div></section>
+    <section class="section"><h3 class="section-title">Controls</h3><label class="small">Target speed <span id="speedLabel">48</span> mph</label><input id="speedSlider" type="range" min="18" max="82" value="48"><label class="small">Difficulty</label><select id="difficulty" class="field"><option value="easy">Light traffic</option><option value="standard" selected>Standard city</option><option value="hard">Dense urban</option></select></section>
+    <section class="section"><h3 class="section-title">Environment</h3><label class="small">Time of day</label><select id="timeOfDay" class="field"><option value="day" selected>Day (noon)</option><option value="dawn">Dawn / Sunrise</option><option value="dusk">Dusk / Sunset</option><option value="night">Night</option></select><label class="small">Weather</label><select id="weather" class="field"><option value="clear" selected>Clear sky</option><option value="overcast">Overcast</option><option value="rain">Rain</option><option value="fog">Dense fog</option><option value="snow">Snow</option></select><label class="small">Visibility <span id="visLabel">620</span> m</label><input id="visSlider" type="range" min="80" max="800" value="620"><label class="small">Sun elevation <span id="sunLabel">75</span>°</label><input id="sunSlider" type="range" min="5" max="90" value="75"></section>
+    <section class="section"><h3 class="section-title">Vehicle</h3><label class="small">Type</label><select id="vehicleType" class="field"><option value="sedan" selected>Sedan</option><option value="suv">SUV</option><option value="pickup">Pickup Truck</option><option value="van">Cargo Van</option></select><label class="small">Mass / inertia</label><select id="vehicleMass" class="field"><option value="light">Light (sporty)</option><option value="standard" selected>Standard</option><option value="heavy">Heavy (slow brake)</option></select></section>
+    <section class="section"><h3 class="section-title">Road Conditions</h3><label class="small">Surface</label><select id="roadSurface" class="field"><option value="dry" selected>Dry</option><option value="wet">Wet</option><option value="icy">Icy</option><option value="snowy">Snowy</option></select><label class="small">Construction zones</label><select id="construction" class="field"><option value="none" selected>None</option><option value="light">Light</option><option value="heavy">Heavy</option></select><label class="small">Pedestrian density</label><select id="pedDensity" class="field"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select><label class="small">Emergency vehicles</label><select id="emergency" class="field"><option value="none" selected>None</option><option value="rare">Occasional</option><option value="frequent">Frequent</option></select></section>
+    <section class="section"><h3 class="section-title">Sensor Config</h3><div class="toggle-grid"><label class="pill"><input id="camSensor" type="checkbox" checked> Camera</label><label class="pill"><input id="lidarSensor" type="checkbox"> LiDAR</label><label class="pill"><input id="radarSensor" type="checkbox"> Radar</label><label class="pill"><input id="gpsSensor" type="checkbox" checked> GPS / Nav</label></div><label class="small">Sensor noise <span id="noiseLabel">0</span>%</label><input id="noiseSlider" type="range" min="0" max="80" value="0"><label class="small">Detection range <span id="rangeLabel">125</span> m</label><input id="rangeSlider" type="range" min="30" max="200" value="125"><label class="small">Camera FoV <span id="fovLabel">67</span>°</label><input id="fovSlider" type="range" min="40" max="100" value="67"></section>
+    <section class="section"><h3 class="section-title">Sensor Layers</h3><div class="toggle-grid"><label class="pill"><input id="boxesToggle" type="checkbox" checked> Detection boxes</label><label class="pill"><input id="routeToggle" type="checkbox" checked> Planned route</label><label class="pill"><input id="laneToggle" type="checkbox" checked> Lane overlay</label><label class="pill"><input id="lidarToggle" type="checkbox"> Lidar fan</label><label class="pill"><input id="debugToggle" type="checkbox"> Debug nodes</label></div><p class="hint">Display overlays — toggle what's rendered in the viewport. Sensor availability is set in Sensor Config above.</p></section>
+    <section class="section"><h3 class="section-title">Telemetry</h3><div class="telemetry-grid"><div class="stat"><span>Speed</span><strong id="speedStat">0 mph</strong></div><div class="stat"><span>Steering</span><strong id="steerStat">0.0 deg</strong></div><div class="stat"><span>Nearest</span><strong id="nearestStat">Clear</strong></div><div class="stat"><span>Route</span><strong id="routeStat">Center</strong></div><div class="stat"><span>Limit</span><strong id="limitStat">48 mph</strong></div><div class="stat"><span>Camera</span><strong id="cameraStat">Sensor</strong></div></div></section>
+  </aside>
+  <main class="main">
+    <header class="topbar"><div><h2>Three.js autonomous vehicle sensor camera</h2><p>Actual 3D road visualization with visible cars, traffic controls, lane-change planning, speed control, and projected perception boxes.</p></div><div class="chips"><span id="laneChip" class="chip good">Lane detected</span><span id="objectChip" class="chip good">Path clear</span><span id="driveChip" class="chip warn">Paused</span></div></header>
+    <section id="stage" class="stage">
+      <div class="view-title"><strong>Sensor camera</strong><span>Real 3D road, actors, signs, lights, route prediction, and detection overlay</span></div>
+      <div id="overlay" class="overlay"></div><div id="egoHood" class="ego-hood"></div>
+      <div class="minimap"><canvas id="miniCanvas"></canvas></div>
+      <div class="hud"><span id="hudSpeed">0 mph</span><span id="hudRoute">Route center lane</span><span id="hudDecision">Paused</span></div>
+      <div class="camera-buttons"><button id="sensorCam" class="btn active">Sensor</button><button id="chaseCam" class="btn">Chase</button><button id="topCam" class="btn">Top</button></div>
+    </section>
+    <section class="log-panel"><div class="log-title"><h3>AI Decision Log</h3><p>Condensed decisions from the autonomous controller.</p></div><div id="logFeed" class="log-feed"></div></section>
+  </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.min.js"></script>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const mphToMs=m=>m*0.44704;
+const msToMph=m=>m/0.44704;
+
+class Log{
+  constructor(el){this.el=el;this.t=0;this.items=[];this.last='';}
+  tick(dt){this.t+=dt;}
+  reset(){this.t=0;this.items=[];this.last='';this.add('Scenario reset, real 3D scene initialized');}
+  add(msg){if(msg===this.last)return;this.last=msg;const m=String(Math.floor(this.t/60)).padStart(2,'0');const s=String(Math.floor(this.t%60)).padStart(2,'0');this.items.unshift({time:`${m}:${s}`,msg});this.items=this.items.slice(0,15);this.el.innerHTML=this.items.map(i=>`<div class="log-item"><span class="log-time">${i.time}</span><span>${i.msg}</span></div>`).join('');}
+}
+
+class Road{
+  // 4-lane road: 2 lanes per direction. Lane centers at ±laneW/2 (inner) and ±laneW*1.5 (outer).
+  // Positive lateral is the ego's side of the yellow centerline; negative is oncoming.
+  constructor(){this.laneW=3.4;this.travelHalf=this.laneW*2;this.shoulder=2.0;this.width=this.travelHalf*2+this.shoulder*2;this.sidewalk=4.4;}
+  centerX(z){return Math.sin(z*0.0062)*10 + Math.sin(z*0.014)*3.2;}
+  dx(z){return Math.cos(z*0.0062)*0.062 + Math.cos(z*0.014)*0.045;}
+  yaw(z){return Math.atan2(this.dx(z),1);}
+  point(z,lateral=0){const d=this.dx(z);const inv=1/Math.hypot(1,d);const nx=inv, nz=-d*inv;return new THREE.Vector3(this.centerX(z)+nx*lateral,0,z+nz*lateral);}
+  laneName(lat){if(lat<0)return 'oncoming lane';return lat<this.laneW?'inner lane':'outer lane';}
+}
+
+class MeshFactory{
+  constructor(){
+    const asphaltMap=this.makeRoadTexture(256,256);
+    asphaltMap.wrapS=THREE.RepeatWrapping;
+    asphaltMap.wrapT=THREE.RepeatWrapping;
+    asphaltMap.repeat.set(1.8,18);
+    asphaltMap.needsUpdate=true;
+    const shoulderMap=this.makeShoulderTexture(192,192);
+    shoulderMap.wrapS=THREE.RepeatWrapping;
+    shoulderMap.wrapT=THREE.RepeatWrapping;
+    shoulderMap.repeat.set(1.2,14);
+    shoulderMap.needsUpdate=true;
+    this.mats={
+      asphalt:new THREE.MeshStandardMaterial({color:0x2d3642,roughness:.97,metalness:0,map:asphaltMap}),
+      shoulder:new THREE.MeshStandardMaterial({color:0x303946,roughness:1,map:shoulderMap}),
+      roadBase:new THREE.MeshStandardMaterial({color:0x1b2430,roughness:1}),
+      concrete:new THREE.MeshStandardMaterial({color:0x6e7884,roughness:.92}),
+      curb:new THREE.MeshStandardMaterial({color:0xb7c1cc,roughness:.75}),
+      grass:new THREE.MeshStandardMaterial({color:0x182719,roughness:1}),
+      white:new THREE.MeshStandardMaterial({color:0xe8edf2,roughness:.7}),
+      yellow:new THREE.MeshStandardMaterial({color:0xffd166,roughness:.7}),
+      laneWhite:new THREE.MeshStandardMaterial({color:0xf4f7fb,roughness:.58}),
+      laneYellow:new THREE.MeshStandardMaterial({color:0xf7d363,roughness:.58}),
+      roadPatch:new THREE.MeshStandardMaterial({color:0x252f3a,roughness:1,transparent:true,opacity:.68}),
+      tar:new THREE.MeshStandardMaterial({color:0x141b24,roughness:1}),
+      cyan:new THREE.MeshBasicMaterial({color:0x4ee7ff,transparent:true,opacity:.78}),
+      green:new THREE.MeshBasicMaterial({color:0x42f58c,transparent:true,opacity:.85}),
+      red:new THREE.MeshBasicMaterial({color:0xff5c7a}),
+      car:new THREE.MeshStandardMaterial({color:0xbfd2e8,roughness:.45,metalness:.12}),
+      car2:new THREE.MeshStandardMaterial({color:0x8aa4c5,roughness:.5,metalness:.08}),
+      dark:new THREE.MeshStandardMaterial({color:0x111827,roughness:.6}),
+      tire:new THREE.MeshStandardMaterial({color:0x05070a,roughness:.8}),
+      cone:new THREE.MeshStandardMaterial({color:0xff7a36,roughness:.65}),
+      ped:new THREE.MeshStandardMaterial({color:0xffd166,roughness:.7}),
+      sign:new THREE.MeshStandardMaterial({color:0xffffff,roughness:.55}),
+      signRed:new THREE.MeshStandardMaterial({color:0xd82032,roughness:.45}),
+      pole:new THREE.MeshStandardMaterial({color:0x8f9aab,roughness:.5}),
+      windowLit:new THREE.MeshStandardMaterial({color:0xa7c3d9,roughness:.32,metalness:.08,emissive:0x23384c,emissiveIntensity:.18}),
+      brick:new THREE.MeshStandardMaterial({color:0x5e4a45,roughness:.92}),
+      facade:new THREE.MeshStandardMaterial({color:0x4f5c69,roughness:.9}),
+      awning:new THREE.MeshStandardMaterial({color:0x2b3647,roughness:.82}),
+      rim:new THREE.MeshStandardMaterial({color:0xc8d0d8,roughness:.18,metalness:.82}),
+      glass:new THREE.MeshStandardMaterial({color:0x0d1a2a,roughness:.06,metalness:.14,transparent:true,opacity:.72,side:THREE.DoubleSide}),
+      headlight:new THREE.MeshStandardMaterial({color:0xd8e8f8,roughness:.06,metalness:.5,emissive:0xffffff,emissiveIntensity:0}),
+      taillight:new THREE.MeshStandardMaterial({color:0xff2211,roughness:.18,metalness:.05,emissive:0xff2200,emissiveIntensity:0.28}),
+      chrome:new THREE.MeshStandardMaterial({color:0xd4dce6,roughness:.05,metalness:.96}),
+      lampGlow:new THREE.MeshBasicMaterial({color:0xfff4bf})
+    };
+  }
+  makeRoadTexture(w,h){
+    const c=document.createElement('canvas');
+    c.width=w;c.height=h;
+    const x=c.getContext('2d');
+    x.fillStyle='#384250';
+    x.fillRect(0,0,w,h);
+    for(let i=0;i<3800;i++){
+      const g=48+Math.floor(Math.random()*78);
+      x.fillStyle=`rgb(${g},${g+2},${g+6})`;
+      x.fillRect(Math.random()*w,Math.random()*h,1,1);
+    }
+    for(let i=0;i<22;i++){
+      x.fillStyle=`rgba(24,30,38,${0.08+Math.random()*0.12})`;
+      x.fillRect(0,Math.random()*h,w,1+Math.random()*2.2);
+    }
+    for(let i=0;i<70;i++){
+      x.strokeStyle=`rgba(205,212,220,${Math.random()*0.06})`;
+      x.lineWidth=.5+Math.random()*.9;
+      const y=Math.random()*h;
+      x.beginPath();
+      x.moveTo(0,y);
+      x.lineTo(w,y+Math.random()*5-2.5);
+      x.stroke();
+    }
+    return new THREE.CanvasTexture(c);
+  }
+  makeShoulderTexture(w,h){
+    const c=document.createElement('canvas');
+    c.width=w;c.height=h;
+    const x=c.getContext('2d');
+    x.fillStyle='#495666';
+    x.fillRect(0,0,w,h);
+    for(let i=0;i<2200;i++){
+      const g=84+Math.floor(Math.random()*58);
+      x.fillStyle=`rgb(${g},${g+2},${g+4})`;
+      x.fillRect(Math.random()*w,Math.random()*h,1,1);
+    }
+    for(let i=0;i<10;i++){
+      x.fillStyle='rgba(22,29,37,.16)';
+      x.fillRect(0,i*(h/10),w,1.1);
+    }
+    return new THREE.CanvasTexture(c);
+  }
+  box(w,h,d,mat){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.castShadow=true;m.receiveShadow=true;return m;}
+  car(colorMat){
+    const g=new THREE.Group();const mat=colorMat||this.mats.car;
+    // Lower body
+    const body=this.box(2.04,.62,4.22,mat);body.position.y=.50;g.add(body);
+    // Upper door panels
+    const upper=this.box(1.90,.28,3.80,mat);upper.position.y=.92;g.add(upper);
+    // Cabin
+    const cabin=this.box(1.36,.52,1.80,this.mats.dark);cabin.position.set(0,1.14,-.26);g.add(cabin);
+    // Windshield
+    const ws=this.box(1.28,.46,.08,this.mats.glass);ws.position.set(0,1.10,.60);ws.rotation.x=.32;g.add(ws);
+    // Rear window
+    const rw=this.box(1.24,.42,.08,this.mats.glass);rw.position.set(0,1.08,-1.12);rw.rotation.x=-.30;g.add(rw);
+    // Side windows
+    for(const x of [-.96,.96]){const sw=this.box(.08,.36,1.42,this.mats.glass);sw.position.set(x,1.14,-.28);g.add(sw);}
+    // Hood panel
+    const hood=this.box(1.92,.07,1.38,mat);hood.position.set(0,.84,1.12);g.add(hood);
+    // Front bumper
+    const fb=this.box(2.00,.24,.14,this.mats.dark);fb.position.set(0,.36,2.14);g.add(fb);
+    // Rear bumper
+    const rb=this.box(2.00,.24,.14,this.mats.dark);rb.position.set(0,.36,-2.14);g.add(rb);
+    // Grille
+    const gr=this.box(1.22,.18,.08,this.mats.dark);gr.position.set(0,.64,2.15);g.add(gr);
+    // Headlights
+    for(const x of [-.62,.62]){const hl=this.box(.32,.14,.08,this.mats.headlight);hl.position.set(x,.72,2.13);g.add(hl);}
+    // Tail lights
+    for(const x of [-.70,.70]){const tl=this.box(.28,.12,.08,this.mats.taillight);tl.position.set(x,.70,-2.13);g.add(tl);}
+    // Brake strip
+    const brake=this.box(1.38,.07,.06,this.mats.red);brake.position.set(0,.79,2.14);g.add(brake);
+    // Side mirrors
+    for(const x of [-1.08,1.08]){const m=this.box(.09,.11,.18,this.mats.dark);m.position.set(x,1.02,.42);g.add(m);}
+    // Tires + rims
+    for(const x of [-1.04,1.04])for(const z of [-1.42,1.42]){
+      const t=new THREE.Mesh(new THREE.CylinderGeometry(.30,.30,.24,18),this.mats.tire);t.rotation.z=Math.PI/2;t.position.set(x,.30,z);t.castShadow=true;g.add(t);
+      const r=new THREE.Mesh(new THREE.CylinderGeometry(.17,.17,.25,10),this.mats.rim);r.rotation.z=Math.PI/2;r.position.set(x,.30,z);g.add(r);
+    }
+    g.userData={cameraHeight:1.18,cameraZ:1.9,label:'sedan'};return g;
+  }
+  cone(){const g=new THREE.Group();const base=this.box(.75,.08,.75,this.mats.cone);base.position.y=.04;g.add(base);const c=new THREE.Mesh(new THREE.ConeGeometry(.36,1.1,20),this.mats.cone);c.position.y=.62;c.castShadow=true;g.add(c);return g;}
+  pedestrian(){
+    const g=new THREE.Group();
+    const shirtColors=[0x2d7dd2,0xe7c948,0x97cc04,0xf45d01,0xd62828,0x8338ec,0x3a86ff,0xfb5607,0x06d6a0,0xff006e];
+    const pantColors=[0x1a1a2e,0x2b4590,0x2d3436,0x1f3a1f,0x4a3728,0x2c3e50];
+    const skinTones=[0xf4c894,0xe8a87c,0xc68642,0x8d5524,0x4a2912];
+    const shirt=new THREE.MeshStandardMaterial({color:shirtColors[Math.floor(Math.random()*shirtColors.length)],roughness:.88});
+    const pants=new THREE.MeshStandardMaterial({color:pantColors[Math.floor(Math.random()*pantColors.length)],roughness:.90});
+    const skin=new THREE.MeshStandardMaterial({color:skinTones[Math.floor(Math.random()*skinTones.length)],roughness:.92});
+    // Shoes
+    for(const x of [-.10,.10]){const s=this.box(.13,.08,.23,this.mats.dark);s.position.set(x,.04,.02);g.add(s);}
+    // Lower legs
+    for(const x of [-.10,.10]){const l=new THREE.Mesh(new THREE.CylinderGeometry(.068,.062,.52,8),pants);l.position.set(x,.36,0);l.castShadow=true;g.add(l);}
+    // Hips
+    const hips=this.box(.38,.34,.20,pants);hips.position.set(0,.78,0);g.add(hips);
+    // Torso
+    const torso=this.box(.42,.52,.22,shirt);torso.position.set(0,1.14,0);torso.castShadow=true;g.add(torso);
+    // Arms
+    for(const x of [-.28,.28]){const a=new THREE.Mesh(new THREE.CylinderGeometry(.062,.056,.60,8),shirt);a.rotation.z=x<0?.18:-.18;a.position.set(x,1.08,0);a.castShadow=true;g.add(a);}
+    // Neck
+    const neck=new THREE.Mesh(new THREE.CylinderGeometry(.08,.08,.16,8),skin);neck.position.set(0,1.50,0);g.add(neck);
+    // Head
+    const head=new THREE.Mesh(new THREE.SphereGeometry(.21,14,12),skin);head.position.set(0,1.68,0);head.castShadow=true;g.add(head);
+    return g;
+  }
+  roadBlock(){const g=new THREE.Group();const b=this.box(2.4,.7,1.0,this.mats.signRed);b.position.y=.38;g.add(b);for(const x of [-.75,.75]){const stripe=this.box(.25,.72,1.05,this.mats.sign);stripe.position.set(x,.4,0);stripe.rotation.z=.4;g.add(stripe);}return g;}
+  building(w,h,d,matA,matB){
+    const g=new THREE.Group();
+    const shell=this.box(w,h,d,matA||this.mats.facade); shell.position.y=h/2; g.add(shell);
+    const roof=this.box(w*.92,.25,d*.92,this.mats.dark); roof.position.y=h+.12; g.add(roof);
+    const rows=Math.max(2,Math.floor(h/3.8));
+    const cols=Math.max(2,Math.floor(w/2.1));
+    for(let r=0;r<rows;r++){
+      for(let c=0;c<cols;c++){
+        const pane=this.box(.7,.95,.06,matB||this.mats.windowLit);
+        pane.position.set(-w*.36 + c*(w*.72/Math.max(1,cols-1)), 1.4 + r*((h-2.8)/Math.max(1,rows-1)), d/2+.04);
+        g.add(pane);
+      }
+    }
+    return g;
+  }
+  streetLight(){
+    const g=new THREE.Group();
+    const pole=new THREE.Mesh(new THREE.CylinderGeometry(.05,.06,4.6,10),this.mats.pole); pole.position.y=2.3; pole.castShadow=true; g.add(pole);
+    const arm=this.box(1.1,.08,.08,this.mats.pole); arm.position.set(.42,4.35,0); g.add(arm);
+    const head=this.box(.38,.18,.28,this.mats.dark); head.position.set(.95,4.25,0); g.add(head);
+    const glow=new THREE.Mesh(new THREE.SphereGeometry(.12,12,12),this.mats.lampGlow); glow.position.set(.98,4.06,0); g.add(glow);
+    return g;
+  }
+  trafficLight(){const g=new THREE.Group();const pole=new THREE.Mesh(new THREE.CylinderGeometry(.08,.08,5.2,12),this.mats.pole);pole.position.y=2.6;g.add(pole);const arm=this.box(3.2,.12,.12,this.mats.pole);arm.position.set(-1.4,5.1,0);g.add(arm);const housing=this.box(.7,1.7,.32,this.mats.dark);housing.position.set(-3.0,4.85,0);g.add(housing);const lamps={};for(const [name,y,col] of [['red',5.35,0xff5c7a],['yellow',4.85,0xffd166],['green',4.35,0x42f58c]]){const s=new THREE.Mesh(new THREE.SphereGeometry(.18,18,18),new THREE.MeshBasicMaterial({color:col}));s.position.set(-3.0,y,-.19);s.userData.baseColor=col;g.add(s);lamps[name]=s;}g.userData.lamps=lamps;return g;}
+  stopSign(){const g=new THREE.Group();const pole=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,2.6,10),this.mats.pole);pole.position.y=1.3;g.add(pole);const sign=this.box(1.25,.85,.08,this.mats.signRed);sign.position.y=2.75;g.add(sign);sign.rotation.z=Math.PI/4;return g;}
+  yieldSign(){const g=new THREE.Group();const pole=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,2.4,10),this.mats.pole);pole.position.y=1.2;g.add(pole);const tri=new THREE.Mesh(new THREE.ConeGeometry(.72,.08,3),this.mats.signRed);tri.rotation.x=Math.PI/2;tri.rotation.z=Math.PI;tri.position.y=2.55;g.add(tri);return g;}
+  speedSign(limit){const g=new THREE.Group();const pole=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,2.5,10),this.mats.pole);pole.position.y=1.25;g.add(pole);const sign=this.box(1.05,1.35,.08,this.mats.sign);sign.position.y=2.75;g.add(sign);g.userData.limit=limit;return g;}
+  suv(colorMat){
+    const g=new THREE.Group();const mat=colorMat||this.mats.car;
+    const body=this.box(2.16,.88,4.62,mat);body.position.y=.72;g.add(body);
+    const upper=this.box(2.00,.32,4.20,mat);upper.position.y=1.22;g.add(upper);
+    const cabin=this.box(1.52,.64,2.42,this.mats.dark);cabin.position.set(0,1.48,.02);g.add(cabin);
+    const ws=this.box(1.44,.56,.10,this.mats.glass);ws.position.set(0,1.44,.96);ws.rotation.x=.28;g.add(ws);
+    const rw=this.box(1.40,.50,.10,this.mats.glass);rw.position.set(0,1.42,-1.02);rw.rotation.x=-.28;g.add(rw);
+    for(const x of [-1.00,1.00]){const sw=this.box(.10,.48,1.90,this.mats.glass);sw.position.set(x,1.48,.02);g.add(sw);}
+    const fb=this.box(2.12,.28,.18,this.mats.dark);fb.position.set(0,.40,2.42);g.add(fb);
+    const rb=this.box(2.12,.28,.18,this.mats.dark);rb.position.set(0,.40,-2.42);g.add(rb);
+    for(const x of [-.68,.68]){const hl=this.box(.36,.16,.10,this.mats.headlight);hl.position.set(x,.82,2.40);g.add(hl);}
+    for(const x of [-.74,.74]){const tl=this.box(.32,.14,.10,this.mats.taillight);tl.position.set(x,.82,-2.40);g.add(tl);}
+    for(const x of [-.80,.80]){const rail=this.box(.06,.08,3.20,this.mats.chrome);rail.position.set(x,1.82,0);g.add(rail);}
+    for(const x of [-1.14,1.14]){const m=this.box(.10,.14,.22,this.mats.dark);m.position.set(x,1.18,.80);g.add(m);}
+    for(const x of [-1.12,1.12])for(const z of [-1.62,1.62]){
+      const t=new THREE.Mesh(new THREE.CylinderGeometry(.34,.34,.28,18),this.mats.tire);t.rotation.z=Math.PI/2;t.position.set(x,.34,z);t.castShadow=true;g.add(t);
+      const r=new THREE.Mesh(new THREE.CylinderGeometry(.20,.20,.30,10),this.mats.rim);r.rotation.z=Math.PI/2;r.position.set(x,.34,z);g.add(r);
+    }
+    const brake=this.box(1.58,.08,.07,this.mats.red);brake.position.set(0,.88,2.40);g.add(brake);
+    g.userData={cameraHeight:1.44,cameraZ:2.0,label:'SUV'};return g;
+  }
+  pickup(colorMat){
+    const g=new THREE.Group();const mat=colorMat||this.mats.car;
+    // Cab
+    const cab=this.box(2.06,.84,2.54,mat);cab.position.set(0,.72,-1.22);g.add(cab);
+    const cabU=this.box(1.90,.24,2.30,mat);cabU.position.set(0,1.18,-1.22);g.add(cabU);
+    const roof=this.box(1.56,.54,1.70,this.mats.dark);roof.position.set(0,1.36,-1.20);g.add(roof);
+    // Windshield
+    const ws=this.box(1.48,.48,.10,this.mats.glass);ws.position.set(0,1.32,-.04);ws.rotation.x=.30;g.add(ws);
+    const rw=this.box(1.44,.42,.10,this.mats.glass);rw.position.set(0,1.30,-2.28);rw.rotation.x=-.24;g.add(rw);
+    for(const x of [-1.00,1.00]){const sw=this.box(.10,.38,1.36,this.mats.glass);sw.position.set(x,1.32,-1.20);g.add(sw);}
+    // Bed
+    const bed=this.box(2.06,.38,2.24,mat);bed.position.set(0,.52,1.10);g.add(bed);
+    const bwall=this.box(2.06,.60,.10,mat);bwall.position.set(0,.70,2.24);g.add(bwall);
+    for(const x of [-1.00,1.00]){const rail=this.box(.06,.22,2.22,this.mats.chrome);rail.position.set(x,.68,1.10);g.add(rail);}
+    // Bumpers
+    const fb=this.box(2.06,.26,.16,this.mats.dark);fb.position.set(0,.38,2.30);g.add(fb);
+    const rb=this.box(2.06,.26,.16,this.mats.dark);rb.position.set(0,.38,-2.50);g.add(rb);
+    for(const x of [-.62,.62]){const hl=this.box(.30,.14,.10,this.mats.headlight);hl.position.set(x,.78,2.32);g.add(hl);}
+    for(const x of [-.72,.72]){const tl=this.box(.24,.22,.10,this.mats.taillight);tl.position.set(x,.70,2.22);g.add(tl);}
+    for(const x of [-1.10,1.10]){const m=this.box(.10,.14,.22,this.mats.dark);m.position.set(x,1.16,-.04);g.add(m);}
+    for(const x of [-1.08,1.08])for(const z of [-1.72,1.66]){
+      const t=new THREE.Mesh(new THREE.CylinderGeometry(.32,.32,.28,18),this.mats.tire);t.rotation.z=Math.PI/2;t.position.set(x,.32,z);t.castShadow=true;g.add(t);
+      const r=new THREE.Mesh(new THREE.CylinderGeometry(.19,.19,.29,10),this.mats.rim);r.rotation.z=Math.PI/2;r.position.set(x,.32,z);g.add(r);
+    }
+    const brake=this.box(1.55,.09,.07,this.mats.red);brake.position.set(0,.76,2.28);g.add(brake);
+    g.userData={cameraHeight:1.28,cameraZ:2.2,label:'Pickup Truck'};return g;
+  }
+  van(colorMat){
+    const g=new THREE.Group();const mat=colorMat||this.mats.car2;
+    // Main body
+    const body=this.box(2.22,1.82,5.46,mat);body.position.y=1.04;g.add(body);
+    // Front lower section
+    const front=this.box(2.18,.32,1.10,mat);front.position.set(0,.62,2.18);g.add(front);
+    // Windshield
+    const ws=this.box(2.08,.74,.10,this.mats.glass);ws.position.set(0,1.12,2.60);ws.rotation.x=.22;g.add(ws);
+    // Cab side windows
+    for(const x of [-1.08,1.08]){const sw=this.box(.10,.50,1.08,this.mats.glass);sw.position.set(x,1.12,2.18);g.add(sw);}
+    // Sliding door seam lines
+    for(const x of [-1.10,1.10]){const dl=this.box(.06,.90,2.80,this.mats.dark);dl.position.set(x,1.04,.12);g.add(dl);}
+    // Rear door split
+    const rd=this.box(.08,1.42,.10,this.mats.dark);rd.position.set(0,1.04,-2.78);g.add(rd);
+    // Bumpers
+    const fb=this.box(2.18,.28,.18,this.mats.dark);fb.position.set(0,.34,2.82);g.add(fb);
+    const rb=this.box(2.18,.28,.18,this.mats.dark);rb.position.set(0,.34,-2.84);g.add(rb);
+    for(const x of [-.72,.72]){const hl=this.box(.34,.20,.10,this.mats.headlight);hl.position.set(x,.82,2.84);g.add(hl);}
+    for(const x of [-.80,.80]){const tl=this.box(.28,.40,.10,this.mats.taillight);tl.position.set(x,.96,-2.80);g.add(tl);}
+    for(const x of [-1.14,1.14]){const m=this.box(.10,.20,.28,this.mats.dark);m.position.set(x,1.52,2.24);g.add(m);}
+    for(const x of [-1.12,1.12])for(const z of [-1.96,1.96]){
+      const t=new THREE.Mesh(new THREE.CylinderGeometry(.32,.32,.30,18),this.mats.tire);t.rotation.z=Math.PI/2;t.position.set(x,.32,z);t.castShadow=true;g.add(t);
+      const r=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,.31,10),this.mats.rim);r.rotation.z=Math.PI/2;r.position.set(x,.32,z);g.add(r);
+    }
+    const brake=this.box(1.68,.09,.07,this.mats.red);brake.position.set(0,.90,2.76);g.add(brake);
+    g.userData={cameraHeight:1.82,cameraZ:2.4,label:'Cargo Van'};return g;
+  }
+  emergency(){
+    const g=new THREE.Group();
+    const bodyMat=new THREE.MeshStandardMaterial({color:0x152055,roughness:.38,metalness:.14});
+    // Body
+    const body=this.box(2.04,.62,4.22,bodyMat);body.position.y=.50;g.add(body);
+    const upper=this.box(1.90,.28,3.80,bodyMat);upper.position.y=.92;g.add(upper);
+    const cabin=this.box(1.36,.52,1.80,this.mats.dark);cabin.position.set(0,1.14,-.26);g.add(cabin);
+    // Windshield / rear window
+    const ws=this.box(1.28,.46,.08,this.mats.glass);ws.position.set(0,1.10,.60);ws.rotation.x=.32;g.add(ws);
+    const rw=this.box(1.24,.42,.08,this.mats.glass);rw.position.set(0,1.08,-1.12);rw.rotation.x=-.30;g.add(rw);
+    // Bull bar
+    const bull=this.box(1.80,.44,.14,this.mats.chrome);bull.position.set(0,.56,2.18);g.add(bull);
+    // Bumpers
+    const fb=this.box(2.00,.24,.14,this.mats.dark);fb.position.set(0,.36,2.14);g.add(fb);
+    const rb=this.box(2.00,.24,.14,this.mats.dark);rb.position.set(0,.36,-2.14);g.add(rb);
+    // Headlights / taillights
+    for(const x of [-.62,.62]){const hl=this.box(.30,.14,.08,this.mats.headlight);hl.position.set(x,.72,2.14);g.add(hl);}
+    for(const x of [-.70,.70]){const tl=this.box(.28,.12,.08,this.mats.taillight);tl.position.set(x,.70,-2.14);g.add(tl);}
+    // Light bar base
+    const barBase=this.box(.86,.10,.28,this.mats.dark);barBase.position.set(0,1.54,-.18);g.add(barBase);
+    // Red/blue sections (animated in updateActorMeshes)
+    const barR=new THREE.Mesh(new THREE.BoxGeometry(.40,.13,.26),new THREE.MeshBasicMaterial({color:0xff2244}));barR.position.set(.21,1.54,-.18);barR.userData.emgRed=true;g.add(barR);
+    const barB=new THREE.Mesh(new THREE.BoxGeometry(.40,.13,.26),new THREE.MeshBasicMaterial({color:0x2255ff}));barB.position.set(-.21,1.54,-.18);barB.userData.emgBlue=true;g.add(barB);
+    // Side mirrors
+    for(const x of [-1.08,1.08]){const m=this.box(.09,.11,.18,this.mats.dark);m.position.set(x,1.02,.42);g.add(m);}
+    // Tires + rims
+    for(const x of [-1.04,1.04])for(const z of [-1.42,1.42]){
+      const t=new THREE.Mesh(new THREE.CylinderGeometry(.30,.30,.24,18),this.mats.tire);t.rotation.z=Math.PI/2;t.position.set(x,.30,z);t.castShadow=true;g.add(t);
+      const r=new THREE.Mesh(new THREE.CylinderGeometry(.17,.17,.25,10),this.mats.rim);r.rotation.z=Math.PI/2;r.position.set(x,.30,z);g.add(r);
+    }
+    g.userData={cameraHeight:1.18,cameraZ:1.9,label:'emergency vehicle',isEmergency:true};return g;
+  }
+}
+
+class Sim{
+  constructor(){
+    if(!window.THREE){this.showError('Three.js did not load. Open this file with internet access, or allow the CDN script.');return;}
+    this.stage=$('stage');this.overlay=$('overlay');this.mini=$('miniCanvas');this.miniCtx=this.mini.getContext('2d');this.road=new Road();this.factory=new MeshFactory();this.log=new Log($('logFeed'));
+    this.clock=new THREE.Clock();this.paused=true;this.progress=0;this.speed=0;this.targetMph=48;this.limitMph=48;this.lane=this.road.laneW/2;this.targetLane=this.road.laneW/2;this.state='Paused';this.mode='sensor';this.difficulty='standard';this.stopHold=0;this.activeStop=null;this.stuckTimer=0;this.laneChangeTimer=15+Math.random()*20;this.lanePreference=this.road.laneW/2;
+    this.env={timeOfDay:'day',weather:'clear',visibility:620,sunAngle:75,surface:'dry',construction:'none',pedDensity:'medium',emergency:'none',vehicleMass:'standard'};
+    this.vehicleTypeName='sedan';
+    this.sensorConfig={camera:true,lidar:false,radar:false,gps:true,noise:0,range:125};
+    this.surfaceFriction=1.0;this.nextEmergencyZ=500;this.weatherParticles=null;this.weatherParticleCount=0;this.weatherParticleFall=9.5;
+    this.actors=[];this.controls=[];this.nextActorZ=80;this.nextOncomingZ=120;this.nextControlZ=135;this.layers={boxes:true,route:true,lane:true,lidar:false,debug:false};
+    this.scene=new THREE.Scene();this.scene.background=new THREE.Color(0xa4b6c7);this.scene.fog=new THREE.Fog(0xa4b6c7,120,620);
+    this.camera=new THREE.PerspectiveCamera(67,1,.1,650);this.cameraTarget=new THREE.Vector3(0,1,50);
+    this.renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});this.renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));this.renderer.shadowMap.enabled=true;this.renderer.shadowMap.type=THREE.PCFSoftShadowMap;this.stage.prepend(this.renderer.domElement);
+    this.world=new THREE.Group();this.scene.add(this.world);this.dynamic=new THREE.Group();this.scene.add(this.dynamic);this.roadGroup=new THREE.Group();this.scene.add(this.roadGroup);this.routeGroup=new THREE.Group();this.scene.add(this.routeGroup);this.lidarGroup=new THREE.Group();this.scene.add(this.lidarGroup);this.egoCar=this.factory.car(this.factory.mats.car);this.egoCar.userData.label='ego vehicle';this.scene.add(this.egoCar);
+    this._egoHLights=null;
+    this.buildBaseScene();this.setupEgoHeadlights();this.bindUI();this.reset();window.addEventListener('resize',()=>this.resize());this.resize();this.animate();
+  }
+  showError(msg){this.stage.insertAdjacentHTML('beforeend',`<div class="error">${msg}</div>`);}
+  setupEgoHeadlights(){
+    if(this._egoHLights){this._egoHLights.forEach(l=>{if(l.parent)l.parent.remove(l);if(l.target&&l.target.parent)l.target.parent.remove(l.target);});}
+    this._egoHLights=[];
+    for(const xOff of [-.60,.60]){
+      const sl=new THREE.SpotLight(0xfff8e8,0,90,Math.PI*.18,.28,1.8);
+      sl.position.set(xOff,.72,2.0);
+      sl.target.position.set(xOff*2.4,-.6,55);
+      this.egoCar.add(sl);this.egoCar.add(sl.target);
+      this._egoHLights.push(sl);
+    }
+  }
+  buildBaseScene(){
+    this.hemi=new THREE.HemisphereLight(0xcfe8ff,0x253219,1.18);this.scene.add(this.hemi);
+    this.sun=new THREE.DirectionalLight(0xffffff,2.15);this.sun.position.set(-55,95,-45);this.sun.castShadow=true;this.sun.shadow.mapSize.set(2048,2048);this.sun.shadow.camera.left=-160;this.sun.shadow.camera.right=160;this.sun.shadow.camera.top=160;this.sun.shadow.camera.bottom=-160;this.scene.add(this.sun);
+    const ground=new THREE.Mesh(new THREE.PlaneGeometry(1400,2200),this.factory.mats.grass);ground.rotation.x=-Math.PI/2;ground.position.y=-.035;ground.receiveShadow=true;this.world.add(ground);this.ground=ground;
+    this.cityGroup=new THREE.Group();this.world.add(this.cityGroup);
+    this.buildCityBlocks();
+    this.intersectionGroup=new THREE.Group();this.scene.add(this.intersectionGroup);
+    this.radarGroup=new THREE.Group();this.scene.add(this.radarGroup);
+    this.debugGroup=new THREE.Group();this.scene.add(this.debugGroup);
+    this.weatherGroup=new THREE.Group();this.scene.add(this.weatherGroup);
+    this.drawnIntersections=[];
+    this.buildRoadStrip();
+  }
+  buildCityBlocks(){
+    this.cityGroup.clear();
+    const palette=[
+      [this.factory.mats.facade,this.factory.mats.windowLit],
+      [new THREE.MeshStandardMaterial({color:0x5e6977,roughness:.88}), this.factory.mats.windowLit],
+      [new THREE.MeshStandardMaterial({color:0x4c5562,roughness:.9}), this.factory.mats.windowLit],
+      [this.factory.mats.brick, new THREE.MeshStandardMaterial({color:0xc7d8e5,roughness:.36,metalness:.05,emissive:0x1c2d40,emissiveIntensity:.14})]
+    ];
+    for(let z=-120;z<4000;z+=72){
+      for(const side of [-1,1]){
+        const setback = this.road.width/2 + this.road.sidewalk + 12 + rand(0,18);
+        const p=this.road.point(z,side*setback);
+        const yaw=this.road.yaw(z) + rand(-.025,.025);
+        const [matA,matB]=palette[Math.floor(Math.random()*palette.length)];
+        const tower=this.factory.building(rand(8,15),rand(10,30),rand(8,14),matA,matB);
+        tower.position.set(p.x,0,p.z);
+        tower.rotation.y=yaw;
+        this.cityGroup.add(tower);
+
+        if(Math.random()<.72){
+          const front=this.road.point(z+rand(-10,10),side*(this.road.width/2+this.road.sidewalk+4.8));
+          const shopW=rand(9,15), shopD=rand(6,9);
+          const shop=this.factory.box(shopW,4.7,shopD,new THREE.MeshStandardMaterial({color:0x586371,roughness:.92}));
+          shop.position.set(front.x,2.35,front.z);
+          shop.rotation.y=this.road.yaw(z);
+          shop.receiveShadow=true;shop.castShadow=true;
+          this.cityGroup.add(shop);
+          const awning=this.factory.box(shopW*.76,.18,1.0,this.factory.mats.awning);
+          awning.position.set(front.x,3.2,front.z + Math.cos(this.road.yaw(z))*shopD*.48);
+          awning.rotation.y=this.road.yaw(z);
+          this.cityGroup.add(awning);
+          for(let i=-1;i<=1;i++){
+            const win=this.factory.box(1.1,1.0,.07,this.factory.mats.windowLit);
+            win.position.set(i*shopW*.22,.35,shopD/2+.05);
+            shop.add(win);
+          }
+        }
+      }
+    }
+    for(let z=-20;z<4100;z+=32){
+      for(const side of [-1,1]){
+        const lampPos=this.road.point(z,side*(this.road.width/2+this.road.sidewalk*.48));
+        const lamp=this.factory.streetLight();
+        lamp.position.copy(lampPos);
+        lamp.rotation.y=this.road.yaw(z)+(side<0?Math.PI:0);
+        this.cityGroup.add(lamp);
+        if(Math.abs((z%128))<1){
+          const plaza=this.road.point(z+8,side*(this.road.width/2+this.road.sidewalk+4.2));
+          const pad=this.factory.box(11,.05,8,new THREE.MeshStandardMaterial({color:0x8a949e,roughness:.96}));
+          pad.position.set(plaza.x,.026,plaza.z);
+          pad.rotation.y=this.road.yaw(z);
+          this.cityGroup.add(pad);
+        }
+      }
+    }
+  }
+  reset(){
+    this.progress=0;this.speed=0;this.stopHold=0;this.activeStop=null;this.stuckTimer=0;this.laneChangeTimer=15+Math.random()*20;this.lanePreference=this.road.laneW/2;this.targetMph=+$('speedSlider').value;this.limitMph=this.targetMph;this.lane=this.road.laneW/2;this.targetLane=this.road.laneW/2;this.state='Paused';this.paused=true;this.actors.forEach(a=>this.dynamic.remove(a.mesh));this.controls.forEach(c=>this.dynamic.remove(c.mesh));this.actors=[];this.controls=[];this.nextActorZ=120;this.nextOncomingZ=140;this.nextControlZ=200;this.nextEmergencyZ=400;this.log.reset();
+    this.applyEnvironment();
+    if(this.intersectionGroup){
+      while(this.intersectionGroup.children.length){
+        const m=this.intersectionGroup.children.pop();
+        if(m.geometry)m.geometry.dispose();
+        this.intersectionGroup.remove(m);
+      }
+      this.drawnIntersections=[];
+      // Intersections are drawn only where there are actual traffic controls,
+      // so they no longer clutter every 185 m of road.
+    }
+    // Seed a readable opening scenario, but keep the first 80m clear so the car does not instantly freeze.
+    // Opening scenario: a slower car in our inner lane, parked car on right shoulder,
+    // a cone in the outer right lane, and an oncoming car so the road feels lived in.
+    this.addActor(140,this.road.laneW/2,'car',true,false);
+    this.addActor(180,this.road.travelHalf+1.1,'parked',false,false);
+    this.addActor(260,this.road.laneW*1.5,'cone',false,false);
+    this.addActor(170,-this.road.laneW/2,'car',true,true);
+    this.addActor(240,-this.road.laneW*1.5,'car',true,true);
+    this.addControl(95,'stoplight');this.addControl(280,'stopsign');this.addControl(450,'stoplight');this.addControl(620,'speedlimit',35);
+    this.updateRoad();this.updateRoute();this.updateLidar();this.updateCamera();this.updateMini();this.updateUI(this.analyze());
+    this.runDiagnostics();
+  }
+  runDiagnostics(){
+    const checks=[];
+    checks.push(Number.isFinite(this.road.width) && this.road.width>12);
+    checks.push(Number.isFinite(this.road.laneW) && this.road.laneW>2);
+    checks.push(!!this.renderer && !!this.camera && !!this.stage);
+    checks.push(Array.isArray(this.actors) && Array.isArray(this.controls));
+    checks.push(this.roadGroup.children.length>0);
+    if(!checks.every(Boolean)) this.log.add('Diagnostics warning: scene configuration issue detected');
+    else this.log.add('Diagnostics OK, simulation ready');
+  }
+  applyEnvironment(){
+    const {timeOfDay:tod,weather,visibility:vis,sunAngle,surface}=this.env;
+    const bgC={day:0xa4b6c7,dawn:0xd4623a,dusk:0x8c3a22,night:0x050a14};
+    const fogC={day:0xa4b6c7,dawn:0xb85230,dusk:0x7c3218,night:0x080e1c};
+    let bgCol=bgC[tod],fogCol=fogC[tod],fogNear=90,fogFar=vis;
+    if(weather==='fog'){bgCol=0x9aacb8;fogCol=0x9aacb8;fogNear=14;fogFar=Math.min(vis,140);}
+    else if(weather==='rain'){bgCol=0x607888;fogCol=0x607888;fogNear=55;fogFar=Math.min(vis,480);}
+    else if(weather==='snow'){bgCol=0xb8cad6;fogCol=0xb8cad6;fogNear=35;fogFar=Math.min(vis,300);}
+    else if(weather==='overcast'){bgCol=0x7a8e9a;fogCol=0x7a8e9a;fogNear=80;fogFar=Math.min(vis,500);}
+    this.scene.background.setHex(bgCol);
+    this.scene.fog.color.setHex(fogCol);
+    this.scene.fog.near=fogNear;this.scene.fog.far=fogFar;
+    const sunI={day:2.15,dawn:0.95,dusk:0.65,night:0.03};
+    const hemiI={day:1.18,dawn:0.60,dusk:0.40,night:0.07};
+    const wxM={clear:1,overcast:.32,rain:.28,fog:.36,snow:.52};
+    if(this.sun){
+      this.sun.intensity=sunI[tod]*(wxM[weather]??1);
+      const ang=((sunAngle||75)/90)*(Math.PI/2);
+      this.sun.position.set(-55*Math.cos(ang),95*Math.sin(ang),-45);
+    }
+    if(this.hemi)this.hemi.intensity=hemiI[tod];
+    const surfCol={dry:0xffffff,wet:0xaabbcc,icy:0xb8d4e2,snowy:0xd8e5ec};
+    if(this.roadStripMaterial)this.roadStripMaterial.color.setHex(surfCol[surface]||0xffffff);
+    this.surfaceFriction={dry:1.0,wet:0.74,icy:0.40,snowy:0.56}[surface]||1.0;
+    // Headlights + street lamps: shared emissive mats update all meshes at once
+    const hlI={day:0,dawn:1.2,dusk:1.8,night:3.2}[tod]||0;
+    if(this.factory){
+      this.factory.mats.headlight.emissiveIntensity=hlI;
+      this.factory.mats.taillight.emissiveIntensity=.28+hlI*.55;
+      // Street lamps glow amber at night
+      const lampOn=tod==='night'||tod==='dawn'||tod==='dusk';
+      this.factory.mats.lampGlow.color.setHex(lampOn?0xfff4bf:0x888866);
+    }
+    // Ego car spot lights
+    const egoHLI={day:0,dawn:1.4,dusk:2.2,night:3.8}[tod]||0;
+    if(this._egoHLights)this._egoHLights.forEach(l=>l.intensity=egoHLI);
+    // Rebuild weather particles
+    if(this.weatherGroup){while(this.weatherGroup.children.length){const m=this.weatherGroup.children[0];if(m.geometry)m.geometry.dispose();this.weatherGroup.remove(m);}}
+    this.weatherParticles=null;
+    if(weather==='rain'||weather==='snow')this.buildWeatherParticles(weather);
+    this.log.add(`Scene: ${tod}, ${weather}${surface!=='dry'?', '+surface+' surface':''}`);
+  }
+  buildWeatherParticles(weather){
+    const n=weather==='rain'?2500:1800;
+    const range=82;
+    const pos=new Float32Array(n*3);
+    for(let i=0;i<n;i++){pos[i*3]=rand(-range,range);pos[i*3+1]=rand(0,17);pos[i*3+2]=rand(-range,range);}
+    const geo=new THREE.BufferGeometry();
+    geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+    const mat=new THREE.PointsMaterial({color:weather==='snow'?0xdce8f4:0x7899bb,size:weather==='rain'?0.07:0.18,transparent:true,opacity:weather==='rain'?0.50:0.68,sizeAttenuation:true});
+    this.weatherParticles=new THREE.Points(geo,mat);
+    this.weatherParticleCount=n;
+    this.weatherParticleFall=weather==='rain'?9.5:1.4;
+    this.weatherGroup.add(this.weatherParticles);
+  }
+  updateWeather(dt){
+    if(!this.weatherParticles)return;
+    const eP=this.road.point(this.progress,this.lane);
+    this.weatherGroup.position.set(eP.x,0,eP.z);
+    const pos=this.weatherParticles.geometry.attributes.position;
+    const range=82;const fall=this.weatherParticleFall;
+    const drift=fall<5?rand(-0.06,0.06)*dt:0;
+    for(let i=0;i<this.weatherParticleCount;i++){
+      pos.array[i*3+1]-=fall*dt;pos.array[i*3]+=drift;
+      if(pos.array[i*3+1]<0){pos.array[i*3]=rand(-range,range);pos.array[i*3+1]=rand(12,18);pos.array[i*3+2]=rand(-range,range);}
+    }
+    pos.needsUpdate=true;
+  }
+  updateRadar(){
+    while(this.radarGroup.children.length){const m=this.radarGroup.children[0];if(m.geometry)m.geometry.dispose();this.radarGroup.remove(m);}
+    if(!this.sensorConfig.radar)return;
+    const origin=this.road.point(this.progress,this.lane);
+    const yaw=this.road.yaw(this.progress);const sweep=Math.PI*0.68;const steps=28;
+    for(const [dist,alpha] of [[20,0.38],[40,0.26],[60,0.15]]){
+      const pts=[];
+      for(let i=0;i<=steps;i++){const ang=yaw-sweep/2+(sweep/steps)*i;pts.push(new THREE.Vector3(origin.x+Math.sin(ang)*dist,0.35,origin.z+Math.cos(ang)*dist));}
+      const geo=new THREE.BufferGeometry().setFromPoints(pts);
+      this.radarGroup.add(new THREE.Line(geo,new THREE.LineBasicMaterial({color:0xffd166,transparent:true,opacity:alpha})));
+    }
+    for(const a of this.actors){
+      const dz=a.z-this.progress;if(dz<1||dz>62)continue;
+      const p=this.road.point(a.z,a.lateral);
+      const ang=Math.atan2(p.x-origin.x,p.z-origin.z);
+      const relAng=((ang-yaw)+Math.PI*3)%(Math.PI*2)-Math.PI;
+      if(Math.abs(relAng)>sweep/2)continue;
+      const blip=new THREE.Mesh(new THREE.SphereGeometry(0.28,8,8),new THREE.MeshBasicMaterial({color:0xffd166,transparent:true,opacity:0.75}));
+      blip.position.set(p.x,0.5,p.z);this.radarGroup.add(blip);
+    }
+  }
+  spawnEgoVehicle(type){
+    if(this.egoCar)this.scene.remove(this.egoCar);
+    if(type==='suv')this.egoCar=this.factory.suv(this.factory.mats.car);
+    else if(type==='pickup')this.egoCar=this.factory.pickup(this.factory.mats.car);
+    else if(type==='van')this.egoCar=this.factory.van(this.factory.mats.car2);
+    else this.egoCar=this.factory.car(this.factory.mats.car);
+    this.egoCar.userData.label='ego vehicle';
+    this.scene.add(this.egoCar);
+    this.setupEgoHeadlights();
+    this.applyEnvironment();
+    this.log.add(`Vehicle: ${this.egoCar.userData.label||type}`);
+  }
+  bindUI(){
+    $('startBtn').onclick=()=>{this.paused=false;this.log.add('Autonomous drive enabled');};$('pauseBtn').onclick=()=>{this.paused=true;this.log.add('Autonomous drive paused');};$('resetBtn').onclick=()=>this.reset();
+    $('speedSlider').oninput=e=>{this.targetMph=+e.target.value;$('speedLabel').textContent=this.targetMph;};
+    $('difficulty').onchange=e=>{this.difficulty=e.target.value;this.log.add(`Difficulty changed: ${e.target.options[e.target.selectedIndex].text}`);};
+    for(const [id,key] of [['boxesToggle','boxes'],['routeToggle','route'],['laneToggle','lane'],['lidarToggle','lidar'],['debugToggle','debug']]){$(id).onchange=e=>{this.layers[key]=e.target.checked;};}
+    for(const [id,mode] of [['sensorCam','sensor'],['chaseCam','chase'],['topCam','top']]){$(id).onclick=()=>{this.mode=mode;for(const b of ['sensorCam','chaseCam','topCam'])$(b).classList.remove('active');$(id).classList.add('active');this.updateUI();};}
+    // Environment
+    $('timeOfDay').onchange=e=>{this.env.timeOfDay=e.target.value;this.applyEnvironment();};
+    $('weather').onchange=e=>{this.env.weather=e.target.value;this.applyEnvironment();};
+    $('visSlider').oninput=e=>{this.env.visibility=+e.target.value;$('visLabel').textContent=e.target.value;this.applyEnvironment();};
+    $('sunSlider').oninput=e=>{this.env.sunAngle=+e.target.value;$('sunLabel').textContent=e.target.value;this.applyEnvironment();};
+    // Vehicle
+    $('vehicleType').onchange=e=>{this.vehicleTypeName=e.target.value;this.spawnEgoVehicle(e.target.value);};
+    $('vehicleMass').onchange=e=>{this.env.vehicleMass=e.target.value;};
+    // Road conditions
+    $('roadSurface').onchange=e=>{this.env.surface=e.target.value;this.applyEnvironment();};
+    $('construction').onchange=e=>{this.env.construction=e.target.value;};
+    $('pedDensity').onchange=e=>{this.env.pedDensity=e.target.value;};
+    $('emergency').onchange=e=>{this.env.emergency=e.target.value;};
+    // Sensor config
+    $('camSensor').onchange=e=>{this.sensorConfig.camera=e.target.checked;};
+    $('lidarSensor').onchange=e=>{this.sensorConfig.lidar=e.target.checked;if(e.target.checked)$('lidarToggle').checked=true;};
+    $('radarSensor').onchange=e=>{this.sensorConfig.radar=e.target.checked;};
+    $('gpsSensor').onchange=e=>{this.sensorConfig.gps=e.target.checked;};
+    $('noiseSlider').oninput=e=>{this.sensorConfig.noise=+e.target.value;$('noiseLabel').textContent=e.target.value;};
+    $('rangeSlider').oninput=e=>{this.sensorConfig.range=+e.target.value;$('rangeLabel').textContent=e.target.value;};
+    $('fovSlider').oninput=e=>{this.camera.fov=+e.target.value;this.camera.updateProjectionMatrix();$('fovLabel').textContent=e.target.value;};
+  }
+  resize(){const r=this.stage.getBoundingClientRect();this.renderer.setSize(r.width,r.height,false);this.camera.aspect=r.width/r.height;this.camera.updateProjectionMatrix();const d=Math.min(2,window.devicePixelRatio||1);this.mini.width=160*d;this.mini.height=150*d;this.miniCtx.setTransform(d,0,0,d,0,0);}
+  randomActorType(){
+    let pool=this.difficulty==='hard'?['car','car','parked','cone','pedestrian','roadblock']:this.difficulty==='easy'?['car','parked','cone']:['car','car','parked','cone','pedestrian'];
+    const pd=this.env.pedDensity;
+    if(pd==='high'){pool=[...pool,'pedestrian','pedestrian'];}
+    else if(pd==='low'){pool=pool.map(t=>t==='pedestrian'?'car':t);}
+    return pool[Math.floor(Math.random()*pool.length)];
+  }
+  isTravelLane(lat){return lat>0 && (Math.abs(lat-this.road.laneW/2)<.7 || Math.abs(lat-this.road.laneW*1.5)<.7);}
+  actorBlocksLane(actor, lane, dz){
+    // Oncoming traffic is in negative-lateral lanes and cannot block our right-side lanes.
+    if(actor.oncoming)return false;
+    const laneDelta=Math.abs(actor.lateral-lane);
+    if(laneDelta>1.9)return false;
+    if(actor.type==='cone') return dz<18;
+    if(actor.type==='pedestrian') return dz<24;
+    if(actor.type==='car' && actor.moving) return dz<32;
+    return dz<42;
+  }
+  canSpawnActor(z,lateral){
+    if(z<this.progress+55)return false;
+    for(const a of this.actors){if(Math.abs(a.z-z)<22 && Math.abs(a.lateral-lateral)<2.0)return false;}
+    for(const c of this.controls){if(Math.abs(c.z-z)<28)return false;}
+    return true;
+  }
+  spawnAhead(){
+    const density=this.difficulty==='hard'?32:this.difficulty==='easy'?62:46;
+    const oncomingDensity=this.difficulty==='hard'?55:this.difficulty==='easy'?130:85;
+    const conProb={none:0,light:0.22,heavy:0.50}[this.env.construction]||0;
+    while(this.nextActorZ<this.progress+340){
+      if(Math.random()>.18){
+        let type=this.randomActorType();
+        if(Math.random()<conProb)type=Math.random()<.3?'roadblock':'cone';
+        let lane;
+        if(type==='parked'){lane=this.road.travelHalf+rand(.6,1.4);}
+        else{lane=Math.random()<.55?this.road.laneW/2:this.road.laneW*1.5;}
+        const z=this.nextActorZ+rand(-6,6);
+        if(this.canSpawnActor(z,lane))this.addActor(z,lane,type,Math.random()<.65&&type==='car',false);
+      }
+      this.nextActorZ+=rand(density*.8,density*1.25);
+    }
+    // Oncoming traffic
+    while(this.nextOncomingZ<this.progress+380){
+      if(Math.random()>.12){
+        const lane=Math.random()<.55?-this.road.laneW/2:-this.road.laneW*1.5;
+        const z=this.nextOncomingZ+rand(-6,6);
+        if(this.canSpawnActor(z,lane))this.addActor(z,lane,'car',true,true);
+      }
+      this.nextOncomingZ+=rand(oncomingDensity*.7,oncomingDensity*1.2);
+    }
+    // Traffic controls
+    while(this.nextControlZ<this.progress+420){
+      const kinds=['stoplight','stopsign','yield','speedlimit'];
+      const kind=kinds[Math.floor(Math.random()*kinds.length)];
+      this.addControl(this.nextControlZ+rand(-10,10),kind,kind==='speedlimit'?[25,35,45,55][Math.floor(Math.random()*4)]:null);
+      this.nextControlZ+=rand(135,190);
+    }
+    // Emergency vehicles (oncoming fast-movers)
+    const emgInterval={rare:400,frequent:180}[this.env.emergency];
+    if(emgInterval)while(this.nextEmergencyZ<this.progress+420){
+      const lane=Math.random()<.5?-this.road.laneW/2:-this.road.laneW*1.5;
+      const z=this.nextEmergencyZ+rand(-10,10);
+      if(this.canSpawnActor(z,lane)){
+        const mesh=this.factory.emergency();
+        mesh.userData.label='emergency vehicle';
+        this.dynamic.add(mesh);
+        this.actors.push({id:String(Math.random()),z,lateral:lane,type:'car',moving:true,oncoming:true,speed:rand(16,22),mesh,confidence:99});
+      }
+      this.nextEmergencyZ+=rand(emgInterval*.7,emgInterval*1.2);
+    }
+  }
+  addActor(z,lateral,type,moving,oncoming){let mesh;if(type==='car'||type==='parked')mesh=this.factory.car(oncoming?this.factory.mats.car2:(type==='parked'?this.factory.mats.car2:this.factory.mats.car));else if(type==='cone')mesh=this.factory.cone();else if(type==='pedestrian')mesh=this.factory.pedestrian();else mesh=this.factory.roadBlock();mesh.userData.label=type;this.dynamic.add(mesh);this.actors.push({id:(crypto.randomUUID?crypto.randomUUID():String(Math.random())),z,lateral,type,moving:!!moving,oncoming:!!oncoming,speed:moving?(oncoming?rand(9,15):rand(5,11)):0,mesh,confidence:Math.round(rand(86,98))});}
+  addControl(z,type,limit){let mesh;if(type==='stoplight')mesh=this.factory.trafficLight();else if(type==='stopsign')mesh=this.factory.stopSign();else if(type==='yield')mesh=this.factory.yieldSign();else mesh=this.factory.speedSign(limit||35);this.dynamic.add(mesh);this.controls.push({id:(crypto.randomUUID?crypto.randomUUID():String(Math.random())),z,type,limit:limit||35,mesh,served:false,offset:Math.random()*7});if(type!=='speedlimit')this._drawIntersection(z);}
+  controlPlacement(c){const edge=this.road.width*.5 + (c.type==='stoplight'?1.25:1.6);const point=this.road.point(c.z,edge);const yaw=this.road.yaw(c.z);return {point,yaw};}
+  _drawIntersection(z){
+    if(!this.intersectionGroup)return;
+    if(this.drawnIntersections.some(v=>Math.abs(v-z)<60))return;
+    this.drawnIntersections.push(z);
+    const yaw=this.road.yaw(z);
+    const add=m=>this.intersectionGroup.add(m);
+    const roadW=this.road.travelHalf*2; // full drivable width across both directions
+    // Full-width stop bars — one on each side of the intersection.
+    for(const side of [-1,1]){
+      const p=this.road.point(z+side*11.5,0);
+      const bar=this.factory.box(roadW,.06,.52,this.factory.mats.white);
+      bar.position.set(p.x,.050,p.z);bar.rotation.y=yaw;add(bar);
+    }
+    // Zebra crosswalk: 7 full-width white bands on each side, proper pedestrian crossing.
+    // After rotation.y=yaw the box's local-X (roadW) aligns with road lateral, local-Z (stripeD) with road forward.
+    const stripeD=0.56,gapD=0.52,nStripes=7;
+    const cwHalf=(nStripes*(stripeD+gapD)-gapD)/2;
+    for(const side of [-1,1]){
+      const cwZ=z+side*9.2;
+      for(let i=0;i<nStripes;i++){
+        const off=-cwHalf+i*(stripeD+gapD)+stripeD/2;
+        const p=this.road.point(cwZ+off,0);
+        const stripe=this.factory.box(roadW,.06,stripeD,this.factory.mats.white);
+        stripe.position.set(p.x,.050,p.z);stripe.rotation.y=yaw;add(stripe);
+      }
+    }
+  }
+  updateActorMeshes(dt){
+    for(const a of this.actors){
+      if(a.moving){
+        if(a.oncoming) a.z-=a.speed*dt;
+        else if(a.z>this.progress-10) a.z+=a.speed*dt;
+      }
+      const p=this.road.point(a.z,a.lateral);
+      a.mesh.position.copy(p);
+      a.mesh.rotation.y=this.road.yaw(a.z)+(a.oncoming?Math.PI:0);
+      a.worldPos=p.clone();
+      // Flash emergency light bars
+      if(a.mesh.userData.isEmergency){
+        const ft=Math.floor(performance.now()/240)%2;
+        a.mesh.traverse(c=>{
+          if(c.userData.emgRed)c.material.color.setHex(ft?0xff2244:0x220005);
+          if(c.userData.emgBlue)c.material.color.setHex(ft?0x1133bb:0x2255ff);
+        });
+      }
+    }
+    for(const c of this.controls){
+      const place=this.controlPlacement(c);
+      c.mesh.position.copy(place.point);
+      c.worldPos=place.point.clone();
+      if(c.type==='stoplight'){
+        c.mesh.rotation.y=place.yaw;
+        const state=this.lightState(c);
+        for(const [name,lamp] of Object.entries(c.mesh.userData.lamps)){
+          lamp.material.color.setHex(name===state?lamp.userData.baseColor:0x263040);
+        }
+      }else{
+        c.mesh.rotation.y=place.yaw+Math.PI;
+      }
+    }
+    for(let i=this.actors.length-1;i>=0;i--){if(this.actors[i].z<this.progress-45){this.dynamic.remove(this.actors[i].mesh);this.actors.splice(i,1);}}
+    for(let i=this.controls.length-1;i>=0;i--){if(this.controls[i].z<this.progress-45){this.dynamic.remove(this.controls[i].mesh);this.controls.splice(i,1);}}
+  }
+  lightState(c){const t=(performance.now()/1000+c.offset)%9;if(t<4.6)return'green';if(t<6.0)return'yellow';return'red';}
+  laneClear(lane, lookAhead=55){
+    for(const a of this.actors){
+      const dz=a.z-this.progress;
+      if(dz<=2||dz>lookAhead)continue;
+      if(this.actorBlocksLane(a,lane,dz))return false;
+    }
+    return true;
+  }
+  closestLaneObstacle(lane,maxDist=80){
+    let nearest=null;
+    for(const a of this.actors){
+      const dz=a.z-this.progress;
+      if(dz<=2||dz>maxDist)continue;
+      if(!this.actorBlocksLane(a,lane,dz))continue;
+      if(!nearest||dz<nearest.distance)nearest={kind:a.type,distance:dz,actor:a,ref:a};
+    }
+    return nearest;
+  }
+  closestMovingCarAhead(lane,maxDist=80){
+    let nearest=null;
+    for(const a of this.actors){
+      if(!a.moving||a.oncoming)continue;
+      const dz=a.z-this.progress;
+      if(dz<=3||dz>maxDist)continue;
+      if(Math.abs(a.lateral-lane)>1.9)continue;
+      if(!nearest||dz<nearest.distance)nearest={distance:dz,actor:a};
+    }
+    return nearest;
+  }
+  getVehicleProps(){
+    const p={sedan:{topSpeed:80,followDist:14,comfortDist:42,laneRate:1.35},suv:{topSpeed:72,followDist:16,comfortDist:48,laneRate:1.20},pickup:{topSpeed:70,followDist:18,comfortDist:52,laneRate:1.10},van:{topSpeed:60,followDist:22,comfortDist:58,laneRate:0.90}};
+    return p[this.vehicleTypeName||'sedan']||p.sedan;
+  }
+  analyze(){
+    const lanes=[this.road.laneW/2, this.road.laneW*1.5];
+    const current=lanes.reduce((b,l)=>Math.abs(l-this.lane)<Math.abs(b-this.lane)?l:b, this.road.laneW/2);
+    let desiredLane=current;
+    const speedLimit=Math.min(this.targetMph,this.limitMph);
+    // Vehicle behavioral properties
+    const vp=this.getVehicleProps();
+    // Weather and time-of-day speed ceilings
+    const wxSpeedMul={clear:1.0,overcast:1.0,rain:0.85,fog:0.75,snow:0.70}[this.env.weather]||1.0;
+    const todSpeedMul={day:1.0,dawn:0.90,dusk:0.88,night:0.78}[this.env.timeOfDay]||1.0;
+    const envCeiling=Math.min(speedLimit*wxSpeedMul*todSpeedMul,vp.topSpeed);
+    let desiredMph=envCeiling;
+    let reason='cruise';
+    let nearest=null;
+    // Effective sensor range (reduced at night, capped by slider)
+    const todRangeMul={day:1.0,dawn:0.80,dusk:0.75,night:0.55}[this.env.timeOfDay]||1.0;
+    const sensorRange=this.sensorConfig.range||125;
+    const effectiveRange=Math.min(sensorRange*0.65,80)*todRangeMul;
+    const controlRange=Math.min(sensorRange*0.76,95)*todRangeMul;
+    // Sensor noise: per-analyze perturbation factor on perceived distances
+    const noiseScale=(this.sensorConfig.noise||0)/100*0.45;
+    const noiseFactor=noiseScale>0?1+(Math.random()*2-1)*noiseScale:1;
+
+    // --- Traffic controls ---
+    for(const c of this.controls){
+      const dz=c.z-this.progress;
+      if(c.type==='speedlimit'&&dz<2&&dz>-8&&!c.served){this.limitMph=c.limit;c.served=true;this.log.add(`Speed limit sign read: ${c.limit} mph`);}
+      if(dz<=0||dz>controlRange)continue;
+      const pdz=dz*noiseFactor;
+      if(c.type==='stoplight'){
+        const st=this.lightState(c);
+        if((st==='red'||st==='yellow') && (!nearest||pdz<nearest.distance)){
+          nearest={kind:`${st} light`,distance:pdz,ref:c};
+          reason='traffic-light';
+          desiredMph=pdz<10?0:Math.min(desiredMph,clamp((pdz-8)/36,0,1)*envCeiling);
+        }
+      } else if(c.type==='stopsign'&&!c.served && (!nearest||pdz<nearest.distance)){
+        nearest={kind:'stop sign',distance:pdz,ref:c};
+        reason='stop-sign';
+        desiredMph=pdz<9?0:Math.min(desiredMph,clamp((pdz-7)/32,0,1)*Math.max(18,envCeiling));
+      } else if(c.type==='yield'&&!c.served && pdz<52 && (!nearest||pdz<nearest.distance)){
+        nearest={kind:'yield sign',distance:pdz,ref:c};
+        reason='yield';
+        desiredMph=Math.min(desiredMph,pdz<18?12:20);
+        if(dz<1.5)c.served=true;
+      }
+    }
+
+    // --- Speed matching: smoothly follow a moving car ahead ---
+    const frontCar=this.closestMovingCarAhead(current,effectiveRange);
+    if(frontCar){
+      const frontMph=msToMph(frontCar.actor.speed);
+      const pdist=frontCar.distance*noiseFactor;
+      if(pdist<vp.comfortDist){
+        const t=Math.max(0,(pdist-vp.followDist)/(vp.comfortDist-vp.followDist));
+        const matchMph=lerp(Math.max(0,frontMph-3),envCeiling,t);
+        desiredMph=Math.min(desiredMph,matchMph);
+        if(!nearest||pdist<nearest.distance){
+          nearest={kind:'car ahead',distance:pdist,ref:frontCar.actor};
+          if(reason==='cruise')reason='following';
+        }
+      }
+    }
+
+    // --- Lane preference wander: use preferred lane when path is clear ---
+    if(reason==='cruise'||reason==='following'){
+      if(this.laneClear(this.lanePreference,Math.min(45,effectiveRange+10))){
+        desiredLane=this.lanePreference;
+        if(desiredLane!==current&&reason==='cruise')reason='prefer';
+      }
+    }
+
+    // --- Blocking obstacle in current lane ---
+    const blocking=this.closestLaneObstacle(current,effectiveRange);
+    if(blocking && (!nearest || blocking.distance<nearest.distance)){
+      const pdist=blocking.distance*noiseFactor;
+      nearest={kind:blocking.kind,distance:pdist,actor:blocking.actor,ref:blocking.ref};
+      if(blocking.kind==='pedestrian'){
+        reason='pedestrian';
+        if(pdist<14) desiredMph=0;
+        else if(pdist<26) desiredMph=Math.min(desiredMph,4);
+        else desiredMph=Math.min(desiredMph,clamp((pdist-14)/32,0,1)*Math.max(8,envCeiling*.45));
+      }else{
+        const options=lanes.filter(l=>l!==current).sort((a,b)=>Math.abs(a-this.lane)-Math.abs(b-this.lane));
+        const viable=options.find(l=>this.laneClear(l,42));
+        if(viable!==undefined && pdist<60){
+          desiredLane=viable;
+          desiredMph=Math.min(desiredMph,Math.max(16,envCeiling*.82));
+          reason='avoid';
+        }else{
+          reason='blocked';
+          if(pdist<8) desiredMph=0;
+          else if(pdist<16) desiredMph=Math.min(desiredMph,4);
+          else desiredMph=Math.min(desiredMph,clamp((pdist-12)/28,0,1)*Math.max(12,envCeiling*.65));
+        }
+      }
+    }
+
+    const curve=Math.abs(this.road.yaw(this.progress+70)-this.road.yaw(this.progress+10));
+    if(curve>.22) desiredMph=Math.min(desiredMph,envCeiling*.72);
+    return {desiredLane,desiredMph,reason,nearest};
+  }
+  updateVehicle(dt){
+    if(this.paused){this.speed=lerp(this.speed,0,1-Math.exp(-dt*3));this.state='Paused';return this.analyze();}
+    // Periodically shift lane preference to create natural wandering behaviour.
+    this.laneChangeTimer-=dt;
+    if(this.laneChangeTimer<=0){
+      const prev=this.lanePreference;
+      this.lanePreference=Math.random()<0.38?this.road.laneW*1.5:this.road.laneW/2;
+      this.laneChangeTimer=(12+Math.random()*22)/this.getVehicleProps().laneRate;
+      if(this.lanePreference!==prev)this.log.add(this.lanePreference>this.road.laneW?'Moving to outer lane':'Returning to inner lane');
+    }
+    const a=this.analyze();
+    let desiredMph=a.desiredMph;
+    if(a.reason==='yield'){
+      desiredMph=Math.max(desiredMph,10);
+      this.stopHold=0;this.activeStop=null;
+    }
+    if(a.reason==='stop-sign'&&a.nearest&&a.nearest.distance<9){
+      desiredMph=0;
+      if(this.speed<mphToMs(1.2)){
+        if(this.activeStop!==a.nearest.ref.id){this.activeStop=a.nearest.ref.id;this.stopHold=0;}
+        this.stopHold+=dt;
+        if(this.stopHold>1.0){a.nearest.ref.served=true;this.stopHold=0;this.activeStop=null;this.log.add('Full stop complete, proceeding through intersection');desiredMph=12;}
+      }
+    }else if(a.reason!=='stop-sign'){
+      this.stopHold=0;this.activeStop=null;
+    }
+    this.targetLane=a.desiredLane;
+    const frict=this.surfaceFriction||1.0;
+    const massK={light:1.35,standard:1.0,heavy:0.65}[this.env.vehicleMass]||1.0;
+    const laneErr=this.targetLane-this.lane;
+    this.lane+=laneErr*(1-Math.exp(-dt*1.35*Math.min(frict*1.3,1)));
+    this.speed=lerp(this.speed,mphToMs(desiredMph),1-Math.exp(-dt*1.18*Math.min(frict*1.2,1)*massK));
+    if(this.speed<mphToMs(.4)&&desiredMph>5)this.speed=mphToMs(2.5);
+
+    const hardStop=(a.reason==='traffic-light'&&desiredMph<1) || (a.reason==='stop-sign'&&desiredMph<1);
+    if(!hardStop && msToMph(this.speed)<1.2){
+      this.stuckTimer+=dt;
+      if(this.stuckTimer>2.5){
+        const blocker=this.closestLaneObstacle(this.targetLane)||this.closestLaneObstacle(this.lane);
+        if(blocker&&blocker.ref){
+          this.dynamic.remove(blocker.ref.mesh);
+          this.actors=this.actors.filter(x=>x!==blocker.ref);
+          this.log.add(`Clearing stalled ${blocker.kind}, resuming route`);
+          desiredMph=Math.max(desiredMph,12);
+        }
+        this.stuckTimer=0;
+      }
+    } else {
+      this.stuckTimer=0;
+    }
+
+    this.progress+=this.speed*dt;
+    this.ground.position.z=this.progress+350;
+    this.spawnAhead();
+    if(a.reason==='pedestrian'&&desiredMph<1)this.state='Stopped for pedestrian';
+    else if(a.reason==='pedestrian')this.state='Slowing for pedestrian';
+    else if(a.reason==='traffic-light'&&desiredMph<1)this.state='Stopped at red light';
+    else if(a.reason==='stop-sign'&&desiredMph<1)this.state=this.stopHold>0?'Stopped at stop sign':'Stopping at stop sign';
+    else if(a.reason==='yield')this.state='Yielding';
+    else if(a.reason==='avoid')this.state='Changing lanes';
+    else if(a.reason==='following')this.state='Following traffic';
+    else if(a.reason==='prefer')this.state='Lane change';
+    else if(a.reason==='blocked'&&desiredMph<1)this.state='Stopped';
+    else if(desiredMph<Math.min(this.targetMph,this.limitMph)-8)this.state='Slowing';
+    else this.state='Cruising';
+    return {...a,desiredMph};
+  }
+  updateRoad(){
+    // Road geometry is built once in buildRoadStrip(); per-frame work is just
+    // swapping the lane-marking texture when the toggle changes.
+    if(!this.roadStripMaterial)return;
+    const desired=this.layers.lane?this.roadTexMarked:this.roadTexPlain;
+    if(this.roadStripMaterial.map!==desired){
+      this.roadStripMaterial.map=desired;
+      this.roadStripMaterial.needsUpdate=true;
+    }
+  }
+  buildRoadStrip(){
+    const minZ=-280, maxZ=4200, step=1.5;
+    const outer=this.road.width/2;
+    const period=26.0;
+    this.roadTexPlain=this._bakeRoadTexture(false);
+    this.roadTexMarked=this._bakeRoadTexture(true);
+    for(const t of [this.roadTexPlain,this.roadTexMarked]){
+      t.wrapS=THREE.ClampToEdgeWrapping;
+      t.wrapT=THREE.RepeatWrapping;
+      t.anisotropy=8;
+      t.needsUpdate=true;
+    }
+    this.roadStripMaterial=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.94,metalness:0,map:this.roadTexMarked,side:THREE.DoubleSide});
+    // Asphalt ribbon — a single continuous mesh carrying all lane paint.
+    {
+      const v=[],u=[],i=[];let m=0;
+      for(let z=minZ;z<=maxZ;z+=step){
+        const a=this.road.point(z,-outer);
+        const b=this.road.point(z, outer);
+        v.push(a.x,0.02,a.z, b.x,0.02,b.z);
+        u.push(0,z/period, 1,z/period);
+        if(m>0)i.push(m-2,m-1,m, m-1,m+1,m);
+        m+=2;
+      }
+      const g=new THREE.BufferGeometry();
+      g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));
+      g.setAttribute('uv',new THREE.Float32BufferAttribute(u,2));
+      g.setIndex(i);g.computeVertexNormals();
+      this.roadStrip=new THREE.Mesh(g,this.roadStripMaterial);
+      this.roadStrip.receiveShadow=true;
+      this.roadGroup.add(this.roadStrip);
+    }
+    // Continuous sidewalks per side.
+    for(const side of [-1,1]){
+      const latL=side<0?-(outer+this.road.sidewalk):(outer);
+      const latR=side<0?-(outer):(outer+this.road.sidewalk);
+      const v=[],i=[];let m=0;
+      for(let z=minZ;z<=maxZ;z+=step){
+        const a=this.road.point(z,latL);
+        const b=this.road.point(z,latR);
+        v.push(a.x,0.20,a.z, b.x,0.20,b.z);
+        if(m>0)i.push(m-2,m-1,m, m-1,m+1,m);
+        m+=2;
+      }
+      const g=new THREE.BufferGeometry();
+      g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));
+      g.setIndex(i);g.computeVertexNormals();
+      const mat=new THREE.MeshStandardMaterial({color:0x6e7884,roughness:.92,side:THREE.DoubleSide});
+      const mesh=new THREE.Mesh(g,mat);
+      mesh.receiveShadow=true;
+      this.roadGroup.add(mesh);
+    }
+    // Curb vertical face per side — no segmentation along the curve.
+    for(const side of [-1,1]){
+      const v=[],i=[];let m=0;
+      for(let z=minZ;z<=maxZ;z+=step){
+        const p=this.road.point(z,side*outer);
+        v.push(p.x,0.02,p.z, p.x,0.22,p.z);
+        if(m>0)i.push(m-2,m-1,m, m-1,m+1,m);
+        m+=2;
+      }
+      const g=new THREE.BufferGeometry();
+      g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));
+      g.setIndex(i);g.computeVertexNormals();
+      const mat=new THREE.MeshStandardMaterial({color:0x9aa4b0,roughness:.78,side:THREE.DoubleSide});
+      const mesh=new THREE.Mesh(g,mat);
+      mesh.receiveShadow=true;
+      this.roadGroup.add(mesh);
+    }
+  }
+  _bakeRoadTexture(withMarkings){
+    const outer=this.road.width/2;
+    const travel=this.road.travelHalf;
+    const laneW=this.road.laneW;
+    const period=26.0;
+    const W=1024,H=1024;
+    const c=document.createElement('canvas');
+    c.width=W;c.height=H;
+    const x=c.getContext('2d');
+    const u=lat=>((lat+outer)/(2*outer))*W;
+    // Base asphalt + grain.
+    x.fillStyle='#384250';x.fillRect(0,0,W,H);
+    for(let k=0;k<22000;k++){
+      const g=46+Math.floor(Math.random()*78);
+      x.fillStyle=`rgb(${g},${g+2},${g+6})`;
+      x.fillRect(Math.random()*W,Math.random()*H,1.2,1.2);
+    }
+    for(let k=0;k<18;k++){
+      x.fillStyle=`rgba(24,30,38,${0.06+Math.random()*0.08})`;
+      x.fillRect(0,Math.random()*H,W,1+Math.random()*1.6);
+    }
+    // Shoulder regions outside the travel lanes.
+    const shL=u(-travel),shR=u(travel);
+    x.fillStyle='rgba(70,84,100,.42)';
+    x.fillRect(0,0,shL,H);
+    x.fillRect(shR,0,W-shR,H);
+    for(let k=0;k<6000;k++){
+      const xp=Math.random()*W;
+      if(xp>shL&&xp<shR)continue;
+      const g=82+Math.floor(Math.random()*54);
+      x.fillStyle=`rgb(${g},${g+2},${g+4})`;
+      x.fillRect(xp,Math.random()*H,1.1,1.1);
+    }
+    // Wheel-wear bands at every lane center (2 per direction).
+    for(const lane of [-laneW*1.5,-laneW/2,laneW/2,laneW*1.5]){
+      const bL=u(lane-.85),bR=u(lane+.85);
+      x.fillStyle='rgba(20,26,36,.16)';
+      x.fillRect(bL,0,bR-bL,H);
+      x.fillStyle='rgba(20,26,36,.08)';
+      x.fillRect(bL+2,0,bR-bL-4,H);
+    }
+    if(withMarkings){
+      const cx=u(0);
+      const yLine=Math.max(2.2, .15/(2*outer)*W);
+      x.fillStyle='#f7d363';
+      x.fillRect(cx-yLine*1.8,0,yLine,H);
+      x.fillRect(cx+yLine*0.8,0,yLine,H);
+      const edgeOff=.30;
+      const eW=Math.max(2.5, .20/(2*outer)*W);
+      x.fillStyle='#f2f6fa';
+      x.fillRect(u(-travel+edgeOff),0,eW,H);
+      x.fillRect(u( travel-edgeOff)-eW,0,eW,H);
+      const dashLen=6.6, cycleLen=13.0;
+      const dW=Math.max(2.2, .18/(2*outer)*W);
+      x.fillStyle='#f4f7fb';
+      // Dashed dividers BETWEEN same-direction lanes (at ±laneW), not across the yellow centerline.
+      for(const lane of [-laneW,laneW]){
+        const px=u(lane);
+        for(let pz=0; pz<period; pz+=cycleLen){
+          const y0=(pz/period)*H;
+          const y1=((pz+dashLen)/period)*H;
+          x.fillRect(px-dW/2, y0, dW, y1-y0);
+        }
+      }
+      x.fillStyle='rgba(255,255,255,.18)';
+      x.fillRect(u(-outer+.18),0,1.6,H);
+      x.fillRect(u( outer-.18)-1.6,0,1.6,H);
+    }
+    return new THREE.CanvasTexture(c);
+  }
+  updateRoute(){while(this.routeGroup.children.length){const m=this.routeGroup.children.pop();if(m.geometry)m.geometry.dispose();this.routeGroup.remove(m);}if(!this.layers.route||!this.sensorConfig.gps)return;const pts=[];for(let z=this.progress+3;z<this.progress+115;z+=7){const t=(z-this.progress)/115;pts.push(this.road.point(z,lerp(this.lane,this.targetLane,t)));}const curve=new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(p.x,.12,p.z)));const geo=new THREE.TubeGeometry(curve,64,.055,8,false);const mesh=new THREE.Mesh(geo,this.factory.mats.green);this.routeGroup.add(mesh);}
+  updateLidar(){
+    while(this.lidarGroup.children.length){const m=this.lidarGroup.children.pop();if(m.geometry)m.geometry.dispose();this.lidarGroup.remove(m);}
+    if(!this.layers.lidar||!this.sensorConfig.lidar||this.mode==='sensor')return;
+    const origin=this.road.point(this.progress,this.lane);origin.y=.7;
+    for(let i=0;i<16;i++){
+      const ang=-Math.PI*.42+(i/15)*Math.PI*.84+this.road.yaw(this.progress);
+      const len=15+Math.sin(i*2.1+performance.now()*.002)*2.5;
+      const pts=[origin,new THREE.Vector3(origin.x+Math.sin(ang)*len,.7,origin.z+Math.cos(ang)*len)];
+      const geo=new THREE.BufferGeometry().setFromPoints(pts);
+      const mat=new THREE.LineBasicMaterial({color:0x4ee7ff,transparent:true,opacity:.36});
+      const line=new THREE.Line(geo,mat);
+      this.lidarGroup.add(line);
+    }
+  }
+  updateCamera(){
+    const p=this.road.point(this.progress,this.lane);
+    const yaw=this.road.yaw(this.progress);
+    this.egoCar.position.copy(p);
+    this.egoCar.position.y=0;
+    this.egoCar.rotation.y=yaw;
+    this.egoCar.visible=this.mode!=='sensor';
+    const hood=$('egoHood');
+    if(hood)hood.classList.toggle('hidden',this.mode!=='sensor');
+    let pos,target;
+    if(this.mode==='sensor'){
+      const camH=this.egoCar.userData.cameraHeight||1.18;
+      const camZ=this.egoCar.userData.cameraZ||1.9;
+      pos=this.road.point(this.progress+camZ,this.lane);
+      pos.y=camH;
+      target=this.road.point(this.progress+80,lerp(this.lane,this.targetLane,.4));
+      target.y=.85;
+    }else if(this.mode==='chase'){
+      pos=this.road.point(this.progress-22,lerp(this.lane,0,.25));pos.y=8.4;
+      target=this.road.point(this.progress+64,lerp(this.lane,this.targetLane,.4));target.y=1.2;
+    }else{
+      pos=this.road.point(this.progress+2,this.lane);pos.y=116;
+      target=this.road.point(this.progress+46,this.lane);target.y=0;
+    }
+    this.camera.position.lerp(pos,.095);
+    this.cameraTarget.lerp(target,.13);
+    this.camera.lookAt(this.cameraTarget);
+  }
+  updateOverlay(analysis){
+    if(!this.sensorConfig.camera){this.overlay.innerHTML='<div style="position:absolute;inset:0;background:rgba(5,10,18,.85);display:flex;align-items:center;justify-content:center;color:rgba(148,163,184,.7);font-size:14px;letter-spacing:.12em;text-transform:uppercase">Camera Sensor Offline</div>';return;}
+    if(!this.layers.boxes){this.overlay.innerHTML='';return;}
+    const r=this.stage.getBoundingClientRect();
+    const detRange=this.sensorConfig.range||125;
+    const noisePx=(this.sensorConfig.noise||0)*0.12;
+    const objects=[];
+    for(const a of this.actors){
+      const dz=a.z-this.progress;
+      if(dz>3&&dz<detRange){
+        const base=(a.worldPos||this.road.point(a.z,a.lateral)).clone();
+        base.y+=a.type==='pedestrian'?1.4:.95;
+        objects.push({pos:base,label:`${a.type} ${Math.round(dz)}m`,bad:dz<22&&Math.abs(a.lateral-this.lane)<2.4,w:68,h:44,nx:rand(-noisePx,noisePx),ny:rand(-noisePx,noisePx)});
+      }
+    }
+    for(const c of this.controls){
+      const dz=c.z-this.progress;
+      if(dz>4&&dz<detRange){
+        let label=c.type;
+        if(c.type==='stoplight')label=`${this.lightState(c)} light`;
+        if(c.type==='speedlimit')label=`limit ${c.limit}`;
+        const base=(c.worldPos||this.controlPlacement(c).point).clone();
+        base.y=c.type==='stoplight'?4.8:2.2;
+        objects.push({pos:base,label:`${label} ${Math.round(dz)}m`,bad:(c.type==='stoplight'&&this.lightState(c)==='red')||c.type==='stopsign',warn:c.type==='yield'||(c.type==='stoplight'&&this.lightState(c)==='yellow'),w:c.type==='stoplight'?66:58,h:c.type==='stoplight'?84:64,nx:rand(-noisePx,noisePx),ny:rand(-noisePx,noisePx)});
+      }
+    }
+    const html=[];
+    for(const o of objects){
+      const v=o.pos.clone();
+      v.project(this.camera);
+      if(v.z<0||v.z>1)continue;
+      const x=(v.x*.5+.5)*r.width+(o.nx||0),y=(-v.y*.5+.5)*r.height+(o.ny||0);
+      if(x<20||x>r.width-20||y<20||y>r.height-20)continue;
+      const depthScale=clamp(1.1-v.z*.55,.42,1.12);
+      const w=o.w*depthScale,h=o.h*depthScale;
+      html.push(`<div class="detect-box ${o.bad?'bad':o.warn?'warn':''}" style="left:${x-w/2}px;top:${y-h/2}px;width:${w}px;height:${h}px"><div class="detect-label">${o.label}</div></div>`);
+    }
+    this.overlay.innerHTML=html.join('');
+  }
+  updateMini(){
+    const ctx=this.miniCtx,W=160,H=150;
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='rgba(2,8,18,.92)';ctx.fillRect(0,0,W,H);
+    const scale=0.58; // px per metre
+    const eZ=this.progress,eX=this.road.centerX(eZ);
+    const toMap=(wx,wz)=>({x:W/2+(wx-eX)*scale,y:H-22-(wz-eZ)*scale});
+    const rH=this.road.width/2;
+    // Road fill
+    ctx.fillStyle='rgba(42,54,68,.82)';
+    ctx.beginPath();
+    let first=true;
+    for(let z=eZ-15;z<=eZ+240;z+=6){const p=this.road.point(z,-rH),m=toMap(p.x,p.z);first?(ctx.moveTo(m.x,m.y),first=false):ctx.lineTo(m.x,m.y);}
+    for(let z=eZ+240;z>=eZ-15;z-=6){const p=this.road.point(z,rH),m=toMap(p.x,p.z);ctx.lineTo(m.x,m.y);}
+    ctx.closePath();ctx.fill();
+    // Road edges
+    ctx.strokeStyle='rgba(80,100,130,.65)';ctx.lineWidth=1;
+    for(const side of [-1,1]){
+      ctx.beginPath();first=true;
+      for(let z=eZ-15;z<=eZ+240;z+=6){const p=this.road.point(z,side*rH),m=toMap(p.x,p.z);first?(ctx.moveTo(m.x,m.y),first=false):ctx.lineTo(m.x,m.y);}
+      ctx.stroke();
+    }
+    // Yellow centre divider
+    ctx.strokeStyle='rgba(247,211,99,.55)';ctx.lineWidth=0.8;ctx.setLineDash([3,3]);
+    ctx.beginPath();first=true;
+    for(let z=eZ;z<=eZ+240;z+=6){const p=this.road.point(z,0),m=toMap(p.x,p.z);first?(ctx.moveTo(m.x,m.y),first=false):ctx.lineTo(m.x,m.y);}
+    ctx.stroke();ctx.setLineDash([]);
+    // Intersection tick marks
+    for(const iz of this.drawnIntersections){
+      if(iz<eZ-10||iz>eZ+240)continue;
+      const m=toMap(this.road.centerX(iz),iz);
+      ctx.strokeStyle='rgba(148,163,184,.55)';ctx.lineWidth=rH*2*scale;
+      ctx.beginPath();ctx.moveTo(m.x,m.y-1);ctx.lineTo(m.x,m.y+1);ctx.stroke();ctx.lineWidth=1;
+    }
+    // Traffic controls
+    for(const c of this.controls){
+      if(c.z<eZ-10||c.z>eZ+240)continue;
+      const m=toMap(this.road.centerX(c.z),c.z);
+      let col='rgba(148,163,184,.9)';
+      if(c.type==='stoplight'){const st=this.lightState(c);col=st==='red'?'#ff5c7a':st==='yellow'?'#ffd166':'#42f58c';}
+      else if(c.type==='stopsign')col='#ff5c7a';
+      else if(c.type==='yield')col='#ffd166';
+      ctx.fillStyle=col;ctx.beginPath();ctx.arc(m.x,m.y,3.5,0,Math.PI*2);ctx.fill();
+    }
+    // Other actors
+    for(const a of this.actors){
+      if(a.z<eZ-15||a.z>eZ+240)continue;
+      const p=this.road.point(a.z,a.lateral),m=toMap(p.x,p.z);
+      if(m.x<2||m.x>W-2||m.y<4||m.y>H-4)continue;
+      ctx.fillStyle=a.oncoming?'rgba(255,92,122,.85)':a.type==='pedestrian'?'rgba(255,209,102,.85)':'rgba(180,208,238,.85)';
+      ctx.beginPath();ctx.arc(m.x,m.y,2.2,0,Math.PI*2);ctx.fill();
+    }
+    // Ego car — green arrow pointing in road direction
+    const ey=H-22,ex=W/2,yaw=this.road.yaw(eZ);
+    ctx.save();ctx.translate(ex,ey);ctx.rotate(-yaw);
+    ctx.fillStyle='#42f58c';ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(0,-5);ctx.lineTo(-3,4);ctx.lineTo(0,2);ctx.lineTo(3,4);ctx.closePath();
+    ctx.fill();ctx.stroke();ctx.restore();
+    // Labels
+    ctx.fillStyle='rgba(200,220,240,.6)';ctx.font='9px ui-monospace,Consolas,monospace';
+    ctx.textAlign='left';ctx.fillText('↑ AHEAD',6,12);
+    ctx.textAlign='right';ctx.fillText(`${Math.round(msToMph(this.speed))} mph`,W-6,12);
+    ctx.textAlign='left';ctx.fillStyle='rgba(148,163,184,.5)';ctx.fillText(`${Math.round(eZ)}m`,6,H-6);
+  }
+  updateUI(analysis){$('stateText').textContent=this.state;$('speedStat').textContent=`${Math.round(msToMph(this.speed))} mph`;$('steerStat').textContent=`${((this.targetLane-this.lane)*8).toFixed(1)} deg`;$('nearestStat').textContent=analysis&&analysis.nearest?`${Math.round(analysis.nearest.distance)}m`:'Clear';$('routeStat').textContent=this.road.laneName(this.targetLane).replace(' lane','');$('limitStat').textContent=`${Math.round(this.limitMph)} mph`;$('cameraStat').textContent=this.mode[0].toUpperCase()+this.mode.slice(1);$('hudSpeed').textContent=`${Math.round(msToMph(this.speed))} mph`;$('hudRoute').textContent=`Route ${this.road.laneName(this.targetLane)}`;$('hudDecision').textContent=this.state;const danger=this.state.includes('Stop');$('driveChip').textContent=this.state;$('driveChip').className='chip '+(danger?'bad':['Slowing','Yielding','Changing lanes','Following traffic','Lane change'].includes(this.state)?'warn':'good');$('objectChip').textContent=analysis&&analysis.nearest?`${analysis.nearest.kind||'object'} ${Math.round(analysis.nearest.distance)}m`:'Path clear';$('objectChip').className='chip '+(danger?'bad':analysis&&analysis.nearest?'warn':'good');}
+  updateDebug(){
+    while(this.debugGroup.children.length){const m=this.debugGroup.children[0];if(m.geometry)m.geometry.dispose();this.debugGroup.remove(m);}
+    if(!this.layers.debug)return;
+    const eZ=this.progress;
+    // Lane centre guide lines
+    for(const lat of [this.road.laneW/2,this.road.laneW*1.5]){
+      const pts=[];
+      for(let z=eZ-8;z<eZ+95;z+=5){const p=this.road.point(z,lat);pts.push(new THREE.Vector3(p.x,.18,p.z));}
+      if(pts.length<2)continue;
+      const geo=new THREE.BufferGeometry().setFromPoints(pts);
+      this.debugGroup.add(new THREE.Line(geo,new THREE.LineBasicMaterial({color:0x4ee7ff,transparent:true,opacity:.55})));
+    }
+    // Actor bounding rings
+    for(const a of this.actors){
+      const dz=a.z-eZ;if(dz<-5||dz>90)continue;
+      const p=a.worldPos||this.road.point(a.z,a.lateral);
+      const r=a.type==='pedestrian'?0.6:a.type==='cone'?0.5:1.2;
+      const geo=new THREE.RingGeometry(r-.06,r+.06,20);
+      const mat=new THREE.MeshBasicMaterial({color:a.oncoming?0xff5c7a:0x4ee7ff,side:THREE.DoubleSide,transparent:true,opacity:.55});
+      const ring=new THREE.Mesh(geo,mat);
+      ring.position.set(p.x,.15,p.z);ring.rotation.x=-Math.PI/2;
+      this.debugGroup.add(ring);
+    }
+  }
+  animate(){requestAnimationFrame(()=>this.animate());const dt=Math.min(.05,this.clock.getDelta());this.log.tick(dt);const analysis=this.updateVehicle(dt);this.updateActorMeshes(dt);this.updateRoad();this.updateRoute();this.updateLidar();this.updateRadar();this.updateWeather(dt);this.updateDebug();this.updateCamera();this.renderer.render(this.scene,this.camera);this.updateOverlay(analysis);this.updateMini();this.updateUI(analysis);this.decisionLog(analysis);}
+  decisionLog(a){if(this.paused)return;if(!a)return;if(a.reason==='pedestrian')this.log.add('Pedestrian in path, holding for them to clear');else if(a.reason==='avoid')this.log.add(`Obstacle ahead, changing to ${this.road.laneName(this.targetLane)}`);else if(a.reason==='traffic-light')this.log.add('Traffic light ahead, adjusting speed');else if(a.reason==='stop-sign')this.log.add('Stop sign detected, preparing full stop');else if(a.reason==='yield')this.log.add('Yield sign detected, slowing');else if(a.reason==='blocked')this.log.add('Lane blocked, slowing and looking for a clean path');else if(a.reason==='following')this.log.add('Following vehicle ahead, matching speed');else if(a.reason==='prefer')this.log.add(`Choosing ${this.road.laneName(this.targetLane)} for clear run`);else if(this.speed>mphToMs(10))this.log.add('Path clear, cruising');}
+}
+
+function rand(a,b){return a+Math.random()*(b-a)}
+window.addEventListener('load',()=>{try{window.__sim=new Sim();}catch(e){console.error(e);$('stage').insertAdjacentHTML('beforeend',`<div class="error">Simulation error:\n${e.stack||e}</div>`);}});
+})();
+</script>
+</body>
+</html>

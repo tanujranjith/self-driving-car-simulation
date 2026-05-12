@@ -11,6 +11,85 @@
 }
 *{box-sizing:border-box}html,body{height:100%;margin:0;overflow:hidden;background:radial-gradient(circle at 20% 0%,rgba(78,231,255,.12),transparent 35%),var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select{font:inherit}.app{height:100vh;width:100vw;display:grid;grid-template-columns:318px minmax(0,1fr);gap:16px;padding:16px}.sidebar{height:calc(100vh - 32px);overflow:auto;background:linear-gradient(180deg,rgba(14,24,42,.96),rgba(8,15,28,.96));border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);padding:16px}.brand{display:flex;gap:12px;align-items:center;padding-bottom:16px;border-bottom:1px solid var(--line)}.logo{width:42px;height:42px;border-radius:15px;background:radial-gradient(circle at 25% 22%,rgba(255,255,255,.8),transparent 13%),linear-gradient(145deg,#42f58c,#4ee7ff 50%,#a78bfa);box-shadow:0 0 28px rgba(78,231,255,.28)}.brand h1{margin:0;font-size:14px;letter-spacing:.18em;line-height:1;text-transform:uppercase}.brand p{margin:6px 0 0;color:var(--muted);font-size:11px}.section{padding:15px 0;border-bottom:1px solid var(--line)}.section:last-child{border-bottom:0}.section-title{margin:0 0 10px;font-size:12px;letter-spacing:.14em;text-transform:uppercase}.button-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.btn{height:42px;border:1px solid rgba(148,163,184,.28);border-radius:14px;background:rgba(255,255,255,.045);color:var(--text);cursor:pointer}.btn:hover,.btn.active{background:rgba(78,231,255,.11);border-color:rgba(78,231,255,.5)}.btn.primary{background:rgba(78,231,255,.13);border-color:rgba(78,231,255,.5)}label.small{display:block;margin:12px 0 7px;color:var(--muted);font-size:12px}.field{width:100%;height:44px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.055);color:var(--text);padding:0 12px;outline:none}select.field option{background:#101827;color:#eaf2ff}input[type=range]{width:100%;accent-color:var(--cyan)}.toggle-grid,.telemetry-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.pill{min-height:38px;display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:13px;background:rgba(255,255,255,.045);color:var(--muted);font-size:12px;cursor:pointer}.pill input{accent-color:var(--green)}.state-badge{display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border-radius:999px;border:1px solid rgba(66,245,140,.28);background:rgba(66,245,140,.08);font-size:13px}.dot{width:8px;height:8px;border-radius:99px;background:var(--green);box-shadow:0 0 15px var(--green)}.stat{min-height:62px;padding:10px;border:1px solid var(--line);border-radius:13px;background:rgba(255,255,255,.045);overflow:hidden}.stat span{display:block;font-size:11px;color:var(--muted);margin-bottom:6px}.stat strong{font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hint{font-size:11px;color:var(--muted);line-height:1.45;margin:10px 0 0}.main{min-width:0;height:calc(100vh - 32px);display:grid;grid-template-rows:auto minmax(0,1fr)138px;gap:14px}.topbar,.log-panel,.stage{border:1px solid var(--line);border-radius:22px;background:rgba(8,16,30,.82);box-shadow:var(--shadow);backdrop-filter:blur(18px)}.topbar{min-height:82px;padding:14px 16px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center}.topbar h2{margin:0 0 6px;font-size:15px;letter-spacing:.04em}.topbar p{margin:0;color:var(--muted);font-size:12px;line-height:1.4}.chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.chip{display:inline-flex;align-items:center;gap:7px;min-height:31px;padding:7px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.045);font-size:12px;white-space:nowrap}.chip:before{content:"";width:7px;height:7px;border-radius:99px;background:var(--cyan);box-shadow:0 0 14px var(--cyan)}.chip.good:before{background:var(--green);box-shadow:0 0 14px var(--green)}.chip.warn:before{background:var(--yellow);box-shadow:0 0 14px var(--yellow)}.chip.bad:before{background:var(--red);box-shadow:0 0 14px var(--red)}.stage{position:relative;overflow:hidden;min-height:0;background:#0a111e}.stage canvas{display:block;width:100%;height:100%}.view-title{position:absolute;z-index:3;top:14px;left:14px;max-width:calc(100% - 28px);padding:10px 12px;border:1px solid rgba(148,163,184,.18);border-radius:14px;background:rgba(2,8,18,.66);backdrop-filter:blur(12px);pointer-events:none}.view-title strong{display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase}.view-title span{display:block;margin-top:4px;font-size:11px;color:var(--muted)}.camera-buttons{position:absolute;right:14px;bottom:14px;display:flex;gap:8px;z-index:5}.camera-buttons .btn{height:34px;padding:0 14px}.hud{position:absolute;left:14px;bottom:14px;z-index:5;display:flex;gap:8px;flex-wrap:wrap}.hud span{font-size:12px;padding:7px 10px;border:1px solid var(--line);border-radius:999px;background:rgba(2,8,18,.72)}.ego-hood{position:absolute;left:50%;bottom:-4px;transform:translateX(-50%);width:42%;height:112px;z-index:4;pointer-events:none;opacity:.92;background:linear-gradient(180deg,rgba(210,226,244,.18),rgba(170,190,210,.75) 58%,rgba(34,46,62,.98));border-radius:55% 55% 0 0/100% 100% 0 0;box-shadow:0 -10px 42px rgba(0,0,0,.34),inset 0 2px 0 rgba(255,255,255,.22)}.ego-hood:before{content:"";position:absolute;left:50%;top:18px;transform:translateX(-50%);width:48%;height:20px;border-radius:999px;background:rgba(17,24,39,.38);box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}.ego-hood.hidden{display:none}.overlay{position:absolute;inset:0;pointer-events:none;z-index:4}.detect-box{position:absolute;border:2px solid var(--green);border-radius:3px;background:rgba(66,245,140,.06);box-shadow:0 0 14px rgba(66,245,140,.22)}.detect-box.warn{border-color:var(--yellow);background:rgba(255,209,102,.07)}.detect-box.bad{border-color:var(--red);background:rgba(255,92,122,.08)}.detect-label{position:absolute;left:-2px;top:-24px;white-space:nowrap;background:rgba(0,0,0,.72);border-radius:6px;padding:4px 7px;font-size:11px;color:#f4fbff}.minimap{position:absolute;right:14px;top:14px;width:160px;height:150px;border:1px solid var(--line);border-radius:16px;background:rgba(2,8,18,.72);z-index:4;overflow:hidden}.minimap canvas{width:100%;height:100%}.log-panel{min-height:0;display:grid;grid-template-columns:190px minmax(0,1fr);gap:14px;padding:14px}.log-title h3{margin:0 0 8px;font-size:13px;letter-spacing:.12em;text-transform:uppercase}.log-title p{margin:0;color:var(--muted);font-size:12px;line-height:1.4}.log-feed{min-width:0;overflow:auto;display:grid;align-content:start;gap:7px;padding-right:3px}.log-item{display:grid;grid-template-columns:58px minmax(0,1fr);gap:10px;padding:7px 10px;border:1px solid rgba(148,163,184,.12);border-radius:12px;background:rgba(255,255,255,.035);font-size:12px}.log-time{color:var(--cyan);font-variant-numeric:tabular-nums}.error{position:absolute;inset:20px;z-index:20;background:#210b14;border:1px solid var(--red);border-radius:16px;padding:18px;color:white;white-space:pre-wrap}@media(max-width:1050px){.app{grid-template-columns:280px minmax(0,1fr);gap:12px;padding:12px}.sidebar,.main{height:calc(100vh - 24px)}.topbar{grid-template-columns:1fr}.chips{justify-content:flex-start}}@media(max-width:760px){html,body{overflow:auto}.app{height:auto;grid-template-columns:1fr}.sidebar,.main{height:auto}.main{grid-template-rows:auto 680px 190px}.log-panel{grid-template-columns:1fr}}
 </style>
+
+<style>
+.fusion-canvas{
+  position:absolute!important;
+  inset:0;
+  z-index:6;
+  display:none;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  mix-blend-mode:normal;
+}
+.fusion-canvas.active{display:block;}
+.fusion-hud{
+  position:absolute;
+  z-index:7;
+  left:10px;
+  bottom:88px;
+  width:218px;
+  max-width:calc(100% - 28px);
+  display:none;
+  gap:4px;
+  padding:8px 9px;
+  border:1px solid rgba(78,231,255,.18);
+  border-radius:13px;
+  background:linear-gradient(180deg,rgba(2,8,18,.54),rgba(2,8,18,.34));
+  box-shadow:0 10px 26px rgba(0,0,0,.20), inset 0 1px 0 rgba(255,255,255,.04);
+  backdrop-filter:blur(10px);
+  pointer-events:none;
+  color:#eaf2ff;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+.fusion-hud.active{display:grid;}
+.fusion-hud strong{
+  display:block;
+  font-size:9px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:#8feeff;
+  margin-bottom:1px;
+}
+.fusion-hud .fusion-row{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:10px;
+  align-items:center;
+  font-size:9px;
+  color:#b7c7db;
+  line-height:1.18;
+}
+.fusion-hud .fusion-row span:last-child{color:#f4fbff;text-align:right;max-width:112px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fusion-hud .fusion-status{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding-bottom:6px;
+  margin-bottom:1px;
+  border-bottom:1px solid rgba(148,163,184,.14);
+}
+.fusion-hud .fusion-status span{font-size:9px;max-width:118px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fusion-hud .fusion-status:before{
+  content:"";
+  flex:0 0 auto;
+  width:7px;
+  height:7px;
+  border-radius:999px;
+  background:#42f58c;
+  box-shadow:0 0 12px #42f58c;
+}
+.fusion-hud.warn .fusion-status:before{background:#ffd166;box-shadow:0 0 12px #ffd166;}
+.fusion-hud.bad .fusion-status:before{background:#ff5c7a;box-shadow:0 0 12px #ff5c7a;}
+body.fusion-view .view-title{left:14px;top:14px;max-width:330px;opacity:.86;}
+body.fusion-view .stage > canvas:first-child{filter:contrast(1.105) saturate(1.065) brightness(.995);}
+body.fusion-view .minimap{opacity:.42;}
+body.fusion-view .camera-buttons,
+body.fusion-view .hud{z-index:8;}
+@media(max-width:900px){body.fusion-view .view-title{left:14px;top:98px;max-width:calc(100% - 28px)}.fusion-hud{bottom:62px;width:210px;opacity:.9}}
+</style>
+
 <style>
 .sidebar{
   display:flex;
@@ -229,10 +308,10 @@ input[type=range]::-moz-range-thumb{
     <header class="topbar"><div><h2>Three.js autonomous vehicle sensor camera</h2><p>Actual 3D road visualization with visible cars, traffic controls, lane-change planning, speed control, and projected perception boxes.</p></div><div class="chips"><span id="laneChip" class="chip good">Lane detected</span><span id="objectChip" class="chip good">Path clear</span><span id="driveChip" class="chip warn">Paused</span></div></header>
     <section id="stage" class="stage">
       <div class="view-title"><strong>Sensor camera</strong><span>Real 3D road, actors, signs, lights, route prediction, and detection overlay</span></div>
-      <div id="overlay" class="overlay"></div><div id="egoHood" class="ego-hood"></div>
+      <div id="overlay" class="overlay"></div><canvas id="fusionCanvas" class="fusion-canvas"></canvas><div id="fusionHud" class="fusion-hud" aria-hidden="true"></div><div id="egoHood" class="ego-hood"></div>
       <div class="minimap"><canvas id="miniCanvas"></canvas></div>
       <div class="hud"><span id="hudSpeed">0 mph</span><span id="hudRoute">Route center lane</span><span id="hudDecision">Paused</span></div>
-      <div class="camera-buttons"><button id="sensorCam" class="btn active">Sensor</button><button id="chaseCam" class="btn">Chase</button><button id="topCam" class="btn">Top</button></div>
+      <div class="camera-buttons"><button id="sensorCam" class="btn active">Sensor</button><button id="chaseCam" class="btn">Chase</button><button id="topCam" class="btn">Top</button><button id="fusionCam" class="btn">Fusion</button></div>
     </section>
     <section class="log-panel"><div class="log-title"><h3>AI Decision Log</h3><p>Condensed decisions from the autonomous controller.</p></div><div id="logFeed" class="log-feed"></div></section>
   </main>
@@ -424,15 +503,40 @@ class MeshFactory{
   building(w,h,d,matA,matB){
     const g=new THREE.Group();
     const shell=this.box(w,h,d,matA||this.mats.facade); shell.position.y=h/2; g.add(shell);
-    const roof=this.box(w*.92,.25,d*.92,this.mats.dark); roof.position.y=h+.12; g.add(roof);
+    const roof=this.box(w*.94,.25,d*.94,this.mats.dark); roof.position.y=h+.12; g.add(roof);
+    const trimMat=new THREE.MeshStandardMaterial({color:0x303946,roughness:.86});
+    const signMat=new THREE.MeshStandardMaterial({color:[0x22384a,0x2c3e50,0x3f4550,0x21322f][Math.floor(Math.random()*4)],roughness:.82});
+    const doorMat=new THREE.MeshStandardMaterial({color:0x142030,roughness:.62,metalness:.04});
+    // Very light facade structure so buildings read as city blocks without expensive geometry.
+    const cornice=this.box(w*.98,.10,.08,trimMat);cornice.position.set(0,h-.45,d/2+.055);g.add(cornice);
+    const baseTrim=this.box(w*.96,.08,.08,trimMat);baseTrim.position.set(0,1.05,d/2+.055);g.add(baseTrim);
+    const seamCount=clamp(Math.floor(w/4),1,3);
+    for(let i=1;i<=seamCount;i++){
+      const sx=-w*.42+i*(w*.84/(seamCount+1));
+      const seam=this.box(.045,Math.max(2,h-2.2),.055,trimMat);
+      seam.position.set(sx,h/2+.55,d/2+.062);g.add(seam);
+    }
     const rows=Math.max(2,Math.floor(h/3.8));
-    const cols=Math.max(2,Math.floor(w/2.1));
+    const cols=Math.max(2,Math.floor(w/2.2));
     for(let r=0;r<rows;r++){
       for(let c=0;c<cols;c++){
-        const pane=this.box(.7,.95,.06,matB||this.mats.windowLit);
-        pane.position.set(-w*.36 + c*(w*.72/Math.max(1,cols-1)), 1.4 + r*((h-2.8)/Math.max(1,rows-1)), d/2+.04);
-        g.add(pane);
+        const wx=-w*.36 + c*(w*.72/Math.max(1,cols-1));
+        const wy=1.45 + r*((h-2.9)/Math.max(1,rows-1));
+        const pane=this.box(.72,.92,.06,matB||this.mats.windowLit);
+        pane.position.set(wx,wy,d/2+.04);g.add(pane);
+        if((r+c)%2===0){
+          const mullion=this.box(.04,.88,.065,trimMat);mullion.position.set(wx,wy,d/2+.078);g.add(mullion);
+        }
+        if(r%2===1){
+          const sill=this.box(.84,.045,.065,trimMat);sill.position.set(wx,wy-.52,d/2+.078);g.add(sill);
+        }
       }
+    }
+    // Ground-floor storefront hint on some buildings.
+    if(h>12&&w>9){
+      const sign=this.box(w*.52,.36,.08,signMat);sign.position.set(0,2.65,d/2+.09);g.add(sign);
+      const door=this.box(.82,1.75,.075,doorMat);door.position.set(-w*.22,1.02,d/2+.10);g.add(door);
+      const display=this.box(1.15,1.05,.075,matB||this.mats.windowLit);display.position.set(w*.20,1.18,d/2+.10);g.add(display);
     }
     return g;
   }
@@ -560,7 +664,7 @@ class MeshFactory{
 class Sim{
   constructor(){
     if(!window.THREE){this.showError('Three.js did not load. Open this file with internet access, or allow the CDN script.');return;}
-    this.stage=$('stage');this.overlay=$('overlay');this.mini=$('miniCanvas');this.miniCtx=this.mini.getContext('2d');this.road=new Road();this.factory=new MeshFactory();this.log=new Log($('logFeed'));
+    this.stage=$('stage');this.overlay=$('overlay');this.fusionCanvas=$('fusionCanvas');this.fusionCtx=this.fusionCanvas?this.fusionCanvas.getContext('2d'):null;this.fusionHud=$('fusionHud');this.viewTitle=this.stage.querySelector('.view-title');this.fusionStats={points:0,detections:0};this.mini=$('miniCanvas');this.miniCtx=this.mini.getContext('2d');this.road=new Road();this.factory=new MeshFactory();this.log=new Log($('logFeed'));
     this.clock=new THREE.Clock();this.paused=true;this.progress=0;this.speed=0;this.targetMph=48;this.limitMph=48;this.lane=this.road.laneW/2;this.targetLane=this.road.laneW/2;this.state='Paused';this.mode='sensor';this.difficulty='standard';this.stopHold=0;this.activeStop=null;this.stuckTimer=0;this.laneChangeTimer=15+Math.random()*20;this.lanePreference=this.road.laneW/2;
     this.env={timeOfDay:'day',weather:'clear',visibility:620,sunAngle:75,surface:'dry',construction:'none',pedDensity:'medium',emergency:'none',vehicleMass:'standard'};
     this.vehicleTypeName='sedan';
@@ -630,10 +734,19 @@ class Sim{
           awning.position.set(front.x,3.2,front.z + Math.cos(this.road.yaw(z))*shopD*.48);
           awning.rotation.y=this.road.yaw(z);
           this.cityGroup.add(awning);
+          const signMat=new THREE.MeshStandardMaterial({color:[0x24364a,0x344054,0x2d3f34,0x493a2a][Math.floor(Math.random()*4)],roughness:.82});
+          const storeSign=this.factory.box(shopW*.62,.42,.08,signMat);
+          storeSign.position.set(0,1.52,shopD/2+.08);shop.add(storeSign);
+          const doorMat=new THREE.MeshStandardMaterial({color:0x142033,roughness:.64,metalness:.05});
+          const door=this.factory.box(.92,1.7,.08,doorMat);
+          door.position.set(-shopW*.30,-1.05,shopD/2+.09);shop.add(door);
           for(let i=-1;i<=1;i++){
             const win=this.factory.box(1.1,1.0,.07,this.factory.mats.windowLit);
             win.position.set(i*shopW*.22,.35,shopD/2+.05);
             shop.add(win);
+            const sill=this.factory.box(1.25,.05,.08,this.factory.mats.dark);
+            sill.position.set(i*shopW*.22,-.20,shopD/2+.09);
+            shop.add(sill);
           }
         }
       }
@@ -796,7 +909,7 @@ class Sim{
     $('speedSlider').oninput=e=>{this.targetMph=+e.target.value;$('speedLabel').textContent=this.targetMph;};
     $('difficulty').onchange=e=>{this.difficulty=e.target.value;this.log.add(`Difficulty changed: ${e.target.options[e.target.selectedIndex].text}`);};
     for(const [id,key] of [['boxesToggle','boxes'],['routeToggle','route'],['laneToggle','lane'],['lidarToggle','lidar'],['debugToggle','debug']]){$(id).onchange=e=>{this.layers[key]=e.target.checked;};}
-    for(const [id,mode] of [['sensorCam','sensor'],['chaseCam','chase'],['topCam','top']]){$(id).onclick=()=>{this.mode=mode;for(const b of ['sensorCam','chaseCam','topCam'])$(b).classList.remove('active');$(id).classList.add('active');this.updateUI();};}
+    for(const [id,mode] of [['sensorCam','sensor'],['chaseCam','chase'],['topCam','top'],['fusionCam','fusion']]){$(id).onclick=()=>{this.mode=mode;for(const b of ['sensorCam','chaseCam','topCam','fusionCam'])$(b).classList.remove('active');$(id).classList.add('active');this.updateViewTitle();this.updateUI();};}
     // Environment
     $('timeOfDay').onchange=e=>{this.env.timeOfDay=e.target.value;this.applyEnvironment();};
     $('weather').onchange=e=>{this.env.weather=e.target.value;this.applyEnvironment();};
@@ -812,14 +925,14 @@ class Sim{
     $('emergency').onchange=e=>{this.env.emergency=e.target.value;};
     // Sensor config
     $('camSensor').onchange=e=>{this.sensorConfig.camera=e.target.checked;};
-    $('lidarSensor').onchange=e=>{this.sensorConfig.lidar=e.target.checked;if(e.target.checked)$('lidarToggle').checked=true;};
+    $('lidarSensor').onchange=e=>{this.sensorConfig.lidar=e.target.checked;if(e.target.checked){$('lidarToggle').checked=true;this.layers.lidar=true;}else{this.layers.lidar=false;}};
     $('radarSensor').onchange=e=>{this.sensorConfig.radar=e.target.checked;};
     $('gpsSensor').onchange=e=>{this.sensorConfig.gps=e.target.checked;};
     $('noiseSlider').oninput=e=>{this.sensorConfig.noise=+e.target.value;$('noiseLabel').textContent=e.target.value;};
     $('rangeSlider').oninput=e=>{this.sensorConfig.range=+e.target.value;$('rangeLabel').textContent=e.target.value;};
     $('fovSlider').oninput=e=>{this.camera.fov=+e.target.value;this.camera.updateProjectionMatrix();$('fovLabel').textContent=e.target.value;};
   }
-  resize(){const r=this.stage.getBoundingClientRect();this.renderer.setSize(r.width,r.height,false);this.camera.aspect=r.width/r.height;this.camera.updateProjectionMatrix();const d=Math.min(2,window.devicePixelRatio||1);this.mini.width=160*d;this.mini.height=150*d;this.miniCtx.setTransform(d,0,0,d,0,0);}
+  resize(){const r=this.stage.getBoundingClientRect();this.renderer.setSize(r.width,r.height,false);this.camera.aspect=r.width/r.height;this.camera.updateProjectionMatrix();const d=Math.min(2,window.devicePixelRatio||1);this.mini.width=160*d;this.mini.height=150*d;this.miniCtx.setTransform(d,0,0,d,0,0);if(this.fusionCanvas&&this.fusionCtx){this.fusionCanvas.width=Math.max(1,Math.floor(r.width*d));this.fusionCanvas.height=Math.max(1,Math.floor(r.height*d));this.fusionCtx.setTransform(d,0,0,d,0,0);}}
   randomActorType(){
     let pool=this.difficulty==='hard'?['car','car','parked','cone','pedestrian','roadblock']:this.difficulty==='easy'?['car','parked','cone']:['car','car','parked','cone','pedestrian'];
     const pd=this.env.pedDensity;
@@ -1279,6 +1392,22 @@ class Sim{
       x.fillRect(bL,0,bR-bL,H);
       x.fillStyle='rgba(20,26,36,.08)';
       x.fillRect(bL+2,0,bR-bL-4,H);
+      // restrained longitudinal lane-wear streaks, baked into the road texture so they remain stable.
+      for(let k=0;k<18;k++){
+        const px=u(lane+(-.72+Math.random()*1.44));
+        const py=Math.random()*H;
+        const len=18+Math.random()*70;
+        x.fillStyle=`rgba(12,18,26,${0.025+Math.random()*0.035})`;
+        x.fillRect(px,py,.7+Math.random()*1.6,len);
+      }
+    }
+    // A few faint repairs and hairline surface seams, kept sparse to avoid noise.
+    for(let k=0;k<42;k++){
+      const px=u(-travel+Math.random()*travel*2);
+      const py=Math.random()*H;
+      x.strokeStyle=`rgba(12,17,24,${0.025+Math.random()*0.04})`;
+      x.lineWidth=.55+Math.random()*.8;
+      x.beginPath();x.moveTo(px,py);x.lineTo(px+Math.random()*18-9,py+16+Math.random()*50);x.stroke();
     }
     if(withMarkings){
       const cx=u(0);
@@ -1312,7 +1441,7 @@ class Sim{
   updateRoute(){while(this.routeGroup.children.length){const m=this.routeGroup.children.pop();if(m.geometry)m.geometry.dispose();this.routeGroup.remove(m);}if(!this.layers.route||!this.sensorConfig.gps)return;const pts=[];for(let z=this.progress+3;z<this.progress+115;z+=7){const t=(z-this.progress)/115;pts.push(this.road.point(z,lerp(this.lane,this.targetLane,t)));}const curve=new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(p.x,.12,p.z)));const geo=new THREE.TubeGeometry(curve,64,.055,8,false);const mesh=new THREE.Mesh(geo,this.factory.mats.green);this.routeGroup.add(mesh);}
   updateLidar(){
     while(this.lidarGroup.children.length){const m=this.lidarGroup.children.pop();if(m.geometry)m.geometry.dispose();this.lidarGroup.remove(m);}
-    if(!this.layers.lidar||!this.sensorConfig.lidar||this.mode==='sensor')return;
+    if(!this.layers.lidar||!this.sensorConfig.lidar||this.mode==='sensor'||this.mode==='fusion')return;
     const origin=this.road.point(this.progress,this.lane);origin.y=.7;
     for(let i=0;i<16;i++){
       const ang=-Math.PI*.42+(i/15)*Math.PI*.84+this.road.yaw(this.progress);
@@ -1330,11 +1459,11 @@ class Sim{
     this.egoCar.position.copy(p);
     this.egoCar.position.y=0;
     this.egoCar.rotation.y=yaw;
-    this.egoCar.visible=this.mode!=='sensor';
+    this.egoCar.visible=this.mode!=='sensor'&&this.mode!=='fusion';
     const hood=$('egoHood');
     if(hood)hood.classList.toggle('hidden',this.mode!=='sensor');
     let pos,target;
-    if(this.mode==='sensor'){
+    if(this.mode==='sensor'||this.mode==='fusion'){
       const camH=this.egoCar.userData.cameraHeight||1.18;
       const camZ=this.egoCar.userData.cameraZ||1.9;
       pos=this.road.point(this.progress+camZ,this.lane);
@@ -1352,7 +1481,668 @@ class Sim{
     this.cameraTarget.lerp(target,.13);
     this.camera.lookAt(this.cameraTarget);
   }
+
+  clearFusionOverlay(){
+    if(this.fusionCanvas){this.fusionCanvas.classList.remove('active');}
+    if(this.fusionHud){this.fusionHud.classList.remove('active','warn','bad');this.fusionHud.setAttribute('aria-hidden','true');this.fusionHud.innerHTML='';}
+    document.body.classList.remove('fusion-view');
+    if(this.fusionCtx&&this.fusionCanvas){const d=Math.min(2,window.devicePixelRatio||1);const r=this.stage.getBoundingClientRect();this.fusionCtx.setTransform(d,0,0,d,0,0);this.fusionCtx.clearRect(0,0,r.width,r.height);}
+    this.fusionStats={points:0,detections:0};
+  }
+  updateViewTitle(){
+    if(!this.viewTitle)return;
+    const strong=this.viewTitle.querySelector('strong');
+    const span=this.viewTitle.querySelector('span');
+    const copy={
+      sensor:['Sensor camera','Real 3D road, actors, signs, lights, route prediction, and detection overlay'],
+      chase:['Chase camera','Third-person vehicle tracking view with route and road context'],
+      top:['Top view','Overhead map-style view of lanes, traffic, route, and controls'],
+      fusion:['Sensor Fusion','Forward camera plus projected LiDAR depth, camera detections, lanes, safe path, and decision HUD']
+    }[this.mode]||['Sensor camera','Real 3D road, actors, signs, lights, route prediction, and detection overlay'];
+    if(strong)strong.textContent=copy[0];
+    if(span)span.textContent=copy[1];
+  }
+  fusionRuleLabel(reason){
+    const map={
+      cruise:'Cruise',prefer:'Lane preference',following:'Follow traffic',avoid:'Obstacle avoidance',blocked:'Blocked path',pedestrian:'Pedestrian yield','traffic-light':'Traffic signal','stop-sign':'Stop rule',yield:'Yield rule'
+    };
+    return map[reason]||String(reason||'Cruise');
+  }
+  stableNoise(a,b=0,c=0){
+    const n=Math.sin(a*12.9898+b*78.233+c*37.719)*43758.5453123;
+    return n-Math.floor(n);
+  }
+  fusionProject(world){
+    const r=this.stage.getBoundingClientRect();
+    const v=world.clone().project(this.camera);
+    if(v.z<-1||v.z>1)return null;
+    const x=(v.x*.5+.5)*r.width;
+    const y=(-v.y*.5+.5)*r.height;
+    if(x<-90||x>r.width+90||y<-90||y>r.height+90)return null;
+    return {x,y,z:v.z,w:r.width,h:r.height};
+  }
+  fusionDetectionType(det){
+    if(!det)return 'object';
+    if(det.source==='control')return 'traffic control';
+    if(det.type==='pedestrian')return 'pedestrian';
+    if(det.type==='car'||det.type==='parked')return 'vehicle';
+    if(det.type==='cone'||det.type==='roadblock')return 'obstacle';
+    return det.type||'object';
+  }
+  fusionSeverityFor(kind,distance,ref=null){
+    const label=String(kind||'').toLowerCase();
+    if(label.includes('red light')||label.includes('stop sign')||label.includes('pedestrian')||label.includes('roadblock'))return 'bad';
+    if(distance<18||label.includes('yellow')||label.includes('yield')||label.includes('cone')||label.includes('emergency')||label.includes('car ahead'))return 'warn';
+    if(ref&&ref.moving&&!ref.oncoming&&distance<46)return 'warn';
+    return 'good';
+  }
+  fusionColor(distance,severity='point',alpha=1){
+    const t=clamp(distance/125,0,1);
+    if(severity==='bad')return `rgba(255,92,122,${alpha})`;
+    if(severity==='warn')return `rgba(255,209,102,${alpha})`;
+    if(severity==='good')return `rgba(66,245,140,${alpha})`;
+    // Depth colors: orange/yellow close points, cyan-green mid points, cool blue-cyan far points.
+    if(t<.22){
+      const k=t/.22;
+      const r=Math.round(255*(1-k)+255*k);
+      const g=Math.round(132*(1-k)+198*k);
+      const b=Math.round(54*(1-k)+76*k);
+      return `rgba(${r},${g},${b},${alpha})`;
+    }
+    if(t<.55){
+      const k=(t-.22)/.33;
+      const r=Math.round(255*(1-k)+56*k);
+      const g=Math.round(198*(1-k)+232*k);
+      const b=Math.round(76*(1-k)+214*k);
+      return `rgba(${r},${g},${b},${alpha})`;
+    }
+    const k=(t-.55)/.45;
+    const r=Math.round(56*(1-k)+64*k);
+    const g=Math.round(232*(1-k)+152*k);
+    const b=Math.round(214*(1-k)+255*k);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+  fusionActorLabel(a,dz){
+    let type=a.type;
+    if(a.mesh&&a.mesh.userData&&a.mesh.userData.isEmergency)type='emergency vehicle';
+    else if(type==='car')type=a.oncoming?'oncoming vehicle':'vehicle';
+    else if(type==='parked')type='parked vehicle';
+    else if(type==='roadblock')type='roadblock';
+    return `${type} ${Math.round(dz)}m`;
+  }
+  fusionControlLabel(c,dz){
+    let type=c.type;
+    if(c.type==='stoplight')type=`${this.lightState(c)} light`;
+    else if(c.type==='stopsign')type='stop sign';
+    else if(c.type==='speedlimit')type=`speed limit ${c.limit}`;
+    else if(c.type==='yield')type='yield sign';
+    return `${type} ${Math.round(dz)}m`;
+  }
+  getFusionDetections(){
+    const range=this.sensorConfig.range||125;
+    const detections=[];
+    for(const a of this.actors){
+      const dz=a.z-this.progress;
+      if(dz<=3||dz>range)continue;
+      const pos=(a.worldPos||this.road.point(a.z,a.lateral)).clone();
+      pos.y+=a.type==='pedestrian'?1.15:a.type==='cone'?.55:.95;
+      const baseLabel=this.fusionActorLabel(a,dz);
+      const severity=this.fusionSeverityFor(baseLabel,dz,a);
+      const dims=a.type==='pedestrian'?{w:38,h:88}:a.type==='cone'?{w:34,h:50}:a.type==='roadblock'?{w:90,h:50}:{w:86,h:48};
+      const key=a.id||`actor-${a.z}-${a.lateral}`;
+      detections.push({key,source:'actor',ref:a,pos,z:a.z,lateral:a.lateral,distance:dz,label:baseLabel,severity,type:a.type,detType:this.fusionDetectionType({source:'actor',type:a.type}),dims});
+    }
+    for(const c of this.controls){
+      const dz=c.z-this.progress;
+      if(dz<=4||dz>range)continue;
+      const pos=(c.worldPos||this.controlPlacement(c).point).clone();
+      pos.y=c.type==='stoplight'?4.7:2.35;
+      const baseLabel=this.fusionControlLabel(c,dz);
+      const severity=this.fusionSeverityFor(baseLabel,dz,c);
+      const dims=c.type==='stoplight'?{w:58,h:92}:c.type==='speedlimit'?{w:54,h:70}:{w:58,h:64};
+      const key=c.id||`control-${c.z}-${c.type}`;
+      detections.push({key,source:'control',ref:c,pos,z:c.z,lateral:null,distance:dz,label:baseLabel,severity,type:c.type,detType:'traffic control',dims});
+    }
+    detections.sort((a,b)=>a.distance-b.distance);
+    return detections.slice(0,26);
+  }
+  fusionPriority(det,analysis){
+    let score=0;
+    if(det.severity==='bad')score+=90;
+    else if(det.severity==='warn')score+=48;
+    else score+=16;
+    score+=clamp(110-det.distance,0,110)*.45;
+    if(det.distance>75)score-=42;
+    if(det.distance>95)score-=38;
+    if(det.type==='pedestrian')score+=38;
+    if(det.type==='car'||det.type==='parked')score+=18;
+    if(det.source==='control'){
+      score+=det.distance<=70?24:-18;
+      if(det.distance>78)score-=35;
+    }
+    if(det.type==='stoplight'||det.type==='stopsign'||det.type==='yield')score+=det.distance<=70?18:-8;
+    if(analysis&&analysis.nearest&&analysis.nearest.ref){
+      if(det.ref===analysis.nearest.ref)score+=140;
+      else if(det.ref&&analysis.nearest.ref.id&&det.ref.id===analysis.nearest.ref.id)score+=140;
+    }
+    return score;
+  }
+  isFusionActiveRuleDetection(det,analysis){
+    if(!det||!analysis||!analysis.nearest||!analysis.nearest.ref)return false;
+    const ref=analysis.nearest.ref;
+    return det.ref===ref || (det.ref&&ref.id&&det.ref.id===ref.id);
+  }
+  shouldFusionLabelTrafficControl(det,analysis){
+    if(!det||det.source!=='control')return true;
+    if(this.isFusionActiveRuleDetection(det,analysis))return true;
+    const usefulRange=(det.type==='stoplight'||det.type==='stopsign'||det.type==='yield')?72:58;
+    return det.distance<=usefulRange;
+  }
+  shouldFusionShowFullLabel(det,analysis){
+    if(!det)return false;
+    if(this.isFusionActiveRuleDetection(det,analysis))return true;
+    const isNearest=!!(analysis&&analysis.nearest&&analysis.nearest.ref&&(det.ref===analysis.nearest.ref||(det.ref&&analysis.nearest.ref.id&&det.ref.id===analysis.nearest.ref.id)));
+    if(isNearest)return true;
+    const cap=det.source==='control'?72:75;
+    if(det.distance>cap)return false;
+    if(det.source==='control')return this.shouldFusionLabelTrafficControl(det,analysis);
+    if(det.severity==='bad'||det.severity==='warn')return true;
+    if(det.type==='pedestrian')return det.distance<=72;
+    if(det.type==='car'||det.type==='parked')return det.distance<=68;
+    return det.distance<=45;
+  }
+  selectFusionLabels(detections,analysis,maxLabels=3){
+    const selected=[];
+    const add=det=>{
+      if(!det||selected.includes(det))return;
+      if(!this.shouldFusionShowFullLabel(det,analysis))return;
+      selected.push(det);
+    };
+    const sorted=[...detections].sort((a,b)=>this.fusionPriority(b,analysis)-this.fusionPriority(a,analysis));
+    if(analysis&&analysis.nearest&&analysis.nearest.ref){
+      add(detections.find(d=>d.ref===analysis.nearest.ref||(d.ref&&analysis.nearest.ref.id&&d.ref.id===analysis.nearest.ref.id)));
+    }
+    add(sorted.find(d=>d.source==='control'&&(d.type==='stoplight'||d.type==='stopsign'||d.type==='yield')&&this.shouldFusionShowFullLabel(d,analysis)));
+    add(sorted.find(d=>d.type==='pedestrian'&&this.shouldFusionShowFullLabel(d,analysis)));
+    add(sorted.find(d=>(d.type==='car'||d.type==='parked')&&this.shouldFusionShowFullLabel(d,analysis)));
+    add(sorted.find(d=>(d.severity==='bad'||d.severity==='warn')&&this.shouldFusionShowFullLabel(d,analysis)));
+    for(const det of sorted){
+      if(selected.length>=maxLabels)break;
+      add(det);
+    }
+    return new Set(selected.slice(0,maxLabels).map(d=>d.key));
+  }
+  drawFusionPolyline(ctx,points,style,width=2,label,opts={}){
+    let started=false,labelPoint=null;
+    ctx.save();
+    if(opts.dash)ctx.setLineDash(opts.dash);
+    if(opts.glow){
+      ctx.shadowColor=style;
+      ctx.shadowBlur=opts.glow;
+    }
+    ctx.beginPath();
+    for(let i=0;i<points.length;i++){
+      const p=this.fusionProject(points[i]);
+      if(!p){started=false;continue;}
+      if(!started){ctx.moveTo(p.x,p.y);started=true;}else{ctx.lineTo(p.x,p.y);}
+      if(!labelPoint&&i>Math.floor(points.length*.42))labelPoint=p;
+    }
+    ctx.strokeStyle=style;
+    ctx.lineWidth=width;
+    ctx.lineCap='round';
+    ctx.lineJoin='round';
+    ctx.stroke();
+    ctx.restore();
+    if(label&&labelPoint){
+      ctx.save();
+      ctx.font='10px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+      ctx.globalAlpha=opts.labelAlpha??.78;
+      ctx.fillStyle='rgba(2,8,18,.58)';
+      const tw=ctx.measureText(label).width+12;
+      this.drawFusionRoundRect(ctx,labelPoint.x-tw/2,labelPoint.y-25,tw,18,5);
+      ctx.fill();
+      ctx.fillStyle=style;
+      ctx.fillText(label,labelPoint.x-tw/2+6,labelPoint.y-12);
+      ctx.restore();
+    }
+  }
+  drawFusionRoundRect(ctx,x,y,w,h,r){
+    const rr=Math.min(r,w/2,h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+rr,y);
+    ctx.arcTo(x+w,y,x+w,y+h,rr);
+    ctx.arcTo(x+w,y+h,x,y+h,rr);
+    ctx.arcTo(x,y+h,x,y,rr);
+    ctx.arcTo(x,y,x+w,y,rr);
+    ctx.closePath();
+  }
+  buildFusionLidarPoints(detections){
+    const points=[];
+    const maxRange=Math.min(this.sensorConfig.range||125,126);
+    const roadLats=[-this.road.travelHalf,0,this.road.travelHalf,-this.road.width/2,this.road.width/2,this.lane,this.targetLane];
+    const lanes=[];
+    for(const lat of roadLats){
+      const rounded=Math.round(lat*10)/10;
+      if(!lanes.some(v=>Math.abs(v-rounded)<.15))lanes.push(rounded);
+    }
+    for(let z=this.progress+12;z<this.progress+maxRange;z+=9.6){
+      for(const lat of lanes){
+        const n=this.stableNoise(z,lat);
+        const n2=this.stableNoise(lat,z,3.1);
+        const p=this.road.point(z+(n-.5)*.50,lat+(n2-.5)*.18);
+        p.y=.06+n*.07;
+        points.push({pos:p,distance:z-this.progress,kind:'road',severity:'point'});
+      }
+    }
+    const important=[...detections].sort((a,b)=>this.fusionPriority(b,null)-this.fusionPriority(a,null)).slice(0,8);
+    for(const det of important){
+      const count=det.type==='pedestrian'?8:det.type==='cone'?5:det.source==='control'?6:9;
+      const yaw=this.road.yaw(det.z||this.progress+det.distance);
+      const sin=Math.sin(yaw),cos=Math.cos(yaw);
+      for(let i=0;i<count;i++){
+        const n=this.stableNoise(det.distance,i,1.7)-.5;
+        const n2=this.stableNoise(i,det.distance,8.2)-.5;
+        const n3=this.stableNoise(det.distance,i,14.9);
+        const lateralScale=det.type==='pedestrian'?.50:det.type==='cone'?.32:det.source==='control'?.42:1.0;
+        const depthScale=det.type==='pedestrian'?.24:det.type==='cone'?.28:det.source==='control'?.20:1.36;
+        const hScale=det.type==='pedestrian'?1.5:det.type==='cone'?.72:det.source==='control'?1.0:1.25;
+        const base=det.pos.clone();
+        base.x+=cos*n*lateralScale + sin*n2*depthScale;
+        base.z+=-sin*n*lateralScale + cos*n2*depthScale;
+        base.y=Math.max(.08,base.y-.50+n3*hScale);
+        points.push({pos:base,distance:det.distance,kind:'object',severity:det.severity});
+      }
+    }
+    return points.slice(0,150);
+  }
+  drawFusionProjectedShape(ctx,worldPts,fillStyle,strokeStyle=null,lineWidth=1){
+    const pts=worldPts.map(p=>this.fusionProject(p)).filter(Boolean);
+    if(pts.length<3)return false;
+    ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+    for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i].x,pts[i].y);
+    ctx.closePath();
+    if(fillStyle){ctx.fillStyle=fillStyle;ctx.fill();}
+    if(strokeStyle){ctx.strokeStyle=strokeStyle;ctx.lineWidth=lineWidth;ctx.stroke();}
+    return true;
+  }
+  drawFusionRoadSurfaceDetail(ctx,w,h){
+    const travel=this.road.travelHalf;
+    const laneW=this.road.laneW;
+    const maxZ=this.progress+112;
+    ctx.save();
+    // Mild near-road tonal separation: asphalt center, lane shoulders, and curb edges.
+    const roadBand=[
+      this.road.point(this.progress+5,-travel+.24),
+      this.road.point(this.progress+5, travel-.24),
+      this.road.point(maxZ, travel-.24),
+      this.road.point(maxZ,-travel+.24)
+    ].map(p=>{p.y=.118;return p;});
+    this.drawFusionProjectedShape(ctx,roadBand,'rgba(10,18,28,.045)');
+    for(const side of [-1,1]){
+      const shoulder=[
+        this.road.point(this.progress+7,side*(travel-.18)),
+        this.road.point(this.progress+7,side*(travel+1.05)),
+        this.road.point(maxZ,side*(travel+1.05)),
+        this.road.point(maxZ,side*(travel-.18))
+      ].map(p=>{p.y=.13;return p;});
+      this.drawFusionProjectedShape(ctx,shoulder,'rgba(160,176,190,.032)',`rgba(225,234,242,.055)`,.8);
+    }
+    // Tire-wear bands: stable, narrow, and under all perception marks.
+    for(const lane of [-laneW*1.5,-laneW/2,laneW/2,laneW*1.5]){
+      for(const off of [-.48,.48]){
+        const band=[
+          this.road.point(this.progress+7,lane+off-.13),
+          this.road.point(this.progress+7,lane+off+.13),
+          this.road.point(maxZ,lane+off+.13),
+          this.road.point(maxZ,lane+off-.13)
+        ].map(p=>{p.y=.142;return p;});
+        this.drawFusionProjectedShape(ctx,band,'rgba(0,0,0,.042)');
+      }
+    }
+    // Sparse projected surface flecks and repairs, deterministic so the overlay does not shimmer.
+    for(let i=0;i<38;i++){
+      const z=this.progress+8+i*2.75;
+      if(z>maxZ)break;
+      const seed=Math.floor(z*1.7);
+      const n=this.stableNoise(seed,7,3);
+      const lat=-travel+.95+n*(travel*2-1.9);
+      const len=.45+this.stableNoise(seed,11,5)*1.8;
+      const p1=this.road.point(z,lat);p1.y=.158;
+      const p2=this.road.point(z+len,lat+(this.stableNoise(seed,17,2)-.5)*.22);p2.y=.158;
+      const a=clamp(.12-(z-this.progress)/115*.085,.018,.09);
+      const pp1=this.fusionProject(p1),pp2=this.fusionProject(p2);
+      if(!pp1||!pp2)continue;
+      ctx.strokeStyle=`rgba(6,12,20,${a})`;
+      ctx.lineWidth=clamp(1.2-(z-this.progress)/120,.28,1.0);
+      ctx.beginPath();ctx.moveTo(pp1.x,pp1.y);ctx.lineTo(pp2.x,pp2.y);ctx.stroke();
+    }
+    ctx.restore();
+  }
+  drawFusionScanGrid(ctx,w,h){
+    ctx.save();
+    ctx.strokeStyle='rgba(78,231,255,.045)';
+    ctx.lineWidth=1;
+    for(let y=Math.round(h*.24);y<h;y+=42){
+      ctx.beginPath();
+      ctx.moveTo(0,y);
+      ctx.lineTo(w,y);
+      ctx.stroke();
+    }
+    ctx.strokeStyle='rgba(78,231,255,.035)';
+    for(let x=w*.14;x<w;x+=w*.14){
+      ctx.beginPath();
+      ctx.moveTo(x,h*.26);
+      ctx.lineTo(x,h);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  drawFusionRoadFeatures(ctx,w,h){
+    if(!this.layers.lane)return;
+    // Lane estimates and road boundaries, brighter than the base road but still below objects.
+    const laneLat=[-this.road.travelHalf,-this.road.laneW,0,this.road.laneW,this.road.travelHalf,-this.road.width/2,this.road.width/2];
+    for(const lat of laneLat){
+      const pts=[];
+      for(let z=this.progress+6;z<this.progress+135;z+=8){const p=this.road.point(z,lat);p.y=.15;pts.push(p);}
+      const isCenter=Math.abs(lat)<.01;
+      const isOuterEdge=Math.abs(Math.abs(lat)-this.road.width/2)<.01;
+      const isTravelEdge=Math.abs(Math.abs(lat)-this.road.travelHalf)<.01;
+      const style=isCenter?'rgba(255,218,116,.82)':isOuterEdge?'rgba(255,255,255,.46)':isTravelEdge?'rgba(255,255,255,.58)':'rgba(255,255,255,.70)';
+      const width=isCenter?1.65:isOuterEdge?1.05:1.22;
+      this.drawFusionPolyline(ctx,pts,style,width,null,isCenter?{dash:[14,8]}:{});
+    }
+    // Intersection and crosswalk hints in Fusion, projected from existing intersection locations.
+    // Keep these localized and lower-contrast so they read as camera-visible road paint, not a grid overlay.
+    for(const iz of this.drawnIntersections||[]){
+      const dz=iz-this.progress;
+      if(dz<4||dz>120)continue;
+      ctx.save();
+      const alpha=clamp(1-dz/138,.20,.58);
+      const travel=this.road.travelHalf;
+      const apron=[
+        this.road.point(iz-12.8,-travel+.28),
+        this.road.point(iz-12.8, travel-.28),
+        this.road.point(iz+12.8, travel-.28),
+        this.road.point(iz+12.8,-travel+.28)
+      ];
+      const apronPts=apron.map(p=>{p.y=.112;return this.fusionProject(p);}).filter(Boolean);
+      if(apronPts.length===4){
+        ctx.fillStyle=`rgba(176,190,202,${alpha*.055})`;
+        ctx.beginPath();ctx.moveTo(apronPts[0].x,apronPts[0].y);
+        for(let i=1;i<apronPts.length;i++)ctx.lineTo(apronPts[i].x,apronPts[i].y);
+        ctx.closePath();ctx.fill();
+      }
+      // Subtle sidewalk/corner pads near the curb returns.
+      for(const side of [-1,1]){
+        for(const zOff of [-9.5,9.5]){
+          const edge=side*(travel+.16);
+          const inner=side*(travel-1.05);
+          const corner=[
+            this.road.point(iz+zOff-1.05,inner),
+            this.road.point(iz+zOff-1.05,edge),
+            this.road.point(iz+zOff+1.05,edge),
+            this.road.point(iz+zOff+1.05,inner)
+          ];
+          const cpts=corner.map(p=>{p.y=.19;return this.fusionProject(p);}).filter(Boolean);
+          if(cpts.length===4){
+            ctx.fillStyle=`rgba(218,226,232,${alpha*.055})`;
+            ctx.beginPath();ctx.moveTo(cpts[0].x,cpts[0].y);
+            for(let i=1;i<cpts.length;i++)ctx.lineTo(cpts[i].x,cpts[i].y);
+            ctx.closePath();ctx.fill();
+          }
+        }
+      }
+      // Zebra stripes: fewer and grouped close to each crosswalk, not a wide full-intersection grid.
+      for(const centerOff of [-8.35,8.35]){
+        for(const off of [-1.35,0,1.35]){
+          const pts=[];
+          for(let lat=-travel+.74;lat<=travel-.74;lat+=this.road.laneW*.42){const p=this.road.point(iz+centerOff+off,lat);p.y=.205;pts.push(p);}
+          this.drawFusionPolyline(ctx,pts,`rgba(255,255,255,${alpha*.66})`,.92);
+        }
+      }
+      const stopA=[],stopB=[];
+      for(let lat=-travel+.18;lat<=travel-.18;lat+=this.road.laneW*.35){let p=this.road.point(iz-11.25,lat);p.y=.225;stopA.push(p);p=this.road.point(iz+11.25,lat);p.y=.225;stopB.push(p);}
+      this.drawFusionPolyline(ctx,stopA,`rgba(255,255,255,${Math.min(.82,alpha+.22)})`,1.78);
+      this.drawFusionPolyline(ctx,stopB,`rgba(255,255,255,${Math.min(.82,alpha+.22)})`,1.78);
+      ctx.restore();
+    }
+  }
+  drawFusionDetections(ctx,detections,analysis){
+    const r=this.stage.getBoundingClientRect();
+    const used=this.fusionUiExclusionZones(r.width,r.height);
+    const maxLabels=(this.state.includes('Stop')||this.state.includes('Yielding'))?4:3;
+    const selectedLabels=this.selectFusionLabels(detections,analysis,maxLabels);
+    let count=0;
+    let smallTagCount=0;
+    const ordered=[...detections].sort((a,b)=>{
+      const sa=a.severity==='bad'?2:a.severity==='warn'?1:0;
+      const sb=b.severity==='bad'?2:b.severity==='warn'?1:0;
+      if(sa!==sb)return sa-sb;
+      return b.distance-a.distance;
+    });
+    for(const det of ordered){
+      const p=this.fusionProject(det.pos);
+      if(!p)continue;
+      const t=clamp(det.distance/(this.sensorConfig.range||125),0,1);
+      const scale=clamp(1.20-det.distance/150,.42,1.16);
+      const bw=det.dims.w*scale;
+      const bh=det.dims.h*scale;
+      const x=p.x-bw/2;
+      const y=p.y-bh/2;
+      const activeLabel=this.isFusionActiveRuleDetection(det,analysis);
+      const nearestLabel=!!(analysis&&analysis.nearest&&analysis.nearest.ref&&(det.ref===analysis.nearest.ref||(det.ref&&analysis.nearest.ref.id&&det.ref.id===analysis.nearest.ref.id)));
+      const influential=activeLabel||nearestLabel||this.shouldFusionShowFullLabel(det,analysis);
+      let baseAlpha=det.severity==='bad'?clamp(.98-t*.20,.76,.98):det.severity==='warn'?clamp(.80-t*.34,.40,.80):clamp(.60-t*.40,.20,.60);
+      if(det.distance>78&&!influential)baseAlpha*=det.source==='control'?.48:.60;
+      if(det.distance>100&&!influential)baseAlpha*=.72;
+      const col=this.fusionColor(det.distance,det.severity,baseAlpha);
+      const fill=det.severity==='bad'?`rgba(255,92,122,${.050+baseAlpha*.030})`:det.severity==='warn'?`rgba(255,209,102,${.038+baseAlpha*.026})`:`rgba(66,245,140,${.028+baseAlpha*.020})`;
+      const lineBoost=activeLabel||nearestLabel?.22:0;
+      const line=det.severity==='bad'?clamp(2.45-t*.55+lineBoost,1.75,2.75):det.severity==='warn'?clamp(1.85-t*.50+lineBoost,1.12,2.15):clamp(1.32-t*.36+lineBoost,.70,1.55);
+      ctx.save();
+      ctx.globalAlpha=baseAlpha;
+      ctx.lineWidth=line;
+      ctx.strokeStyle=col;
+      ctx.fillStyle=fill;
+      this.drawFusionRoundRect(ctx,x,y,bw,bh,4);
+      ctx.fill();ctx.stroke();
+      const tick=Math.min(11,bw*.26,bh*.26);
+      ctx.beginPath();
+      ctx.moveTo(x,y+tick);ctx.lineTo(x,y);ctx.lineTo(x+tick,y);
+      ctx.moveTo(x+bw-tick,y);ctx.lineTo(x+bw,y);ctx.lineTo(x+bw,y+tick);
+      ctx.moveTo(x,y+bh-tick);ctx.lineTo(x,y+bh);ctx.lineTo(x+tick,y+bh);
+      ctx.moveTo(x+bw-tick,y+bh);ctx.lineTo(x+bw,y+bh);ctx.lineTo(x+bw,y+bh-tick);
+      ctx.stroke();
+      ctx.restore();
+      count++;
+
+      const shouldLabel=selectedLabels.has(det.key);
+      if(shouldLabel){
+        ctx.save();
+        const activeLabel=this.isFusionActiveRuleDetection(det,analysis);
+        const nearestLabel=!!(analysis&&analysis.nearest&&analysis.nearest.ref&&(det.ref===analysis.nearest.ref||(det.ref&&analysis.nearest.ref.id&&det.ref.id===analysis.nearest.ref.id)));
+        const labelStrong=activeLabel||nearestLabel||det.severity==='bad';
+        ctx.font=`${labelStrong?'10.5':'9.5'}px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`;
+        const tw=ctx.measureText(det.label).width+(labelStrong?14:12);
+        const th=labelStrong?19:18;
+        const candidates=[[-2,-24],[-tw/2+bw/2,-42],[bw+7,0],[-tw-7,0],[-2,bh+5],[-tw/2+bw/2,bh+22]];
+        let placed=null;
+        for(const [ox,oy] of candidates){
+          const box={x:x+ox,y:y+oy,w:tw,h:th};
+          const overlaps=used.some(u=>this.rectsOverlap(box,u));
+          if(!overlaps&&box.x>6&&box.x+box.w<p.w-6&&box.y>6&&box.y+box.h<p.h-6){placed=box;break;}
+        }
+        if(placed){
+          used.push(placed);
+          ctx.fillStyle=labelStrong?'rgba(2,8,18,.82)':'rgba(2,8,18,.64)';
+          this.drawFusionRoundRect(ctx,placed.x,placed.y,placed.w,placed.h,6);
+          ctx.fill();
+          ctx.strokeStyle=this.fusionColor(det.distance,det.severity,labelStrong?.86:.62);
+          ctx.lineWidth=labelStrong?1.0:.65;
+          ctx.stroke();
+          ctx.fillStyle=this.fusionColor(det.distance,det.severity,labelStrong?.98:.80);
+          ctx.fillText(det.label,placed.x+(labelStrong?7:6),placed.y+(labelStrong?13.5:13));
+        }
+        ctx.restore();
+      }else if(smallTagCount<3 && det.source!=='control' && (det.severity==='bad'||(det.severity==='warn'&&det.distance<42)||det.distance<24)){
+        const tag=this.fusionDetectionType(det).replace('traffic control','control');
+        ctx.save();
+        ctx.globalAlpha=det.severity==='bad'?.46:.22;
+        ctx.font='8px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+        const tw=Math.min(48,ctx.measureText(tag).width+8);
+        const lx=clamp(x+bw-tw,4,p.w-tw-4),ly=clamp(y+bh+3,4,p.h-14);
+        const box={x:lx,y:ly,w:tw,h:13};
+        if(!used.some(u=>this.rectsOverlap(box,u))){
+          used.push(box);
+          smallTagCount++;
+          ctx.fillStyle='rgba(2,8,18,.45)';
+          this.drawFusionRoundRect(ctx,lx,ly,tw,13,5);
+          ctx.fill();
+          ctx.fillStyle=this.fusionColor(det.distance,det.severity,.68);
+          ctx.fillText(tag.slice(0,8),lx+4,ly+9);
+        }
+        ctx.restore();
+      }
+    }
+    return count;
+  }
+  drawFusionHud(analysis,detections,lidarCount){
+    if(!this.fusionHud)return;
+    const nearest=analysis&&analysis.nearest?`${analysis.nearest.kind||'object'} ${Math.round(analysis.nearest.distance)}m`:'clear';
+    const severity=this.state.includes('Stop')||this.state.includes('Stopped')?'bad':(['Slowing','Yielding','Changing lanes','Following traffic','Lane change'].includes(this.state)?'warn':'good');
+    this.fusionHud.classList.add('active');
+    this.fusionHud.classList.toggle('warn',severity==='warn');
+    this.fusionHud.classList.toggle('bad',severity==='bad');
+    this.fusionHud.setAttribute('aria-hidden','false');
+    this.fusionHud.innerHTML=`
+      <div class="fusion-status"><strong>Fusion HUD</strong><span>${this.state}</span></div>
+      <div class="fusion-row"><span>Target lane</span><span>${this.road.laneName(this.targetLane)}</span></div>
+      <div class="fusion-row"><span>Nearest</span><span>${nearest}</span></div>
+      <div class="fusion-row"><span>Rule</span><span>${this.fusionRuleLabel(analysis&&analysis.reason)}</span></div>
+      <div class="fusion-row"><span>LiDAR</span><span>${lidarCount} pts</span></div>
+      <div class="fusion-row"><span>Camera</span><span>${detections} det</span></div>
+    `;
+  }
+  fusionLegendBounds(w,h){
+    const boxW=144,boxH=92;
+    return {x:Math.max(12,w-boxW-12),y:Math.min(Math.max(164,Math.round(h*.18)),Math.max(12,h-boxH-50)),w:boxW,h:boxH};
+  }
+  fusionUiExclusionZones(w,h){
+    const zones=[];
+    zones.push({x:0,y:Math.max(0,h-240),w:250,h:240}); // HUD + lower-left readout buffer
+    const legend=this.fusionLegendBounds(w,h);
+    zones.push({x:legend.x-8,y:legend.y-8,w:legend.w+16,h:legend.h+16});
+    zones.push({x:0,y:0,w:360,h:82}); // view title area
+    return zones;
+  }
+  rectsOverlap(a,b){
+    return !(a.x+a.w<b.x||a.x>b.x+b.w||a.y+a.h<b.y||a.y>b.y+b.h);
+  }
+  drawFusionLegend(ctx,w,h){
+    const items=[
+      ['#4ee7ff','LiDAR depth'],
+      ['#42f58c','Safe / normal'],
+      ['#ffd166','Caution'],
+      ['#ff5c7a','Stop / block'],
+      ['#ffffff','Lane estimate']
+    ];
+    const b=this.fusionLegendBounds(w,h);
+    ctx.save();
+    ctx.globalAlpha=.82;
+    ctx.fillStyle='rgba(2,8,18,.48)';
+    ctx.strokeStyle='rgba(148,163,184,.14)';
+    this.drawFusionRoundRect(ctx,b.x,b.y,b.w,b.h,11);
+    ctx.fill();ctx.stroke();
+    ctx.font='8px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+    ctx.fillStyle='rgba(234,242,255,.68)';
+    ctx.fillText('FUSION LEGEND',b.x+9,b.y+13);
+    for(let i=0;i<items.length;i++){
+      const yy=b.y+27+i*13;
+      ctx.fillStyle=items[i][0];
+      ctx.beginPath();ctx.arc(b.x+11,yy-3,2.7,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='rgba(226,236,248,.80)';
+      ctx.fillText(items[i][1],b.x+20,yy);
+    }
+    ctx.restore();
+  }
+  updateFusionOverlay(analysis){
+    if(this.mode!=='fusion'||!this.fusionCanvas||!this.fusionCtx){this.clearFusionOverlay();return;}
+    document.body.classList.add('fusion-view');
+    this.fusionCanvas.classList.add('active');
+    const r=this.stage.getBoundingClientRect();
+    const d=Math.min(2,window.devicePixelRatio||1);
+    if(this.fusionCanvas.width!==Math.floor(r.width*d)||this.fusionCanvas.height!==Math.floor(r.height*d))this.resize();
+    const ctx=this.fusionCtx,w=r.width,h=r.height;
+    ctx.save();
+    ctx.setTransform(d,0,0,d,0,0);
+    ctx.clearRect(0,0,w,h);
+    // Camera-feed treatment: lighter and bluer than before, preserving real road/building contrast.
+    ctx.fillStyle='rgba(0,9,22,.078)';
+    ctx.fillRect(0,0,w,h);
+    const horizonTint=ctx.createLinearGradient(0,0,0,h);
+    horizonTint.addColorStop(0,'rgba(38,88,118,.026)');
+    horizonTint.addColorStop(.55,'rgba(0,0,0,0)');
+    horizonTint.addColorStop(1,'rgba(0,0,0,.065)');
+    ctx.fillStyle=horizonTint;ctx.fillRect(0,0,w,h);
+    const vignette=ctx.createRadialGradient(w*.5,h*.57,Math.min(w,h)*.22,w*.5,h*.57,Math.max(w,h)*.76);
+    vignette.addColorStop(0,'rgba(0,0,0,0)');
+    vignette.addColorStop(1,'rgba(0,0,0,.105)');
+    ctx.fillStyle=vignette;ctx.fillRect(0,0,w,h);
+    this.drawFusionRoadSurfaceDetail(ctx,w,h);
+    this.drawFusionScanGrid(ctx,w,h);
+    if(!this.sensorConfig.camera){
+      ctx.fillStyle='rgba(5,10,18,.78)';ctx.fillRect(0,0,w,h);
+      ctx.fillStyle='rgba(148,163,184,.88)';ctx.font='14px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';ctx.textAlign='center';ctx.fillText('CAMERA SENSOR OFFLINE',w/2,h/2);ctx.textAlign='left';
+      this.drawFusionLegend(ctx,w,h);
+      this.drawFusionHud(analysis,0,0);ctx.restore();return;
+    }
+    const detections=this.getFusionDetections();
+    this.drawFusionRoadFeatures(ctx,w,h);
+
+    let lidarDrawn=0;
+    if(this.layers.lidar&&this.sensorConfig.lidar){
+      const lidarPts=this.buildFusionLidarPoints(detections);
+      for(const lp of lidarPts){
+        const p=this.fusionProject(lp.pos);
+        if(!p)continue;
+        const t=clamp(lp.distance/(this.sensorConfig.range||125),0,1);
+        const size=lp.kind==='object'?clamp(2.85-t*1.25,.95,2.85):clamp(1.55-t*.78,.46,1.55);
+        const alpha=lp.kind==='object'?clamp(.58-t*.30,.22,.58):clamp(.28-t*.21,.08,.28);
+        ctx.fillStyle=this.fusionColor(lp.distance,lp.severity||'point',alpha);
+        if(lp.kind==='object'){
+          ctx.beginPath();ctx.arc(p.x,p.y,size,0,Math.PI*2);ctx.fill();
+        }else{
+          ctx.fillRect(p.x-size*.5,p.y-size*.5,size,size);
+        }
+        lidarDrawn++;
+      }
+    }
+
+    if(this.layers.route&&this.sensorConfig.gps){
+      const pts=[];
+      for(let z=this.progress+5;z<this.progress+120;z+=7){const t=(z-this.progress)/120;const p=this.road.point(z,lerp(this.lane,this.targetLane,t));p.y=.24;pts.push(p);}
+      const reason=analysis&&analysis.reason;
+      const routeSeverity=(reason==='blocked'||reason==='pedestrian'||reason==='traffic-light'||reason==='stop-sign')?'bad':(['avoid','following','yield','prefer'].includes(reason)?'warn':'good');
+      const alpha=routeSeverity==='good'?.42:routeSeverity==='warn'?.56:.64;
+      const width=routeSeverity==='good'?1.55:1.9;
+      const isLaneChange=Math.abs(this.targetLane-this.lane)>.35;
+      const routeLabel=routeSeverity==='bad'?'blocked path':(routeSeverity==='warn'?(isLaneChange?'lane change':'caution path'):null);
+      this.drawFusionPolyline(ctx,pts,this.fusionColor(20,routeSeverity,alpha),width,routeLabel,{glow:isLaneChange?5:0,labelAlpha:.46});
+    }
+
+    const detectionCount=this.layers.boxes?this.drawFusionDetections(ctx,detections,analysis):0;
+    this.drawFusionLegend(ctx,w,h);
+    ctx.font='9px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+    ctx.fillStyle='rgba(143,238,255,.42)';
+    ctx.fillText('CAMERA + LIDAR FUSION',14,Math.max(20,h-50));
+    ctx.fillText(`RANGE ${Math.round(this.sensorConfig.range||125)}m  SPEED ${Math.round(msToMph(this.speed))}mph`,14,Math.max(36,h-35));
+    this.fusionStats={points:lidarDrawn,detections:detectionCount};
+    this.drawFusionHud(analysis,detectionCount,lidarDrawn);
+    ctx.restore();
+  }
+
   updateOverlay(analysis){
+    if(this.mode==='fusion'){this.overlay.innerHTML='';return;}
     if(!this.sensorConfig.camera){this.overlay.innerHTML='<div style="position:absolute;inset:0;background:rgba(5,10,18,.85);display:flex;align-items:center;justify-content:center;color:rgba(148,163,184,.7);font-size:14px;letter-spacing:.12em;text-transform:uppercase">Camera Sensor Offline</div>';return;}
     if(!this.layers.boxes){this.overlay.innerHTML='';return;}
     const r=this.stage.getBoundingClientRect();
@@ -1455,7 +2245,24 @@ class Sim{
     ctx.textAlign='right';ctx.fillText(`${Math.round(msToMph(this.speed))} mph`,W-6,12);
     ctx.textAlign='left';ctx.fillStyle='rgba(148,163,184,.5)';ctx.fillText(`${Math.round(eZ)}m`,6,H-6);
   }
-  updateUI(analysis){$('stateText').textContent=this.state;$('speedStat').textContent=`${Math.round(msToMph(this.speed))} mph`;$('steerStat').textContent=`${((this.targetLane-this.lane)*8).toFixed(1)} deg`;$('nearestStat').textContent=analysis&&analysis.nearest?`${Math.round(analysis.nearest.distance)}m`:'Clear';$('routeStat').textContent=this.road.laneName(this.targetLane).replace(' lane','');$('limitStat').textContent=`${Math.round(this.limitMph)} mph`;$('cameraStat').textContent=this.mode[0].toUpperCase()+this.mode.slice(1);$('hudSpeed').textContent=`${Math.round(msToMph(this.speed))} mph`;$('hudRoute').textContent=`Route ${this.road.laneName(this.targetLane)}`;$('hudDecision').textContent=this.state;const danger=this.state.includes('Stop');$('driveChip').textContent=this.state;$('driveChip').className='chip '+(danger?'bad':['Slowing','Yielding','Changing lanes','Following traffic','Lane change'].includes(this.state)?'warn':'good');$('objectChip').textContent=analysis&&analysis.nearest?`${analysis.nearest.kind||'object'} ${Math.round(analysis.nearest.distance)}m`:'Path clear';$('objectChip').className='chip '+(danger?'bad':analysis&&analysis.nearest?'warn':'good');}
+  updateUI(analysis){
+    this.updateViewTitle();
+    $('stateText').textContent=this.state;
+    $('speedStat').textContent=`${Math.round(msToMph(this.speed))} mph`;
+    $('steerStat').textContent=`${((this.targetLane-this.lane)*8).toFixed(1)} deg`;
+    $('nearestStat').textContent=analysis&&analysis.nearest?`${Math.round(analysis.nearest.distance)}m`:'Clear';
+    $('routeStat').textContent=this.road.laneName(this.targetLane).replace(' lane','');
+    $('limitStat').textContent=`${Math.round(this.limitMph)} mph`;
+    $('cameraStat').textContent=this.mode==='fusion'?'Fusion':this.mode[0].toUpperCase()+this.mode.slice(1);
+    $('hudSpeed').textContent=`${Math.round(msToMph(this.speed))} mph`;
+    $('hudRoute').textContent=`Route ${this.road.laneName(this.targetLane)}`;
+    $('hudDecision').textContent=this.state;
+    const danger=this.state.includes('Stop');
+    $('driveChip').textContent=this.state;
+    $('driveChip').className='chip '+(danger?'bad':['Slowing','Yielding','Changing lanes','Following traffic','Lane change'].includes(this.state)?'warn':'good');
+    $('objectChip').textContent=analysis&&analysis.nearest?`${analysis.nearest.kind||'object'} ${Math.round(analysis.nearest.distance)}m`:'Path clear';
+    $('objectChip').className='chip '+(danger?'bad':analysis&&analysis.nearest?'warn':'good');
+  }
   updateDebug(){
     while(this.debugGroup.children.length){const m=this.debugGroup.children[0];if(m.geometry)m.geometry.dispose();this.debugGroup.remove(m);}
     if(!this.layers.debug)return;
@@ -1480,7 +2287,7 @@ class Sim{
       this.debugGroup.add(ring);
     }
   }
-  animate(){requestAnimationFrame(()=>this.animate());const dt=Math.min(.05,this.clock.getDelta());this.log.tick(dt);const analysis=this.updateVehicle(dt);this.updateActorMeshes(dt);this.updateRoad();this.updateRoute();this.updateLidar();this.updateRadar();this.updateWeather(dt);this.updateDebug();this.updateCamera();this.renderer.render(this.scene,this.camera);this.updateOverlay(analysis);this.updateMini();this.updateUI(analysis);this.decisionLog(analysis);}
+  animate(){requestAnimationFrame(()=>this.animate());const dt=Math.min(.05,this.clock.getDelta());this.log.tick(dt);const analysis=this.updateVehicle(dt);this.updateActorMeshes(dt);this.updateRoad();this.updateRoute();this.updateLidar();this.updateRadar();this.updateWeather(dt);this.updateDebug();this.updateCamera();this.renderer.render(this.scene,this.camera);this.updateOverlay(analysis);this.updateFusionOverlay(analysis);this.updateMini();this.updateUI(analysis);this.decisionLog(analysis);}
   decisionLog(a){if(this.paused)return;if(!a)return;if(a.reason==='pedestrian')this.log.add('Pedestrian in path, holding for them to clear');else if(a.reason==='avoid')this.log.add(`Obstacle ahead, changing to ${this.road.laneName(this.targetLane)}`);else if(a.reason==='traffic-light')this.log.add('Traffic light ahead, adjusting speed');else if(a.reason==='stop-sign')this.log.add('Stop sign detected, preparing full stop');else if(a.reason==='yield')this.log.add('Yield sign detected, slowing');else if(a.reason==='blocked')this.log.add('Lane blocked, slowing and looking for a clean path');else if(a.reason==='following')this.log.add('Following vehicle ahead, matching speed');else if(a.reason==='prefer')this.log.add(`Choosing ${this.road.laneName(this.targetLane)} for clear run`);else if(this.speed>mphToMs(10))this.log.add('Path clear, cruising');}
 }
 

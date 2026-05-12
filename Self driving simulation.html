@@ -921,7 +921,6 @@ class MeshFactory{
   }
   trafficLight(){const g=new THREE.Group();const pole=new THREE.Mesh(new THREE.CylinderGeometry(.08,.08,5.2,12),this.mats.pole);pole.position.y=2.6;g.add(pole);const arm=this.box(3.2,.12,.12,this.mats.pole);arm.position.set(-1.4,5.1,0);g.add(arm);const housing=this.box(.7,1.7,.32,this.mats.dark);housing.position.set(-3.0,4.85,0);g.add(housing);const lamps={};for(const [name,y,col] of [['red',5.35,0xff5c7a],['yellow',4.85,0xffd166],['green',4.35,0x42f58c]]){const s=new THREE.Mesh(new THREE.SphereGeometry(.18,18,18),new THREE.MeshBasicMaterial({color:col}));s.position.set(-3.0,y,-.19);s.userData.baseColor=col;g.add(s);lamps[name]=s;}g.userData.lamps=lamps;return g;}
   stopSign(){const g=new THREE.Group();const pole=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,2.6,10),this.mats.pole);pole.position.y=1.3;g.add(pole);const sign=this.box(1.25,.85,.08,this.mats.signRed);sign.position.y=2.75;g.add(sign);sign.rotation.z=Math.PI/4;return g;}
-  yieldSign(){const g=new THREE.Group();const pole=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,2.4,10),this.mats.pole);pole.position.y=1.2;g.add(pole);const tri=new THREE.Mesh(new THREE.ConeGeometry(.72,.08,3),this.mats.signRed);tri.rotation.x=Math.PI/2;tri.rotation.z=Math.PI;tri.position.y=2.55;g.add(tri);return g;}
   speedSign(limit){const g=new THREE.Group();const pole=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,2.5,10),this.mats.pole);pole.position.y=1.25;g.add(pole);const sign=this.box(1.05,1.35,.08,this.mats.sign);sign.position.y=2.75;g.add(sign);g.userData.limit=limit;return g;}
   suv(colorMat){
     const g=new THREE.Group();const mat=colorMat||this.mats.car;
@@ -1036,12 +1035,12 @@ class Sim{
   constructor(){
     if(!window.THREE){this.showError('Three.js did not load. Open this file with internet access, or allow the CDN script.');return;}
     this.stage=$('stage');this.overlay=$('overlay');this.fusionCanvas=$('fusionCanvas');this.fusionCtx=this.fusionCanvas?this.fusionCanvas.getContext('2d'):null;this.fusionHud=$('fusionHud');this.avStackCanvas=$('avStackCanvas');this.avStackCtx=this.avStackCanvas?this.avStackCanvas.getContext('2d'):null;this.avStackHud=$('avStackHud');this.viewTitle=this.stage.querySelector('.view-title');this.fusionStats={points:0,detections:0};this.mini=$('miniCanvas');this.miniCtx=this.mini.getContext('2d');this.road=new Road();this.factory=new MeshFactory();this.log=new Log($('logFeed'));
-    this.clock=new THREE.Clock();this.paused=true;this.progress=0;this.speed=0;this.targetMph=48;this.limitMph=48;this.lane=this.road.laneW/2;this.targetLane=this.road.laneW/2;this.state='Paused';this.displayState='Paused';this._stateChangedAt=0;this.mode='sensor';this.difficulty='standard';this.stopHold=0;this.activeStop=null;this.stuckTimer=0;this.laneChangeTimer=999999;this.lanePreference=this.road.laneW/2;this.turnSignal='none';this.lastTurnSignal='none';this.signalFlashOn=false;this.signalIntentLane=null;this.committedLaneTarget=null;this.committedLaneReason=null;this.laneChangeCommitStarted=0;this.lastLaneCenter=this.road.laneW/2;this.laneChangeActive=false;this.activeBypassBlocker=null;this.routePlanBaseLane=null;this.routePlanStartProgress=0;this.lastAnalysis=null;this.speedLimitAnnounced=false;this.lastLimitMph=this.limitMph;this.laneVelocity=0;this.steerYaw=0;this.routeVisualTargetLane=this.lane;this._lastLaneForVelocity=this.lane;this.closeConeUnstickTimer=0;
+    this.clock=new THREE.Clock();this.paused=true;this.progress=0;this.speed=0;this.targetMph=48;this.limitMph=48;this.lane=this.road.laneW/2;this.targetLane=this.road.laneW/2;this.state='Paused';this.displayState='Paused';this._stateChangedAt=0;this.mode='sensor';this.difficulty='standard';this.stopHold=0;this.activeStop=null;this.stuckTimer=0;this.laneChangeTimer=999999;this.lanePreference=this.road.laneW/2;this.turnSignal='none';this.lastTurnSignal='none';this.signalFlashOn=false;this.signalIntentLane=null;this.committedLaneTarget=null;this.committedLaneReason=null;this.laneChangeCommitStarted=0;this.lastLaneCenter=this.road.laneW/2;this.laneChangeActive=false;this.activeBypassBlocker=null;this.routePlanBaseLane=null;this.routePlanStartProgress=0;this.lastAnalysis=null;this.speedLimitAnnounced=false;this.lastLimitMph=this.limitMph;this.laneVelocity=0;this.steerYaw=0;this.routeVisualTargetLane=this.lane;this._lastLaneForVelocity=this.lane;this.closeConeUnstickTimer=0;this.deadlockActorId=null;this.deadlockTimer=0;
     this.env={timeOfDay:'day',weather:'clear',visibility:620,sunAngle:75,surface:'dry',construction:'none',pedDensity:'medium',emergency:'none',vehicleMass:'standard'};
     this.vehicleTypeName='sedan';
     this.sensorConfig={camera:true,lidar:false,radar:false,gps:true,noise:0,range:125};
     this.surfaceFriction=1.0;this.nextEmergencyZ=500;this.weatherParticles=null;this.weatherParticleCount=0;this.weatherParticleFall=9.5;
-    this.actors=[];this.controls=[];this.nextActorZ=80;this.nextOncomingZ=120;this.nextControlZ=135;this.layers={boxes:true,route:true,lane:true,lidar:false,debug:false};
+    this.actors=[];this.controls=[];this.nextActorZ=80;this.nextOncomingZ=120;this.nextControlZ=135;this.layers={boxes:true,route:true,lane:true,lidar:false,debug:false};this.roadWindowStart=-800;this.roadWindowEnd=6400;this.cityWindowStart=-800;this.cityWindowEnd=7000;
     this.scene=new THREE.Scene();this.scene.background=new THREE.Color(0xa4b6c7);this.scene.fog=new THREE.Fog(0xa4b6c7,120,620);
     this.camera=new THREE.PerspectiveCamera(67,1,.1,650);this.cameraTarget=new THREE.Vector3(0,1,50);
     this.renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});this.renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));this.renderer.shadowMap.enabled=true;this.renderer.shadowMap.type=THREE.PCFSoftShadowMap;this.stage.prepend(this.renderer.domElement);
@@ -1122,36 +1121,49 @@ class Sim{
     this.sun=new THREE.DirectionalLight(0xffffff,2.15);this.sun.position.set(-55,95,-45);this.sun.castShadow=true;this.sun.shadow.mapSize.set(2048,2048);this.sun.shadow.camera.left=-160;this.sun.shadow.camera.right=160;this.sun.shadow.camera.top=160;this.sun.shadow.camera.bottom=-160;this.scene.add(this.sun);
     const ground=new THREE.Mesh(new THREE.PlaneGeometry(1400,2200),this.factory.mats.grass);ground.rotation.x=-Math.PI/2;ground.position.y=-.035;ground.receiveShadow=true;this.world.add(ground);this.ground=ground;
     this.cityGroup=new THREE.Group();this.world.add(this.cityGroup);
-    this.buildCityBlocks();
+    this.buildCityBlocks(-700,7200);
     this.intersectionGroup=new THREE.Group();this.scene.add(this.intersectionGroup);
     this.radarGroup=new THREE.Group();this.scene.add(this.radarGroup);
     this.debugGroup=new THREE.Group();this.scene.add(this.debugGroup);
     this.weatherGroup=new THREE.Group();this.scene.add(this.weatherGroup);
     this.drawnIntersections=[];
-    this.buildRoadStrip();
+    this.buildRoadStrip(-800,7200);
   }
-  buildCityBlocks(){
+  seededRand(seed){
+    let x=Math.sin(seed*12.9898+78.233)*43758.5453;
+    return x-Math.floor(x);
+  }
+  buildCityBlocks(minZ=-700,maxZ=7200){
+    if(!this.cityGroup)return;
+    this.cityGroup.traverse(c=>{if(c.geometry)c.geometry.dispose();});
     this.cityGroup.clear();
+    this.cityWindowStart=minZ;
+    this.cityWindowEnd=maxZ;
     const palette=[
       [this.factory.mats.facade,this.factory.mats.windowLit],
       [new THREE.MeshStandardMaterial({color:0x5e6977,roughness:.88}), this.factory.mats.windowLit],
       [new THREE.MeshStandardMaterial({color:0x4c5562,roughness:.9}), this.factory.mats.windowLit],
       [this.factory.mats.brick, new THREE.MeshStandardMaterial({color:0xc7d8e5,roughness:.36,metalness:.05,emissive:0x1c2d40,emissiveIntensity:.14})]
     ];
-    for(let z=-120;z<4000;z+=72){
+    const firstTower=Math.floor(minZ/72)*72;
+    const lastTower=maxZ+120;
+    for(let z=firstTower;z<lastTower;z+=72){
       for(const side of [-1,1]){
-        const setback = this.road.width/2 + this.road.sidewalk + 12 + rand(0,18);
+        let seed=z*.017+side*19.37;
+        const r=()=>this.seededRand(seed+=1.61803398875);
+        const rr=(a,b)=>a+r()*(b-a);
+        const setback = this.road.width/2 + this.road.sidewalk + 12 + rr(0,18);
         const p=this.road.point(z,side*setback);
-        const yaw=this.road.yaw(z) + rand(-.025,.025);
-        const [matA,matB]=palette[Math.floor(Math.random()*palette.length)];
-        const tower=this.factory.building(rand(8,15),rand(10,30),rand(8,14),matA,matB);
+        const yaw=this.road.yaw(z) + rr(-.025,.025);
+        const [matA,matB]=palette[Math.floor(r()*palette.length)%palette.length];
+        const tower=this.factory.building(rr(8,15),rr(10,30),rr(8,14),matA,matB);
         tower.position.set(p.x,0,p.z);
         tower.rotation.y=yaw;
         this.cityGroup.add(tower);
 
-        if(Math.random()<.72){
-          const front=this.road.point(z+rand(-10,10),side*(this.road.width/2+this.road.sidewalk+4.8));
-          const shopW=rand(9,15), shopD=rand(6,9);
+        if(r()<.72){
+          const front=this.road.point(z+rr(-10,10),side*(this.road.width/2+this.road.sidewalk+4.8));
+          const shopW=rr(9,15), shopD=rr(6,9);
           const shop=this.factory.box(shopW,4.7,shopD,new THREE.MeshStandardMaterial({color:0x586371,roughness:.92}));
           shop.position.set(front.x,2.35,front.z);
           shop.rotation.y=this.road.yaw(z);
@@ -1161,7 +1173,8 @@ class Sim{
           awning.position.set(front.x,3.2,front.z + Math.cos(this.road.yaw(z))*shopD*.48);
           awning.rotation.y=this.road.yaw(z);
           this.cityGroup.add(awning);
-          const signMat=new THREE.MeshStandardMaterial({color:[0x24364a,0x344054,0x2d3f34,0x493a2a][Math.floor(Math.random()*4)],roughness:.82});
+          const signColors=[0x24364a,0x344054,0x2d3f34,0x493a2a];
+          const signMat=new THREE.MeshStandardMaterial({color:signColors[Math.floor(r()*signColors.length)%signColors.length],roughness:.82});
           const storeSign=this.factory.box(shopW*.62,.42,.08,signMat);
           storeSign.position.set(0,1.52,shopD/2+.08);shop.add(storeSign);
           const doorMat=new THREE.MeshStandardMaterial({color:0x142033,roughness:.64,metalness:.05});
@@ -1178,7 +1191,9 @@ class Sim{
         }
       }
     }
-    for(let z=-20;z<4100;z+=32){
+    const firstLamp=Math.floor(minZ/32)*32;
+    const lastLamp=maxZ+80;
+    for(let z=firstLamp;z<lastLamp;z+=32){
       for(const side of [-1,1]){
         const lampPos=this.road.point(z,side*(this.road.width/2+this.road.sidewalk*.48));
         const lamp=this.factory.streetLight();
@@ -1196,8 +1211,10 @@ class Sim{
     }
   }
   reset(){
-    this.progress=0;this.speed=0;this.stopHold=0;this.activeStop=null;this.stuckTimer=0;this.laneChangeTimer=999999;this.lanePreference=this.road.laneW/2;this.turnSignal='none';this.lastTurnSignal='none';this.signalFlashOn=false;this.signalIntentLane=null;this.committedLaneTarget=null;this.committedLaneReason=null;this.laneChangeCommitStarted=0;this.lastLaneCenter=this.road.laneW/2;this.laneChangeActive=false;this.activeBypassBlocker=null;this.routePlanBaseLane=null;this.routePlanStartProgress=0;this.lastAnalysis=null;this.speedLimitAnnounced=false;this.lastLimitMph=this.limitMph;this.laneVelocity=0;this.steerYaw=0;this.routeVisualTargetLane=this.lane;this._lastLaneForVelocity=this.lane;this.closeConeUnstickTimer=0;this.targetMph=+$('speedSlider').value;this.limitMph=this.targetMph;this.lane=this.road.laneW/2;this.targetLane=this.road.laneW/2;this.state='Paused';this.displayState='Paused';this._stateChangedAt=performance.now();this.paused=true;this.actors.forEach(a=>this.dynamic.remove(a.mesh));this.controls.forEach(c=>this.dynamic.remove(c.mesh));this.actors=[];this.controls=[];this.nextActorZ=120;this.nextOncomingZ=140;this.nextControlZ=200;this.nextEmergencyZ=400;this.log.reset();
+    this.progress=0;this.speed=0;this.stopHold=0;this.activeStop=null;this.stuckTimer=0;this.laneChangeTimer=999999;this.lanePreference=this.road.laneW/2;this.turnSignal='none';this.lastTurnSignal='none';this.signalFlashOn=false;this.signalIntentLane=null;this.committedLaneTarget=null;this.committedLaneReason=null;this.laneChangeCommitStarted=0;this.lastLaneCenter=this.road.laneW/2;this.laneChangeActive=false;this.activeBypassBlocker=null;this.routePlanBaseLane=null;this.routePlanStartProgress=0;this.lastAnalysis=null;this.speedLimitAnnounced=false;this.lastLimitMph=this.limitMph;this.laneVelocity=0;this.steerYaw=0;this.routeVisualTargetLane=this.lane;this._lastLaneForVelocity=this.lane;this.closeConeUnstickTimer=0;this.deadlockActorId=null;this.deadlockTimer=0;this.targetMph=+$('speedSlider').value;this.limitMph=this.targetMph;this.lane=this.road.laneW/2;this.targetLane=this.road.laneW/2;this.state='Paused';this.displayState='Paused';this._stateChangedAt=performance.now();this.paused=true;this.actors.forEach(a=>this.dynamic.remove(a.mesh));this.controls.forEach(c=>this.dynamic.remove(c.mesh));this.actors=[];this.controls=[];this.nextActorZ=120;this.nextOncomingZ=140;this.nextControlZ=200;this.nextEmergencyZ=400;this.log.reset();
     this.applyEnvironment();
+    this.buildRoadStrip(this.progress-800,this.progress+7200);
+    this.buildCityBlocks(this.progress-700,this.progress+7200);
     if(this.intersectionGroup){
       while(this.intersectionGroup.children.length){
         const m=this.intersectionGroup.children.pop();
@@ -1361,11 +1378,24 @@ class Sim{
   }
   resize(){const r=this.stage.getBoundingClientRect();this.renderer.setSize(r.width,r.height,false);this.camera.aspect=r.width/r.height;this.camera.updateProjectionMatrix();const d=Math.min(2,window.devicePixelRatio||1);this.mini.width=160*d;this.mini.height=150*d;this.miniCtx.setTransform(d,0,0,d,0,0);if(this.fusionCanvas&&this.fusionCtx){this.fusionCanvas.width=Math.max(1,Math.floor(r.width*d));this.fusionCanvas.height=Math.max(1,Math.floor(r.height*d));this.fusionCtx.setTransform(d,0,0,d,0,0);}if(this.avStackCanvas&&this.avStackCtx){this.avStackCanvas.width=Math.max(1,Math.floor(r.width*d));this.avStackCanvas.height=Math.max(1,Math.floor(r.height*d));this.avStackCtx.setTransform(d,0,0,d,0,0);}}
   randomActorType(){
-    let pool=this.difficulty==='hard'?['car','car','parked','pedestrian','roadblock']:this.difficulty==='easy'?['car','parked']:['car','car','parked','pedestrian'];
-    const pd=this.env.pedDensity;
-    if(pd==='high'){pool=[...pool,'pedestrian','pedestrian'];}
-    else if(pd==='low'){pool=pool.map(t=>t==='pedestrian'?'car':t);}
+    // Pedestrians and cones are not part of the generic obstacle pool. Roadblocks
+    // should be rare unless construction is enabled; frequent in-lane roadblocks
+    // were creating artificial deadlocks despite an obvious adjacent path.
+    let pool=this.difficulty==='hard'?['car','car','car','parked','parked','roadblock']:this.difficulty==='easy'?['car','car','parked']:['car','car','car','car','parked'];
     return pool[Math.floor(Math.random()*pool.length)];
+  }
+  pedestrianSpawnChance(){
+    const base={low:0.012,medium:0.045,high:0.095}[this.env.pedDensity]??0.045;
+    const diff={easy:0.65,standard:1.0,hard:1.25}[this.difficulty]??1.0;
+    return base*diff;
+  }
+  pedestrianIsRoadRelevant(actor){
+    if(!actor||actor.type!=='pedestrian')return true;
+    // A pedestrian waiting on the sidewalk should be a detection, not a lane
+    // blocker. It becomes road-relevant only while entering/crossing the
+    // drivable area, or when spawned in-lane by an older scenario.
+    const roadEdge=this.road.travelHalf+0.45;
+    return Math.abs(actor.lateral)<roadEdge || (!!actor.crossingStarted && Math.abs(actor.lateral)<this.road.travelHalf+1.05);
   }
   isTravelLane(lat){return lat>0 && (Math.abs(lat-this.road.laneW/2)<.7 || Math.abs(lat-this.road.laneW*1.5)<.7);}
   actorBlockRange(actor){
@@ -1384,6 +1414,7 @@ class Sim{
     // Oncoming traffic is in negative-lateral lanes and cannot block our right-side lanes.
     if(actor.oncoming)return false;
     if(dz<=0)return false;
+    if(actor.type==='pedestrian'&&!this.pedestrianIsRoadRelevant(actor))return false;
     const laneDelta=Math.abs(actor.lateral-lane);
     const lateralLimit=actor.type==='cone'?1.85:actor.type==='pedestrian'?1.75:actor.type==='roadblock'?2.75:actor.type==='parked'?2.35:2.20;
     if(laneDelta>lateralLimit)return false;
@@ -1422,11 +1453,36 @@ class Sim{
     }
     // Traffic controls
     while(this.nextControlZ<this.progress+420){
-      const kinds=['stoplight','stopsign','yield','speedlimit'];
+      const kinds=['stoplight','stopsign','speedlimit'];
       const kind=kinds[Math.floor(Math.random()*kinds.length)];
       this.addControl(this.nextControlZ+rand(-10,10),kind,kind==='speedlimit'?[25,35,45,55][Math.floor(Math.random()*4)]:null);
       this.nextControlZ+=rand(135,190);
     }
+    // Pedestrians are sparse and intersection-based. This prevents the
+    // infinite loop from producing constant random lane intrusions while still
+    // preserving occasional crosswalk events.
+    const pedChance=this.pedestrianSpawnChance();
+    for(const c of this.controls){
+      const dz=c.z-this.progress;
+      if(c.type==='speedlimit'||c.pedestrianSpawnChecked||dz<85||dz>340)continue;
+      c.pedestrianSpawnChecked=true;
+      if(Math.random()<pedChance){
+        const side=Math.random()<0.5?1:-1;
+        const lateral=side*(this.road.travelHalf+this.road.sidewalk*.62);
+        const pedZ=c.z+rand(-5.5,5.5);
+        if(this.canSpawnActor(pedZ,lateral)){
+          const ped=this.addActor(pedZ,lateral,'pedestrian',false,false);
+          if(ped){
+            ped.crosswalkActor=true;
+            ped.crossingDir=-side;
+            ped.crossingTarget=-side*(this.road.travelHalf+this.road.sidewalk*.62);
+            ped.crossingStartRange=44+Math.random()*16;
+            ped.crossingSpeed=rand(1.45,1.85);
+          }
+        }
+      }
+    }
+
     // Emergency vehicles (oncoming fast-movers)
     const emgInterval={rare:400,frequent:180}[this.env.emergency];
     if(emgInterval)while(this.nextEmergencyZ<this.progress+420){
@@ -1451,24 +1507,30 @@ class Sim{
     this.dynamic.add(mesh);
     const actor={id:(crypto.randomUUID?crypto.randomUUID():String(Math.random())),z,lateral,type,moving:!!moving,oncoming:!!oncoming,speed:moving?(oncoming?rand(9,15):rand(5,11)):0,mesh,confidence:Math.round(rand(86,98))};
     if(type==='pedestrian'){
-      const outward=lateral>=0?1:-1;
-      actor.crossingDir=outward;
-      actor.crossingTarget=outward*(this.road.travelHalf+this.road.sidewalk+0.65);
-      actor.crossingSpeed=rand(1.18,1.62);
+      const onSidewalk=Math.abs(lateral)>this.road.travelHalf+0.35;
+      const side=lateral>=0?1:-1;
+      // In-lane legacy pedestrians clear outward. Crosswalk pedestrians are
+      // configured by spawnAhead() to cross from one sidewalk to the other.
+      const dir=onSidewalk?-side:side;
+      actor.crossingDir=dir;
+      actor.crossingTarget=onSidewalk?(-side*(this.road.travelHalf+this.road.sidewalk*.62)):(side*(this.road.travelHalf+this.road.sidewalk+0.65));
+      actor.crossingSpeed=onSidewalk?rand(1.45,1.85):rand(1.18,1.62);
       actor.crossingStarted=false;
       actor.clearLog=false;
       actor.walkPhase=rand(0,Math.PI*2);
+      actor.crossingStartRange=onSidewalk?44+Math.random()*16:72;
     }
     this.actors.push(actor);
+    return actor;
   }
-  addControl(z,type,limit){let mesh;if(type==='stoplight')mesh=this.factory.trafficLight();else if(type==='stopsign')mesh=this.factory.stopSign();else if(type==='yield')mesh=this.factory.yieldSign();else mesh=this.factory.speedSign(limit||35);this.dynamic.add(mesh);this.controls.push({id:(crypto.randomUUID?crypto.randomUUID():String(Math.random())),z,type,limit:limit||35,mesh,served:false,offset:Math.random()*7});if(type!=='speedlimit')this._drawIntersection(z);}
+  addControl(z,type,limit){let mesh;if(type==='stoplight')mesh=this.factory.trafficLight();else if(type==='stopsign')mesh=this.factory.stopSign();else{type='speedlimit';mesh=this.factory.speedSign(limit||35);}this.dynamic.add(mesh);const control={id:(crypto.randomUUID?crypto.randomUUID():String(Math.random())),z,type,limit:limit||35,mesh,served:false,offset:Math.random()*7};this.controls.push(control);if(type!=='speedlimit')this._drawIntersection(z);return control;}
   controlPlacement(c){const edge=this.road.width*.5 + (c.type==='stoplight'?1.25:1.6);const point=this.road.point(c.z,edge);const yaw=this.road.yaw(c.z);return {point,yaw};}
   _drawIntersection(z){
     if(!this.intersectionGroup)return;
     if(this.drawnIntersections.some(v=>Math.abs(v-z)<60))return;
     this.drawnIntersections.push(z);
     const yaw=this.road.yaw(z);
-    const add=m=>this.intersectionGroup.add(m);
+    const add=m=>{m.userData=m.userData||{};m.userData.intersectionZ=z;this.intersectionGroup.add(m);};
     const roadW=this.road.travelHalf*2; // full drivable width across both directions
     // Full-width stop bars — one on each side of the intersection.
     for(const side of [-1,1]){
@@ -1507,7 +1569,8 @@ class Sim{
           a.clearLog=false;
           a.walkPhase=rand(0,Math.PI*2);
         }
-        if(dz<72&&dz>-10)a.crossingStarted=true;
+        const startRange=a.crossingStartRange??72;
+        if(dz<startRange&&dz>-10)a.crossingStarted=true;
         if(a.crossingStarted&&Math.abs(a.lateral-a.crossingTarget)>.08){
           a.crossingSpeed=Math.max(a.crossingSpeed||1.35,1.18);
           const step=a.crossingDir*a.crossingSpeed*dt;
@@ -1558,7 +1621,7 @@ class Sim{
     for(let i=this.controls.length-1;i>=0;i--){if(this.controls[i].z<this.progress-45){this.dynamic.remove(this.controls[i].mesh);this.controls.splice(i,1);}}
   }
   lightState(c){const t=(performance.now()/1000+c.offset)%9;if(t<4.6)return'green';if(t<6.0)return'yellow';return'red';}
-  controlStopZ(c){return (c&&['stoplight','stopsign','yield'].includes(c.type))?c.z-11.5:(c?c.z:0);}
+  controlStopZ(c){return (c&&['stoplight','stopsign'].includes(c.type))?c.z-11.5:(c?c.z:0);}
   controlStopDistance(c){return this.controlStopZ(c)-this.progress;}
   travelLanes(){return [this.road.laneW/2,this.road.laneW*1.5];}
   nearestTravelLane(lat){const lanes=this.travelLanes();return lanes.reduce((b,l)=>Math.abs(l-lat)<Math.abs(b-lat)?l:b,lanes[0]);}
@@ -1632,7 +1695,9 @@ class Sim{
         // collision while the ego is already committed to clearing around it.
         if(a.type==='cone'&&escapeReady&&(dz>0.35||egoGap>this.collisionLateralLimit(a)-0.35))continue;
       }
+      if(this.committedPassCanClear(a,dz))continue;
       if(dz<=0.5||dz>maxDist)continue;
+      if(a.type==='pedestrian'&&!this.pedestrianIsRoadRelevant(a))continue;
       const solid=(a.type==='cone'||a.type==='parked'||a.type==='roadblock'||a.type==='pedestrian'||a.type==='car');
       if(!solid)continue;
       const limit=this.collisionLateralLimit(a);
@@ -1648,6 +1713,66 @@ class Sim{
     }
     return nearest;
   }
+  committedPassCanClear(actor,dz){
+    // During an already-committed pass, do not let the emergency governor keep
+    // treating the old-lane blocker as a reason to freeze if the target lane is
+    // clear and there is enough distance to finish the lateral move.
+    if(!actor||!this.laneChangeActive||!Number.isFinite(this.signalIntentLane))return false;
+    if(actor.type==='pedestrian')return false;
+    if(dz<4.5)return false;
+    const targetLane=this.signalIntentLane;
+    const limit=this.collisionLateralLimit(actor);
+    const targetGap=Math.abs(actor.lateral-targetLane);
+    if(targetGap<limit+0.35)return false;
+    const targetRisk=this.closestTargetLaneRisk(targetLane,Math.min(34,Math.max(16,dz+6)));
+    if(targetRisk&&targetRisk.actor!==actor)return false;
+    const lateralRemaining=Math.abs(targetLane-this.lane);
+    const forwardSpeed=Math.max(this.speed,mphToMs(6));
+    const timeToObstacle=dz/forwardSpeed;
+    const estimatedLatTime=lateralRemaining/Math.max(0.55,Math.abs(this.laneVelocity||0)+0.45);
+    return timeToObstacle>Math.min(5.5,estimatedLatTime*.72+1.1);
+  }
+  practicalEscapeLane(current,blocker){
+    // Last-choice planner used only when the strict safe-lane test deadlocks.
+    // It accepts a cautious merge into an adjacent lane if the lane is not
+    // physically blocked, while still rejecting pedestrians, static obstacles,
+    // and rear conflicts that would make the maneuver unsafe.
+    if(!blocker)return null;
+    const options=this.travelLanes().filter(l=>Math.abs(l-current)>.25);
+    let best=null;
+    for(const lane of options){
+      let score=80-Math.abs(lane-this.lane)*7;
+      let reason='cautious escape lane';
+      let safe=true;
+      for(const a of this.actors){
+        if(a.oncoming||a===blocker)continue;
+        if(a.type==='pedestrian'&&!this.pedestrianIsRoadRelevant(a))continue;
+        const dz=a.z-this.progress;
+        const gap=Math.abs(a.lateral-lane);
+        const limit=this.collisionLateralLimit(a)+0.30;
+        if(gap<limit){
+          if(dz>=-2&&dz<22){
+            if(a.type==='car'&&a.moving&&dz>12&&a.speed>this.speed*.35){score-=14;continue;}
+            safe=false;reason=`${a.type} ahead`;break;
+          }
+          if(dz<0&&Math.abs(dz)<17){safe=false;reason=`${a.type} behind`;break;}
+          if(dz>22&&dz<58)score-=Math.max(0,24-(dz-22)*0.45);
+        }
+        const sweptMid=(this.lane+lane)/2;
+        if(Math.abs(a.lateral-sweptMid)<this.collisionLateralLimit(a)+0.05&&Math.abs(dz)<9){safe=false;reason='side conflict';break;}
+      }
+      for(const c of this.controls){
+        const dz=this.controlStopDistance(c);
+        if(dz<=-3||dz>22)continue;
+        if(c.type==='stoplight'&&(this.lightState(c)==='red'||this.lightState(c)==='yellow')){safe=false;reason='traffic rule ahead';break;}
+        if(c.type==='stopsign'&&!c.served){safe=false;reason='stop rule ahead';break;}
+      }
+      if(!safe)continue;
+      const candidate={lane,direction:this.laneDirectionLabel(this.lane,lane),safe:true,score,reason,practical:true};
+      if(!best||candidate.score>best.score)best=candidate;
+    }
+    return best;
+  }
   laneSafetyScore(lane,opts={}){
     const lanes=this.travelLanes();
     if(!lanes.some(l=>Math.abs(l-lane)<.2))return {safe:false,score:-999,reason:'lane unavailable',aheadClear:0,rearClear:0};
@@ -1658,6 +1783,7 @@ class Sim{
     for(const a of this.actors){
       if(a.oncoming)continue;
       const dz=a.z-this.progress;
+      if(a.type==='pedestrian'&&!this.pedestrianIsRoadRelevant(a))continue;
       const latGap=Math.abs(a.lateral-lane);
       if(latGap<1.95){
         const staticNeed=(a.type==='cone'||a.type==='roadblock'||a.type==='parked'||a.type==='pedestrian')?Math.max(aheadNeed,68):aheadNeed;
@@ -1685,7 +1811,6 @@ class Sim{
       if(dz<=-3||dz>38)continue;
       if(c.type==='stoplight'&&(this.lightState(c)==='red'||this.lightState(c)==='yellow')){blocked=true;reason='traffic rule ahead';}
       if(c.type==='stopsign'&&!c.served){blocked=true;reason='stop rule ahead';}
-      if(c.type==='yield'&&!c.served&&dz<24){blocked=true;reason='yield rule ahead';}
     }
     const continuity=lane===this.lanePreference?8:0;
     const score=(aheadClear*1.15)+(rearClear*.9)+(sideClear*.45)-Math.abs(lane-this.lane)*3+continuity;
@@ -1825,7 +1950,7 @@ class Sim{
       const rawDz=c.z-this.progress;
       if(c.type==='speedlimit'&&rawDz<2&&rawDz>-8&&!c.served){this.limitMph=c.limit;c.served=true;this.speedLimitAnnounced=true;this.lastLimitMph=c.limit;this.log.add(`Speed limit sign read: ${c.limit} mph, obeying limit`);}
       const stopDz=this.controlStopDistance(c);
-      if((c.type==='stopsign'||c.type==='yield')&&stopDz<-3&&!c.served)c.served=true;
+      if(c.type==='stopsign'&&stopDz<-3&&!c.served)c.served=true;
       if(stopDz<=-3||stopDz>controlRange)continue;
       const pdz=stopDz*noiseFactor;
       if(c.type==='stoplight'){
@@ -1839,15 +1964,10 @@ class Sim{
         nearest={kind:'stop sign',distance:pdz,ref:c,stopDistance:pdz};
         reason='stop-sign';
         desiredMph=pdz<8?0:Math.min(desiredMph,clamp((pdz-6)/32,0,1)*Math.max(18,envCeiling));
-      } else if(c.type==='yield'&&!c.served && pdz<52 && (!nearest||pdz<nearest.distance)){
-        nearest={kind:'yield sign',distance:pdz,ref:c,stopDistance:pdz};
-        reason='yield';
-        desiredMph=Math.min(desiredMph,pdz<16?12:20);
-        if(stopDz<1.5)c.served=true;
       }
     }
 
-    const trafficRuleActive=['traffic-light','stop-sign','yield'].includes(reason);
+    const trafficRuleActive=['traffic-light','stop-sign'].includes(reason);
 
     // Proactive passing planner: evaluate adjacent lanes before tailing a slower car.
     const frontVehicle=this.closestVehicleAhead(current,proactiveRange);
@@ -1911,6 +2031,10 @@ class Sim{
           const micro=this.bestConeBypassOption(current,blocking.actor||blocking.ref)||this.forcedConeEscapePlan(current,blocking.actor||blocking.ref);
           if(micro&&micro.safe)lanePlan={...micro,relaxed:true};
         }
+        if((!lanePlan||!lanePlan.safe)&&blocking.kind!=='pedestrian'){
+          const practical=this.practicalEscapeLane(current,blocking.actor||blocking.ref);
+          if(practical&&practical.safe)lanePlan={...practical,relaxed:true};
+        }
         if(lanePlan&&lanePlan.safe&&pdist<82){
           desiredLane=lanePlan.lane;
           desiredMph=Math.min(desiredMph,Math.max(14,envCeiling*(lanePlan.relaxed?.70:.82)));
@@ -1928,6 +2052,7 @@ class Sim{
       let lanePlanNow=this.bestLaneChangeOption(current,70);
       if((!lanePlanNow||!lanePlanNow.safe)&&critical.kind!=='pedestrian')lanePlanNow=this.bestLaneChangeOption(current,70,{allowMergeBehindMoving:true,mergeBehindMovingMin:14,aheadNeed:34,rearNeed:20,sideNeed:10});
       if((!lanePlanNow||!lanePlanNow.safe)&&critical.kind==='cone')lanePlanNow=this.bestConeBypassOption(current,critical.actor||critical.ref)||this.forcedConeEscapePlan(current,critical.actor||critical.ref);
+      if((!lanePlanNow||!lanePlanNow.safe)&&critical.kind!=='pedestrian')lanePlanNow=this.practicalEscapeLane(current,critical.actor||critical.ref);
       if(lanePlanNow&&lanePlanNow.safe&&Math.abs(lanePlanNow.lane-this.lane)>.35){
         desiredLane=lanePlanNow.lane;
         lanePlan=lanePlanNow;
@@ -1986,17 +2111,13 @@ class Sim{
       const microCommit=this.committedLaneReason==='micro-bypass'||!this.isTravelLaneValue(this.signalIntentLane);
       const targetSafety=microCommit?{safe:true}:this.laneSafetyScore(this.signalIntentLane,{aheadNeed:30,rearNeed:16,sideNeed:9});
       const criticalCommitRisk=microCommit?null:this.closestTargetLaneRisk(this.signalIntentLane,Math.max(18,this.speed*1.5+10));
-      const hardRule=['traffic-light','stop-sign','yield','pedestrian'].includes(a.reason);
+      const hardRule=['traffic-light','stop-sign','pedestrian'].includes(a.reason);
       if(targetSafety.safe&&!criticalCommitRisk&&!hardRule){
         a.desiredLane=this.signalIntentLane;
         a.lanePlan={lane:this.signalIntentLane,direction:this.laneDirectionLabel(this.lane,this.signalIntentLane),safe:true,reason:microCommit?'committed obstacle bypass':'committed lane change',micro:microCommit};
         if(['cruise','following','prefer','waiting-gap','blocked'].includes(a.reason))a.reason=this.committedLaneReason||'proactive-pass';
         desiredMph=Math.max(desiredMph,Math.min(this.targetMph,Math.max(microCommit?8:18,msToMph(this.speed))));
       }
-    }
-    if(a.reason==='yield'){
-      desiredMph=Math.max(desiredMph,10);
-      this.stopHold=0;this.activeStop=null;
     }
     if(a.reason==='stop-sign'&&a.nearest&&a.nearest.distance<9){
       desiredMph=0;
@@ -2016,6 +2137,7 @@ class Sim{
       let emergencyPlan=this.bestLaneChangeOption(currentLane,72);
       if((!emergencyPlan||!emergencyPlan.safe)&&imminentRisk.kind!=='pedestrian')emergencyPlan=this.bestLaneChangeOption(currentLane,72,{allowMergeBehindMoving:true,mergeBehindMovingMin:14,aheadNeed:34,rearNeed:20,sideNeed:10});
       if((!emergencyPlan||!emergencyPlan.safe)&&imminentRisk.kind==='cone')emergencyPlan=this.bestConeBypassOption(currentLane,imminentRisk.actor||imminentRisk.ref)||this.forcedConeEscapePlan(currentLane,imminentRisk.actor||imminentRisk.ref);
+      if((!emergencyPlan||!emergencyPlan.safe)&&imminentRisk.kind!=='pedestrian')emergencyPlan=this.practicalEscapeLane(currentLane,imminentRisk.actor||imminentRisk.ref);
       const stopRuleTooClose=(a.reason==='traffic-light'||a.reason==='stop-sign')&&a.nearest&&a.nearest.distance<18;
       if(emergencyPlan&&emergencyPlan.safe&&!stopRuleTooClose&&imminentRisk.kind!=='pedestrian'){
         a.desiredLane=emergencyPlan.lane;
@@ -2040,7 +2162,7 @@ class Sim{
     // Once a lane change starts, keep the committed target unless a true stop-rule
     // or pedestrian condition takes over. This prevents left/right retargeting and
     // the path twitching visible in AV Stack during passes.
-    const hardOverride=['traffic-light','stop-sign','yield','pedestrian'].includes(a.reason);
+    const hardOverride=['traffic-light','stop-sign','pedestrian'].includes(a.reason);
     if(this.laneChangeActive&&Number.isFinite(this.committedLaneTarget)&&!hardOverride){
       a.desiredLane=this.committedLaneTarget;
       if(['blocked','waiting-gap','following','cruise'].includes(a.reason))a.reason=this.committedLaneReason||'avoid';
@@ -2101,8 +2223,13 @@ class Sim{
         this.speed=clamp(this.speed,mphToMs(4.2),mphToMs(postBrakeRisk.distance<4?5.8:7.5));
       }else{
         const brakeDistance=Math.max(4.2,this.speed*.95+2.2);
-        if(postBrakeRisk.distance<brakeDistance)this.speed=Math.min(this.speed,mphToMs(2.0));
-        if(postBrakeRisk.distance<2.8)this.speed=0;
+        const canClearCommitted=this.committedPassCanClear(postBrakeRisk.actor||postBrakeRisk.ref,postBrakeRisk.distance);
+        if(!canClearCommitted){
+          if(postBrakeRisk.distance<brakeDistance)this.speed=Math.min(this.speed,mphToMs(2.0));
+          if(postBrakeRisk.distance<2.8)this.speed=0;
+        }else{
+          this.speed=clamp(this.speed,mphToMs(5.5),mphToMs(12));
+        }
       }
     }
     if(postBrakeRisk&&postBrakeRisk.kind==='cone'&&(this.committedLaneReason==='micro-bypass'||a.reason==='micro-bypass')){
@@ -2139,6 +2266,7 @@ class Sim{
           const currentLane=this.nearestTravelLane(this.lane);
           let bypass=this.bestLaneChangeOption(currentLane,76,{allowMergeBehindMoving:true,mergeBehindMovingMin:14,aheadNeed:blocker.kind==='cone'?30:38,rearNeed:18,sideNeed:9});
           if((!bypass||!bypass.safe)&&blocker.kind==='cone')bypass=this.bestConeBypassOption(currentLane,blocker.actor||blocker.ref)||this.forcedConeEscapePlan(currentLane,blocker.actor||blocker.ref);
+          if((!bypass||!bypass.safe)&&blocker.kind!=='pedestrian')bypass=this.practicalEscapeLane(currentLane,blocker.actor||blocker.ref);
           if((!bypass||!bypass.safe)&&blocker.kind==='cone'){
             const roadMin=0.45, roadMax=this.road.travelHalf-.45;
             const currentLane=this.nearestTravelLane(this.lane);
@@ -2174,6 +2302,42 @@ class Sim{
       this.stuckTimer=0;
     }
 
+    // Deadlock recovery: if a non-rule static obstruction has the car stopped
+    // despite an apparently open adjacent corridor, keep trying a cautious escape
+    // and finally clear the simulated obstruction rather than freezing forever.
+    const deadlockRef=a.nearest&&(a.nearest.ref||a.nearest.actor);
+    const deadlockKind=deadlockRef&&deadlockRef.type;
+    const nonRuleDeadlock=deadlockRef&&['roadblock','parked','car'].includes(deadlockKind)&&!['traffic-light','stop-sign','pedestrian'].includes(a.reason)&&msToMph(this.speed)<1.4;
+    if(nonRuleDeadlock){
+      if(this.deadlockActorId===deadlockRef.id)this.deadlockTimer+=dt;
+      else{this.deadlockActorId=deadlockRef.id;this.deadlockTimer=dt;}
+      if(this.deadlockTimer>1.8){
+        const currentLane=this.nearestTravelLane(this.lane);
+        const escape=this.practicalEscapeLane(currentLane,deadlockRef)||this.bestLaneChangeOption(currentLane,70,{allowMergeBehindMoving:true,mergeBehindMovingMin:12,aheadNeed:30,rearNeed:16,sideNeed:8});
+        if(escape&&escape.safe){
+          this.targetLane=escape.lane;
+          this.signalIntentLane=escape.lane;
+          this.committedLaneTarget=escape.lane;
+          this.committedLaneReason='avoid';
+          this.routePlanBaseLane=this.nearestTravelLane(this.lane);
+          this.routePlanStartProgress=this.progress;
+          this.laneChangeActive=true;
+          this.setTurnSignal(this.laneDirectionLabel(this.lane,escape.lane));
+          this.speed=Math.max(this.speed,mphToMs(5.0));
+          this.log.add('Blocked path, committing to available escape lane');
+          this.deadlockTimer=0;
+        }
+      }
+      if(this.deadlockTimer>8.0&&deadlockKind!=='car'){
+        this.dynamic.remove(deadlockRef.mesh);
+        this.actors=this.actors.filter(x=>x!==deadlockRef);
+        this.log.add(`${deadlockKind} deadlock cleared from simulation`);
+        this.deadlockActorId=null;this.deadlockTimer=0;
+      }
+    }else{
+      this.deadlockActorId=null;this.deadlockTimer=0;
+    }
+
     this.progress+=this.speed*dt;
     if(this.committedLaneReason==='micro-bypass'&&this.activeBypassBlocker){
       const still=this.actors.find(x=>x.id===this.activeBypassBlocker);
@@ -2197,7 +2361,6 @@ class Sim{
     else if(a.reason==='pedestrian')nextState='Slowing for pedestrian';
     else if(a.reason==='traffic-light'&&desiredMph<1)nextState='Stopped at red light';
     else if(a.reason==='stop-sign'&&desiredMph<1)nextState=this.stopHold>0?'Stopped at stop sign':'Stopping at stop sign';
-    else if(a.reason==='yield')nextState='Yielding';
     else if(a.reason==='proactive-pass')nextState=this.turnSignal==='left'?'Changing lanes left':'Changing lanes right';
     else if(a.reason==='waiting-gap')nextState='Waiting for gap';
     else if(a.reason==='micro-bypass')nextState='Bypassing obstacle';
@@ -2211,9 +2374,31 @@ class Sim{
     this.lastAnalysis={...a,desiredMph};
     return this.lastAnalysis;
   }
+  updateInfiniteWorld(){
+    const aheadRoad=7200, behindRoad=900;
+    if(!Number.isFinite(this.roadWindowEnd)||this.progress+2200>this.roadWindowEnd||this.progress-600<this.roadWindowStart){
+      this.buildRoadStrip(this.progress-behindRoad,this.progress+aheadRoad);
+    }
+    const aheadCity=7200, behindCity=700;
+    if(!Number.isFinite(this.cityWindowEnd)||this.progress+2600>this.cityWindowEnd||this.progress-500<this.cityWindowStart){
+      this.buildCityBlocks(this.progress-behindCity,this.progress+aheadCity);
+    }
+    if(this.intersectionGroup&&this.intersectionGroup.children.length){
+      for(let i=this.intersectionGroup.children.length-1;i>=0;i--){
+        const m=this.intersectionGroup.children[i];
+        if((m.userData&&Number.isFinite(m.userData.intersectionZ)&&m.userData.intersectionZ<this.progress-500)){
+          this.intersectionGroup.remove(m);
+          if(m.geometry)m.geometry.dispose();
+        }
+      }
+    }
+    if(Array.isArray(this.drawnIntersections))this.drawnIntersections=this.drawnIntersections.filter(z=>z>this.progress-520&&z<this.progress+7200);
+  }
+
   updateRoad(){
-    // Road geometry is built once in buildRoadStrip(); per-frame work is just
-    // swapping the lane-marking texture when the toggle changes.
+    this.updateInfiniteWorld();
+    // Road geometry is streamed around the ego vehicle, then the lane-marking
+    // texture is swapped when the overlay toggle changes.
     if(!this.roadStripMaterial)return;
     const desired=this.layers.lane?this.roadTexMarked:this.roadTexPlain;
     if(this.roadStripMaterial.map!==desired){
@@ -2221,19 +2406,33 @@ class Sim{
       this.roadStripMaterial.needsUpdate=true;
     }
   }
-  buildRoadStrip(){
-    const minZ=-280, maxZ=4200, step=1.5;
+  buildRoadStrip(minZ=this.progress-800,maxZ=this.progress+7200){
+    const step=1.5;
+    if(!Number.isFinite(minZ))minZ=this.progress-800;
+    if(!Number.isFinite(maxZ))maxZ=this.progress+7200;
+    minZ=Math.floor(minZ/step)*step;
+    maxZ=Math.ceil(maxZ/step)*step;
+    this.roadWindowStart=minZ;this.roadWindowEnd=maxZ;
+    if(this.roadGroup){
+      while(this.roadGroup.children.length){
+        const m=this.roadGroup.children.pop();
+        if(m.geometry)m.geometry.dispose();
+        this.roadGroup.remove(m);
+      }
+    }
     const outer=this.road.width/2;
     const period=26.0;
-    this.roadTexPlain=this._bakeRoadTexture(false);
-    this.roadTexMarked=this._bakeRoadTexture(true);
-    for(const t of [this.roadTexPlain,this.roadTexMarked]){
-      t.wrapS=THREE.ClampToEdgeWrapping;
-      t.wrapT=THREE.RepeatWrapping;
-      t.anisotropy=8;
-      t.needsUpdate=true;
+    if(!this.roadTexPlain||!this.roadTexMarked){
+      this.roadTexPlain=this._bakeRoadTexture(false);
+      this.roadTexMarked=this._bakeRoadTexture(true);
+      for(const t of [this.roadTexPlain,this.roadTexMarked]){
+        t.wrapS=THREE.ClampToEdgeWrapping;
+        t.wrapT=THREE.RepeatWrapping;
+        t.anisotropy=8;
+        t.needsUpdate=true;
+      }
     }
-    this.roadStripMaterial=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.94,metalness:0,map:this.roadTexMarked,side:THREE.DoubleSide});
+    if(!this.roadStripMaterial)this.roadStripMaterial=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.94,metalness:0,map:this.roadTexMarked,side:THREE.DoubleSide});
     // Asphalt ribbon — a single continuous mesh carrying all lane paint.
     {
       const v=[],u=[],i=[];let m=0;
@@ -2438,7 +2637,7 @@ class Sim{
     const reason=analysis&&analysis.reason;
     const activeBypass=this.committedLaneReason==='micro-bypass'||reason==='micro-bypass';
     const risk=!activeBypass&&(reason==='blocked'||reason==='pedestrian'||reason==='traffic-light'||reason==='stop-sign'||(this.state&&this.state.includes('Stopped')));
-    const caution=activeBypass||reason==='waiting-gap'||reason==='yield'||reason==='proactive-pass'||reason==='avoid'||reason==='micro-bypass'||reason==='following';
+    const caution=activeBypass||reason==='waiting-gap'||reason==='proactive-pass'||reason==='avoid'||reason==='micro-bypass'||reason==='following';
     return risk?'bad':caution?'warn':'good';
   }
   updateRoute(){
@@ -2626,7 +2825,7 @@ class Sim{
       const left=mapPoint(this.road.point(stopZ,-travel));
       const right=mapPoint(this.road.point(stopZ,travel));
       const st=c.type==='stoplight'?this.lightState(c):c.type;
-      const col=st==='red'||c.type==='stopsign'?'rgba(255,83,106,.62)':st==='yellow'||c.type==='yield'?'rgba(255,203,92,.55)':'rgba(91,245,150,.40)';
+      const col=st==='red'||c.type==='stopsign'?'rgba(255,83,106,.62)':st==='yellow'?'rgba(255,203,92,.55)':'rgba(91,245,150,.40)';
       this.drawAvPolyline(ctx,[left,right],col,2.0);
     }
 
@@ -2657,7 +2856,6 @@ class Sim{
       let col='rgba(148,163,184,.75)';
       if(c.type==='stoplight'){const st=this.lightState(c);col=st==='red'?'rgba(255,83,106,.96)':st==='yellow'?'rgba(255,203,92,.96)':'rgba(66,245,140,.88)';}
       else if(c.type==='stopsign')col='rgba(255,83,106,.90)';
-      else if(c.type==='yield')col='rgba(255,203,92,.88)';
       ctx.save();ctx.fillStyle=col;ctx.shadowColor=col;ctx.shadowBlur=7;ctx.beginPath();ctx.arc(p.x,p.y,4.2,0,Math.PI*2);ctx.fill();ctx.restore();
     }
 
@@ -2742,7 +2940,7 @@ class Sim{
   }
   fusionRuleLabel(reason){
     const map={
-      cruise:'Cruise',prefer:'Lane preference',following:'Safe follow','proactive-pass':'Pass slower car','waiting-gap':'Waiting for gap',avoid:'Obstacle avoidance',blocked:'Blocked path',pedestrian:'Pedestrian yield','traffic-light':'Traffic signal','stop-sign':'Stop rule',yield:'Yield rule'
+      cruise:'Cruise',prefer:'Lane preference',following:'Safe follow','proactive-pass':'Pass slower car','waiting-gap':'Waiting for gap',avoid:'Obstacle avoidance',blocked:'Blocked path',pedestrian:'Pedestrian crossing','traffic-light':'Traffic signal','stop-sign':'Stop rule'
     };
     return map[reason]||String(reason||'Cruise');
   }
@@ -2770,7 +2968,7 @@ class Sim{
   fusionSeverityFor(kind,distance,ref=null){
     const label=String(kind||'').toLowerCase();
     if(label.includes('red light')||label.includes('stop sign')||label.includes('pedestrian')||label.includes('roadblock'))return 'bad';
-    if(distance<18||label.includes('yellow')||label.includes('yield')||label.includes('cone')||label.includes('emergency')||label.includes('car ahead'))return 'warn';
+    if(distance<18||label.includes('yellow')||label.includes('cone')||label.includes('emergency')||label.includes('car ahead'))return 'warn';
     if(ref&&ref.moving&&!ref.oncoming&&distance<46)return 'warn';
     return 'good';
   }
@@ -2813,7 +3011,7 @@ class Sim{
     if(c.type==='stoplight')type=`${this.lightState(c)} light`;
     else if(c.type==='stopsign')type='stop sign';
     else if(c.type==='speedlimit')type=`speed limit ${c.limit}`;
-    else if(c.type==='yield')type='yield sign';
+    
     return `${type} ${Math.round(dz)}m`;
   }
   getFusionDetections(){
@@ -2858,7 +3056,7 @@ class Sim{
       score+=det.distance<=70?24:-18;
       if(det.distance>78)score-=35;
     }
-    if(det.type==='stoplight'||det.type==='stopsign'||det.type==='yield')score+=det.distance<=70?18:-8;
+    if(det.type==='stoplight'||det.type==='stopsign')score+=det.distance<=70?18:-8;
     if(analysis&&analysis.nearest&&analysis.nearest.ref){
       if(det.ref===analysis.nearest.ref)score+=140;
       else if(det.ref&&analysis.nearest.ref.id&&det.ref.id===analysis.nearest.ref.id)score+=140;
@@ -2873,7 +3071,7 @@ class Sim{
   shouldFusionLabelTrafficControl(det,analysis){
     if(!det||det.source!=='control')return true;
     if(this.isFusionActiveRuleDetection(det,analysis))return true;
-    const usefulRange=(det.type==='stoplight'||det.type==='stopsign'||det.type==='yield')?72:58;
+    const usefulRange=(det.type==='stoplight'||det.type==='stopsign')?72:58;
     return det.distance<=usefulRange;
   }
   shouldFusionShowFullLabel(det,analysis){
@@ -2900,7 +3098,7 @@ class Sim{
     if(analysis&&analysis.nearest&&analysis.nearest.ref){
       add(detections.find(d=>d.ref===analysis.nearest.ref||(d.ref&&analysis.nearest.ref.id&&d.ref.id===analysis.nearest.ref.id)));
     }
-    add(sorted.find(d=>d.source==='control'&&(d.type==='stoplight'||d.type==='stopsign'||d.type==='yield')&&this.shouldFusionShowFullLabel(d,analysis)));
+    add(sorted.find(d=>d.source==='control'&&(d.type==='stoplight'||d.type==='stopsign')&&this.shouldFusionShowFullLabel(d,analysis)));
     add(sorted.find(d=>d.type==='pedestrian'&&this.shouldFusionShowFullLabel(d,analysis)));
     add(sorted.find(d=>(d.type==='car'||d.type==='parked')&&this.shouldFusionShowFullLabel(d,analysis)));
     add(sorted.find(d=>(d.severity==='bad'||d.severity==='warn')&&this.shouldFusionShowFullLabel(d,analysis)));
@@ -3148,7 +3346,7 @@ class Sim{
   drawFusionDetections(ctx,detections,analysis){
     const r=this.stage.getBoundingClientRect();
     const used=this.fusionUiExclusionZones(r.width,r.height);
-    const maxLabels=(this.state.includes('Stop')||this.state.includes('Yielding'))?4:3;
+    const maxLabels=(this.state.includes('Stop')||false)?4:3;
     const selectedLabels=this.selectFusionLabels(detections,analysis,maxLabels);
     let count=0;
     let smallTagCount=0;
@@ -3247,7 +3445,7 @@ class Sim{
   drawFusionHud(analysis,detections,lidarCount){
     if(!this.fusionHud)return;
     const nearest=analysis&&analysis.nearest?`${analysis.nearest.kind||'object'} ${Math.round(analysis.nearest.distance)}m`:'clear';
-    const severity=this.state.includes('Stop')||this.state.includes('Stopped')?'bad':(['Slowing','Yielding','Changing lanes','Changing lanes left','Changing lanes right','Following traffic','Following at safe distance','Lane change','Lane change left','Lane change right','Waiting for gap'].includes(this.state)?'warn':'good');
+    const severity=this.state.includes('Stop')||this.state.includes('Stopped')?'bad':(['Slowing','Changing lanes','Changing lanes left','Changing lanes right','Following traffic','Following at safe distance','Lane change','Lane change left','Lane change right','Waiting for gap'].includes(this.state)?'warn':'good');
     this.fusionHud.classList.add('active');
     this.fusionHud.classList.toggle('warn',severity==='warn');
     this.fusionHud.classList.toggle('bad',severity==='bad');
@@ -3402,7 +3600,7 @@ class Sim{
         if(c.type==='speedlimit')label=`limit ${c.limit}`;
         const base=(c.worldPos||this.controlPlacement(c).point).clone();
         base.y=c.type==='stoplight'?4.8:2.2;
-        objects.push({pos:base,label:`${label} ${Math.round(dz)}m`,bad:(c.type==='stoplight'&&this.lightState(c)==='red')||c.type==='stopsign',warn:c.type==='yield'||(c.type==='stoplight'&&this.lightState(c)==='yellow'),w:c.type==='stoplight'?66:58,h:c.type==='stoplight'?84:64,nx:rand(-noisePx,noisePx),ny:rand(-noisePx,noisePx)});
+        objects.push({pos:base,label:`${label} ${Math.round(dz)}m`,bad:(c.type==='stoplight'&&this.lightState(c)==='red')||c.type==='stopsign',warn:(c.type==='stoplight'&&this.lightState(c)==='yellow'),w:c.type==='stoplight'?66:58,h:c.type==='stoplight'?84:64,nx:rand(-noisePx,noisePx),ny:rand(-noisePx,noisePx)});
       }
     }
     const html=[];
@@ -3459,7 +3657,7 @@ class Sim{
       let col='rgba(148,163,184,.9)';
       if(c.type==='stoplight'){const st=this.lightState(c);col=st==='red'?'#ff5c7a':st==='yellow'?'#ffd166':'#42f58c';}
       else if(c.type==='stopsign')col='#ff5c7a';
-      else if(c.type==='yield')col='#ffd166';
+      
       ctx.fillStyle=col;ctx.beginPath();ctx.arc(m.x,m.y,3.5,0,Math.PI*2);ctx.fill();
     }
     // Other actors
@@ -3497,7 +3695,7 @@ class Sim{
     $('hudDecision').textContent=this.state+sigLabel;
     $('hudDecision').classList.toggle('signal-on',this.turnSignal!=='none');
     const danger=this.state.includes('Stop');
-    const cautionStates=['Slowing','Yielding','Changing lanes','Changing lanes left','Changing lanes right','Following traffic','Following at safe distance','Lane change','Lane change left','Lane change right','Waiting for gap'];
+    const cautionStates=['Slowing','Changing lanes','Changing lanes left','Changing lanes right','Following traffic','Following at safe distance','Lane change','Lane change left','Lane change right','Waiting for gap'];
     $('driveChip').textContent=this.state+(this.turnSignal!=='none'?` · ${this.turnSignal} signal`:'');
     $('driveChip').className='chip '+(danger?'bad':cautionStates.includes(this.state)?'warn':'good');
     $('objectChip').textContent=analysis&&analysis.nearest?`${analysis.nearest.kind||'object'} ${Math.round(analysis.nearest.distance)}m`:'Path clear';
@@ -3537,7 +3735,6 @@ class Sim{
     else if(a.reason==='avoid')this.log.add(`Obstacle ahead, changing to ${this.road.laneName(this.targetLane)}`);
     else if(a.reason==='traffic-light')this.log.add('Traffic light ahead, adjusting speed');
     else if(a.reason==='stop-sign')this.log.add('Stop sign detected, preparing full stop');
-    else if(a.reason==='yield')this.log.add('Yield sign detected, slowing');
     else if(a.reason==='blocked')this.log.add('Lane blocked, slowing and looking for a clean path');
     else if(a.reason==='following')this.log.add('Following at safe distance while checking for openings');
     else if(a.reason==='prefer')this.log.add(`Choosing ${this.road.laneName(this.targetLane)} for clear run`);

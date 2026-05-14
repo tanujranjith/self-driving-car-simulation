@@ -1,0 +1,3635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Autonomous City Drive — v38</title>
+<style>
+:root{
+  --bg:#081018; --panel:#0d1622; --panel2:#111b28; --border:#223145;
+  --text:#edf4f8; --muted:#8da0b5; --accent:#79dfff;
+  --good:#69df9b; --warn:#f0c76c; --bad:#ff7890;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:14px ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;overflow:hidden;}
+#app{display:flex;height:100vh;}
+#left{width:268px;padding:20px;background:var(--panel);border-right:1px solid var(--border);overflow-y:auto;}
+#left h1{font-size:13px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 4px;color:var(--text);}
+#left .sub{font-size:11px;color:var(--muted);margin-bottom:20px;}
+.section{margin-bottom:20px;}
+.section h3{margin:0 0 8px;font-size:11px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;}
+.btn-row{display:flex;gap:6px;flex-wrap:wrap;}
+button{padding:8px 12px;background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-family:inherit;font-size:13px;transition:.15s;}
+button:hover{border-color:var(--accent);color:var(--accent);}
+button.active{background:var(--accent);color:var(--bg);border-color:var(--accent);}
+button.primary{background:#1d3548;border-color:#2a5070;}
+button.primary:hover{background:#234159;}
+.stat-row{display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-bottom:1px solid var(--border);}
+.stat-row:last-child{border-bottom:0;}
+.stat-row .k{color:var(--muted);}
+.stat-row .v{font-variant-numeric:tabular-nums;}
+#stage{flex:1;position:relative;background:radial-gradient(1100px 720px at 50% 18%, rgba(74,110,150,.16), transparent 58%), linear-gradient(180deg, #0a121c 0%, #071018 100%);}
+#stage canvas{display:block;}
+#hud{position:absolute;left:16px;bottom:16px;padding:12px 16px;background:rgba(10,16,24,.84);border-radius:10px;border:1px solid var(--border);display:flex;gap:22px;backdrop-filter:blur(10px);box-shadow:0 18px 36px rgba(0,0,0,.24);}
+#hud .stat{display:flex;flex-direction:column;min-width:64px;}
+#hud .label{color:var(--muted);font-size:10px;letter-spacing:.1em;text-transform:uppercase;}
+#hud .value{font-weight:600;font-size:18px;font-variant-numeric:tabular-nums;}
+#hud .value.good{color:var(--good);}
+#hud .value.warn{color:var(--warn);}
+#hud .value.bad{color:var(--bad);}
+#hud .value.signal-left,#hud .value.signal-right{color:var(--warn);animation:blink 1s infinite;}
+@keyframes blink{50%{opacity:.3;}}
+#cam-row{position:absolute;right:16px;bottom:16px;display:flex;gap:6px;padding:6px;background:rgba(10,16,24,.84);border-radius:8px;border:1px solid var(--border);backdrop-filter:blur(10px);box-shadow:0 18px 36px rgba(0,0,0,.22);}
+#minimap{position:absolute;right:16px;top:16px;width:170px;height:170px;background:rgba(4,10,18,.94);border:1px solid var(--border);border-radius:10px;box-shadow:0 16px 28px rgba(0,0,0,.24);}
+#status-row{position:absolute;top:16px;left:50%;transform:translateX(-50%);display:flex;gap:8px;}
+.chip{padding:6px 12px;background:rgba(14,21,33,.85);border:1px solid var(--border);border-radius:99px;font-size:12px;backdrop-filter:blur(8px);}
+.chip .dot{display:inline-block;width:8px;height:8px;border-radius:99px;margin-right:6px;vertical-align:middle;background:var(--good);}
+.chip.warn .dot{background:var(--warn);}
+.chip.bad .dot{background:var(--bad);}
+#arrivalToast{position:absolute;top:58px;left:50%;transform:translateX(-50%);padding:10px 16px;background:rgba(10,16,24,.94);border:1px solid #69df9b;border-radius:10px;color:#edf4f8;font-size:13px;font-weight:600;backdrop-filter:blur(10px);box-shadow:0 16px 32px rgba(0,0,0,.24);opacity:0;pointer-events:none;transition:opacity .18s ease;}
+#arrivalToast.show{opacity:1;}
+#overlay{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+/* Higher specificity (#stage + #fusionCanvas = 0,2,0) beats the generic
+   #stage canvas {display:block} rule (0,1,1) — otherwise the fusion canvas
+   stays visible in all view modes and the LIDAR scatter from fusion bleeds
+   through onto Top / Chase / Sensor as floating cyan dots. */
+#stage #fusionCanvas,#stage #avStackCanvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:none;}
+#stage #fusionCanvas.active,#stage #avStackCanvas.active{display:block;}
+#fusionHud{position:absolute;left:16px;top:16px;padding:10px 14px;background:rgba(9,15,22,.92);border:1px solid rgba(121,223,255,.55);border-radius:8px;font:11px ui-monospace,Consolas,monospace;color:var(--text);display:none;backdrop-filter:blur(10px);min-width:212px;box-shadow:0 18px 30px rgba(0,0,0,.22);}
+#fusionHud.active{display:block;}
+#fusionHud .hud-row{display:flex;justify-content:space-between;padding:2px 0;gap:16px;}
+#fusionHud .hud-row .k{color:var(--muted);}
+#fusionHud .hud-row .v{color:var(--accent);font-variant-numeric:tabular-nums;}
+.det{position:absolute;border:1.5px solid var(--good);border-radius:4px;box-shadow:0 0 0 1px rgba(255,255,255,.04) inset, 0 10px 20px rgba(0,0,0,.12);background:linear-gradient(180deg, rgba(10,16,24,.09), rgba(10,16,24,.01));}
+.det.car{border-color:#7fdfff;}
+.det.stoplight{border-color:var(--warn);}
+.det.stop{border-color:var(--bad);}
+.det.speedlimit{border-color:var(--good);}
+.det.pedestrian{border-color:#ff87ad;}
+.det.low{opacity:.65;}
+.det.med{opacity:.84;}
+.det.high{box-shadow:0 0 0 1px rgba(255,255,255,.05) inset, 0 0 18px rgba(255,255,255,.12);}
+.det span{position:absolute;top:-20px;left:-1px;padding:2px 6px;background:rgba(8,12,18,.84);border:1px solid rgba(255,255,255,.05);border-radius:4px;font-size:11px;line-height:1.35;white-space:nowrap;color:#f4f8fb;}
+#err{position:absolute;top:20px;left:20px;right:20px;background:#3a0a16;color:#ffd0d0;padding:12px 16px;border-radius:6px;border:1px solid #6e1a2c;white-space:pre-wrap;font-family:ui-monospace,Consolas,monospace;font-size:12px;display:none;}
+.log{font-family:ui-monospace,Consolas,monospace;font-size:11px;background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:8px;max-height:140px;overflow-y:auto;}
+.log .row{padding:2px 0;color:var(--muted);}
+.log .row .t{color:var(--accent);margin-right:6px;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="left">
+    <h1>Autonomous City Drive</h1>
+    <div class="sub">v38 · grid-based self-driving sim</div>
+
+    <div class="section">
+      <h3>Quick Actions</h3>
+      <div class="btn-row">
+        <button id="startBtn" class="primary">Start</button>
+        <button id="pauseBtn">Pause</button>
+        <button id="resetBtn">Reset</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Set Speed</h3>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button id="speedDn" style="flex:0 0 36px;padding:6px 0;font-size:16px;">−</button>
+        <div id="setSpeedDisplay" style="flex:1;text-align:center;font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--accent);">80 mph</div>
+        <button id="speedUp" style="flex:0 0 36px;padding:6px 0;font-size:16px;">+</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;text-align:center;">car will match this when road is clear</div>
+    </div>
+
+    <div class="section">
+      <h3>Vehicle</h3>
+      <div class="btn-row">
+        <button class="vbtn active" data-veh="sedan">Sedan</button>
+        <button class="vbtn" data-veh="suv">SUV</button>
+        <button class="vbtn" data-veh="van">Van</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Drive Mode</h3>
+      <div class="btn-row">
+        <button class="destbtn active" data-mode="infinite">Infinite</button>
+        <button class="destbtn" data-mode="cutup">Cut Up</button>
+        <button class="destbtn" data-mode="destination" data-dest="market">Market</button>
+        <button class="destbtn" data-mode="destination" data-dest="campus">Campus</button>
+        <button class="destbtn" data-mode="destination" data-dest="waterfront">Waterfront</button>
+      </div>
+      <div id="cutupDisclaimer" style="display:none;margin-top:8px;padding:8px 10px;background:rgba(255,120,90,.10);border:1px solid rgba(255,120,90,.38);border-radius:6px;font-size:11px;color:#ff9878;line-height:1.55;">&#9888; Simulation only. Aggressive cut-up driving — tailgating, forcing gaps, erratic lane changes — is dangerous and illegal on real roads.</div>
+    </div>
+
+    <div class="section">
+      <h3>Telemetry</h3>
+      <div class="stat-row"><span class="k">Speed</span><span class="v" id="tSpeed">0 mph</span></div>
+      <div class="stat-row"><span class="k">Lane</span><span class="v" id="tLane">inner</span></div>
+      <div class="stat-row"><span class="k">Heading</span><span class="v" id="tHeading">0°</span></div>
+      <div class="stat-row"><span class="k">Next turn</span><span class="v" id="tNext">—</span></div>
+      <div class="stat-row"><span class="k">Destination</span><span class="v" id="tDest">Infinite drive</span></div>
+      <div class="stat-row"><span class="k">Nearest</span><span class="v" id="tNearest">Clear</span></div>
+      <div class="stat-row"><span class="k">Decision</span><span class="v" id="tReason">cruise</span></div>
+    </div>
+
+    <div class="section">
+      <h3>AI Decision Log</h3>
+      <div class="log" id="logFeed"></div>
+    </div>
+  </div>
+
+  <div id="stage">
+    <div id="status-row">
+      <div class="chip"><span class="dot"></span><span id="sLane">Lane detected</span></div>
+      <div class="chip" id="sPath"><span class="dot"></span><span>Path clear</span></div>
+      <div class="chip" id="sDrive"><span class="dot"></span><span id="sDriveText">Paused</span></div>
+    </div>
+    <div id="arrivalToast">Destination reached</div>
+    <div id="overlay"></div>
+    <canvas id="fusionCanvas" width="800" height="600"></canvas>
+    <canvas id="avStackCanvas" width="800" height="600"></canvas>
+    <div id="fusionHud"></div>
+    <canvas id="minimap" width="340" height="340"></canvas>
+    <div id="hud">
+      <div class="stat"><div class="label">Speed</div><div class="value" id="hSpeed">0 mph</div></div>
+      <div class="stat"><div class="label">State</div><div class="value" id="hState">Paused</div></div>
+      <div class="stat"><div class="label">Signal</div><div class="value signal-none" id="hSignal">—</div></div>
+      <div class="stat"><div class="label">Limit</div><div class="value" id="hLimit">— mph</div></div>
+    </div>
+    <div id="cam-row">
+      <button id="camChase" class="active">Chase</button>
+      <button id="camSensor">Sensor</button>
+      <button id="camTop">Top</button>
+      <button id="camFusion">Fusion</button>
+      <button id="camAVStack">AV Stack</button>
+    </div>
+    <div id="err"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(()=>{
+"use strict";
+
+const $ = id => document.getElementById(id);
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const lerp = (a,b,t) => a + (b-a)*t;
+const mphToMs = m => m * 0.44704;
+const msToMph = s => s / 0.44704;
+const TAU = Math.PI*2;
+
+// =================== ROUTE ===================
+class CityRoute {
+  constructor() {
+    this.laneW = 3.4;
+    this.travelHalf = this.laneW * 2;
+    this.shoulder = 1.5;
+    this.width = this.travelHalf*2 + this.shoulder*2;  // 17.6
+    this.sidewalk = 4.0;
+    this.BLOCK = 128;
+    // Half-width of the centered corner smoothing zone (in metres on each side
+    // of the intersection). With centered smoothing the rotation spans 2*CORNER
+    // total — 8 m before the intersection + 8 m after = a 16 m arc. At 35 mph
+    // that's ~1 s of continuous rotation through the corner.
+    this.CORNER = 8;
+    this.pts = [{x:0, z:0, h:0, cumZ:0}];
+    this._seed = 0xBABE1234;
+    this._lastTurnIdx = 0; // require a stretch of straight before turning
+    for(let i=0; i<320; i++) this._ext();
+  }
+  _rnd(){
+    this._seed = (Math.imul(this._seed, 1664525) + 1013904223) | 0;
+    return (this._seed >>> 0) / 4294967296;
+  }
+  _ext(){
+    // Turns are dispersed: at least 2 straight blocks between turns, and after 4
+    // straights the turn probability rises so we don't get extremely long stretches.
+    const L = this.pts[this.pts.length-1];
+    const idx = this.pts.length - 1;
+    const sinceTurn = idx - this._lastTurnIdx;
+    let dh = 0;
+    if(sinceTurn >= 2){
+      const r = this._rnd();
+      const turnChance = sinceTurn >= 4 ? 0.7 : 0.35;
+      if(r < turnChance){
+        dh = (this._rnd() < 0.5) ? -Math.PI/2 : Math.PI/2;
+      }
+    }
+    const h = L.h + dh;
+    this.pts.push({
+      x: L.x + Math.sin(h)*this.BLOCK,
+      z: L.z + Math.cos(h)*this.BLOCK,
+      h,
+      cumZ: L.cumZ + this.BLOCK
+    });
+    if(dh !== 0) this._lastTurnIdx = idx + 1;
+  }
+  _ensure(z){ while(this.pts[this.pts.length-1].cumZ < z + this.BLOCK*4) this._ext(); }
+  _seg(z){
+    this._ensure(z);
+    let lo=0, hi=this.pts.length-2;
+    while(lo<hi){
+      const m = (lo+hi+1)>>1;
+      if(this.pts[m].cumZ <= z) lo = m;
+      else hi = m-1;
+    }
+    const a = this.pts[lo], b = this.pts[lo+1];
+    const t = Math.max(0, Math.min(1, (z - a.cumZ) / this.BLOCK));
+    return {wx:a.x + (b.x-a.x)*t, wz:a.z + (b.z-a.z)*t, i:lo, a, b};
+  }
+  _la(a,b,t){
+    // LINEAR (constant angular rate) instead of cosine ease-in-out. The cosine
+    // ramp creates a slow start + slow finish that the eye reads as "drift out,
+    // then overcorrect" through the corner — a real city turn is closer to a
+    // constant steering-wheel angle, which means constant yaw rate.
+    let d = b - a;
+    while(d > Math.PI) d -= TAU;
+    while(d < -Math.PI) d += TAU;
+    return a + d * t;
+  }
+  _fwd(h){ return {x:Math.sin(h), z:Math.cos(h)}; }
+  _right(h){ return {x:Math.cos(h), z:-Math.sin(h)}; }
+  _turnInfo(nodeIdx){
+    if(nodeIdx <= 0 || nodeIdx + 1 >= this.pts.length) return null;
+    const node = this.pts[nodeIdx];
+    const next = this.pts[nodeIdx + 1];
+    let dh = next.h - node.h;
+    while(dh > Math.PI) dh -= TAU;
+    while(dh < -Math.PI) dh += TAU;
+    if(Math.abs(dh) < 1e-4) return null;
+    const dir = Math.sign(dh);
+    const radius = (2 * this.CORNER) / Math.abs(dh);
+    const inF = this._fwd(node.h);
+    const outF = this._fwd(next.h);
+    const inR = this._right(node.h);
+    const start = {x:node.x - inF.x*radius, z:node.z - inF.z*radius};
+    const end = {x:node.x + outF.x*radius, z:node.z + outF.z*radius};
+    const center = {x:start.x + inR.x*dir*radius, z:start.z + inR.z*dir*radius};
+    return {inH:node.h, outH:next.h, dir, radius, start, end, center, z0:node.cumZ - this.CORNER, z1:node.cumZ + this.CORNER};
+  }
+  _turnSample(turn, z, lat=0){
+    const t = clamp((z - turn.z0) / (2 * this.CORNER), 0, 1);
+    const h = this._la(turn.inH, turn.outH, t);
+    const right = this._right(h);
+    const radius = Math.max(0.25, turn.radius - turn.dir * lat);
+    return {
+      x: turn.center.x - right.x * turn.dir * radius,
+      z: turn.center.z - right.z * turn.dir * radius,
+      h
+    };
+  }
+  yaw(z){
+    // pts[i].h is the heading of the segment ARRIVING at pts[i]. Segment from
+    // pts[lo] to pts[lo+1] has heading b.h.
+    //
+    // Smoothing is CENTERED on each intersection: half before, half after, in a
+    // total zone of width 2*CORNER. This is geometrically essential — if all the
+    // rotation happens AFTER the intersection the path goes straight through the
+    // intersection in the OLD direction first, then slams sideways to settle
+    // into the new lane. Centering it makes the path cut the corner like a real
+    // car: the car begins to rotate as it enters the intersection paving, passes
+    // through the crossing point at 45° heading, and finishes the rotation as it
+    // exits. One continuous arc, no slide-back.
+    const {i,b} = this._seg(z);
+    const prevTurn = this._turnInfo(i);
+    if(prevTurn && z < prevTurn.z1) return this._turnSample(prevTurn, z).h;
+    const nextTurn = this._turnInfo(i + 1);
+    if(nextTurn && z > nextTurn.z0) return this._turnSample(nextTurn, z).h;
+    return b.h;
+  }
+  point(z, lat=0){
+    const {i,a,b} = this._seg(z);
+    const prevTurn = this._turnInfo(i);
+    if(prevTurn && z < prevTurn.z1){
+      const p = this._turnSample(prevTurn, z, lat);
+      return new THREE.Vector3(p.x, 0, p.z);
+    }
+    const nextTurn = this._turnInfo(i + 1);
+    if(nextTurn && z > nextTurn.z0){
+      const p = this._turnSample(nextTurn, z, lat);
+      return new THREE.Vector3(p.x, 0, p.z);
+    }
+    const p0 = prevTurn ? prevTurn.end : {x:a.x, z:a.z};
+    const p1 = nextTurn ? nextTurn.start : {x:b.x, z:b.z};
+    const z0 = a.cumZ + (prevTurn ? this.CORNER : 0);
+    const z1 = b.cumZ - (nextTurn ? this.CORNER : 0);
+    const t = clamp((z - z0) / Math.max(1e-6, z1 - z0), 0, 1);
+    const x = lerp(p0.x, p1.x, t);
+    const wz = lerp(p0.z, p1.z, t);
+    const right = this._right(b.h);
+    return new THREE.Vector3(x + right.x*lat, 0, wz + right.z*lat);
+  }
+  nextIntersection(z){
+    this._ensure(z + this.BLOCK*2);
+    const {i,a,b} = this._seg(z);
+    let turn = 'straight';
+    if(i+2 < this.pts.length){
+      const dh = this.pts[i+2].h - b.h;
+      const n = ((dh + 3*Math.PI) % TAU) - Math.PI;
+      // Label matches the driver's view: in chase / sensor view the camera rotates
+      // with the car, so a positive yaw delta (clockwise from above = north→east)
+      // makes the world drift LEFT in the screen. So we report it as a left turn
+      // to match what the driver sees, signals, and feels.
+      turn = n > 0.4 ? 'left' : n < -0.4 ? 'right' : 'straight';
+    }
+    return {x:b.x, z:b.z, distZ:b.cumZ - z, turn};
+  }
+  laneName(lat){
+    if(lat < 0) return 'oncoming';
+    return lat < this.laneW ? 'inner' : 'outer';
+  }
+}
+
+// =================== FACTORY ===================
+class Factory {
+  constructor(){
+    const m = (color, opts={}) => new THREE.MeshStandardMaterial(Object.assign({color, roughness:.7}, opts));
+    this.mats = {
+      asphalt: m(0x363f4a, {roughness:.97}),
+      sidewalk: m(0x747e8a, {roughness:.92}),
+      curb: m(0xa0a8b3, {roughness:.78}),
+      yellow: m(0xf7c84a, {roughness:.55}),
+      white: m(0xe6ecf2, {roughness:.55}),
+      grass: m(0x506b3a, {roughness:.95}),
+      dark: m(0x12161c, {roughness:.65}),
+      trim: m(0x2a313d, {roughness:.85}),
+      pole: m(0x8f9aab, {roughness:.55, metalness:.2}),
+      glass: m(0x142436, {roughness:.08, metalness:.4, transparent:true, opacity:.78}),
+      lit: m(0xa7c3d9, {roughness:.32, emissive:0x2a3f55, emissiveIntensity:.22}),
+      tire: m(0x070a10, {roughness:.85}),
+      rim: m(0xc8d0d8, {roughness:.18, metalness:.84}),
+      chrome: m(0xd4dce6, {roughness:.05, metalness:.96}),
+      headlight: m(0xfff8e8, {roughness:.06, emissive:0xfff0c8, emissiveIntensity:.42}),
+      taillight: m(0xff2211, {roughness:.18, emissive:0xff2200, emissiveIntensity:.4}),
+      signRed: m(0xd82032, {roughness:.45}),
+      signWhite: m(0xf2f5f9, {roughness:.55}),
+      lampGlow: new THREE.MeshBasicMaterial({color:0xfff4bf}),
+      facade1: m(0x4f5c69, {roughness:.9}),
+      facade2: m(0x6c7884, {roughness:.88}),
+      facade3: m(0x7a5a4c, {roughness:.92}),
+      facade4: m(0x3e4554, {roughness:.85}),
+    };
+  }
+  box(w,h,d,mat){ return new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat); }
+  cyl(r1,r2,h,seg,mat){ return new THREE.Mesh(new THREE.CylinderGeometry(r1,r2,h,seg), mat); }
+
+  addWheel(g, x, y, z, tireR, tireW, rimR, rimW, spokeCount=5){
+    const t = this.cyl(tireR, tireR, tireW, 22, this.mats.tire);
+    t.rotation.z = Math.PI/2; t.position.set(x,y,z); t.castShadow = true; g.add(t);
+    // Sidewall rings
+    for(const ox of [-rimW*.54, rimW*.54]){
+      const sw = this.cyl(tireR*.96, tireR*.96, tireW*.06, 22, this.mats.tire);
+      sw.rotation.z = Math.PI/2; sw.position.set(x+ox,y,z); g.add(sw);
+    }
+    // Rim dish
+    const dish = this.cyl(rimR*.98, rimR*.98, rimW*.72, 18, this.mats.rim);
+    dish.rotation.z = Math.PI/2; dish.position.set(x,y,z); g.add(dish);
+    // Spokes (radiate in the wheel-face plane = YZ plane at this X)
+    const spokeLen = rimR * .62, midR = rimR * .52;
+    const spokeMat = new THREE.MeshStandardMaterial({color:0xb8c2cc, roughness:.22, metalness:.88});
+    for(let i=0; i<spokeCount; i++){
+      const a = (i/spokeCount)*Math.PI*2;
+      const sp = this.box(rimW*.5, rimR*.1, spokeLen, spokeMat);
+      sp.rotation.x = a;
+      sp.position.set(x, y - Math.sin(a)*midR, z + Math.cos(a)*midR);
+      g.add(sp);
+    }
+    // Centre hub cap
+    const hub = this.cyl(rimR*.28, rimR*.28, rimW+.03, 10, this.mats.chrome);
+    hub.rotation.z = Math.PI/2; hub.position.set(x,y,z); g.add(hub);
+    // Lug-nut ring
+    const lugR = rimR*.44, lugMat = this.mats.chrome;
+    for(let i=0; i<spokeCount; i++){
+      const a = (i/spokeCount)*Math.PI*2;
+      const lug = this.cyl(.028, .028, rimW*.18, 6, lugMat);
+      lug.rotation.z = Math.PI/2;
+      lug.position.set(x, y - Math.sin(a)*lugR, z + Math.cos(a)*lugR);
+      g.add(lug);
+    }
+  }
+
+  // ──── Sedan ────
+  sedan(colorHex){
+    const g = new THREE.Group();
+    const bodyMat = new THREE.MeshStandardMaterial({color:colorHex||0x2c3e50, roughness:.42, metalness:.15});
+    const body = this.box(2.0, .68, 4.2, bodyMat); body.position.y=.52; body.castShadow=true; g.add(body);
+    const upper = this.box(1.86, .26, 3.8, bodyMat); upper.position.y=.92; g.add(upper);
+    // Rocker panels
+    for(const x of [-1.02, 1.02]){ const s=this.box(.08,.14,3.7,this.mats.dark); s.position.set(x,.26,0); g.add(s); }
+    // Cabin
+    const cabin = this.box(1.32, .50, 1.78, this.mats.dark); cabin.position.set(0, 1.14, -.20); g.add(cabin);
+    // Windshield + rear
+    const ws = this.box(1.20, .44, .08, this.mats.glass); ws.position.set(0,1.10,.64); ws.rotation.x=.30; g.add(ws);
+    const rw = this.box(1.20, .40, .08, this.mats.glass); rw.position.set(0,1.08,-1.10); rw.rotation.x=-.30; g.add(rw);
+    // Side windows
+    for(const x of [-.94, .94]){ const w=this.box(.06,.34,1.42,this.mats.glass); w.position.set(x,1.14,-.24); g.add(w); }
+    // Door lines
+    for(const z of [.20, -.40]){ const d=this.box(1.94,.54,.02,this.mats.dark); d.position.set(0,.82,z); g.add(d); }
+    // Hood
+    const hood = this.box(1.88,.07,1.36,bodyMat); hood.position.set(0,.84,1.10); g.add(hood);
+    // Bumpers
+    const fb = this.box(1.96,.22,.14,this.mats.dark); fb.position.set(0,.38,2.12); g.add(fb);
+    const rb = this.box(1.96,.22,.14,this.mats.dark); rb.position.set(0,.38,-2.12); g.add(rb);
+    // Trunk lip
+    const sp = this.box(1.60,.08,.20,bodyMat); sp.position.set(0,1.14,-2.04); g.add(sp);
+    // Grille
+    const gr = this.box(1.30,.18,.08,this.mats.dark); gr.position.set(0,.68,2.12); g.add(gr);
+    for(let gi=-2; gi<=2; gi++){ const v=this.box(.06,.16,.09,this.mats.chrome); v.position.set(gi*.28,.68,2.13); g.add(v); }
+    // Headlights
+    for(const x of [-.62,.62]){ const hl=this.box(.32,.14,.08,this.mats.headlight); hl.position.set(x,.74,2.12); g.add(hl); }
+    // Taillights + brake bar
+    const tlBar = this.box(1.52,.06,.07,this.mats.taillight); tlBar.position.set(0,.78,-2.12); g.add(tlBar);
+    for(const x of [-.66,.66]){ const tl=this.box(.30,.14,.08,this.mats.taillight); tl.position.set(x,.72,-2.12); g.add(tl); }
+    // Side mirrors
+    for(const x of [-1.06,1.06]){ const m=this.box(.10,.12,.20,bodyMat); m.position.set(x,1.00,.42); g.add(m); }
+    // Wheels (multi-spoke rims)
+    for(const wx of [-1.02,1.02]) for(const wz of [-1.42,1.42]) this.addWheel(g, wx,.32,wz,.32,.28,.18,.24);
+    // Fender bulges
+    for(const wx of [-1.02,1.02]) for(const wz of [-1.42,1.42]){
+      const fw = this.box(.12,.10,.72,bodyMat); fw.position.set(wx*1.02,.54,wz); g.add(fw);
+    }
+    // Bright yellow front-stripe on hood — unambiguous direction indicator from top view.
+    const fStripe = this.box(.55,.02,.12,new THREE.MeshBasicMaterial({color:0xffe04a}));
+    fStripe.position.set(0,.89,1.7); g.add(fStripe);
+    g.userData = {camHeight:1.18, camZ:1.6, length:4.2, width:2.0, label:'sedan'};
+    return g;
+  }
+
+  // ──── SUV ────
+  suv(colorHex){
+    const g = new THREE.Group();
+    const bodyMat = new THREE.MeshStandardMaterial({color:colorHex||0x556677, roughness:.46, metalness:.12});
+    const body = this.box(2.16,.92,4.62,bodyMat); body.position.y=.74; body.castShadow=true; g.add(body);
+    const upper = this.box(2.02,.30,4.20,bodyMat); upper.position.y=1.24; g.add(upper);
+    for(const x of [-1.09,1.09]){ const cl=this.box(.10,.70,4.60,this.mats.dark); cl.position.set(x,.52,0); g.add(cl); }
+    const skid = this.box(1.80,.10,.40,this.mats.chrome); skid.position.set(0,.22,2.28); g.add(skid);
+    const cabin = this.box(1.54,.60,2.42,this.mats.dark); cabin.position.set(0,1.50,.02); g.add(cabin);
+    const ws = this.box(1.46,.54,.10,this.mats.glass); ws.position.set(0,1.46,.96); ws.rotation.x=.26; g.add(ws);
+    const rw = this.box(1.42,.50,.10,this.mats.glass); rw.position.set(0,1.42,-1.02); rw.rotation.x=-.26; g.add(rw);
+    for(const x of [-1.02,1.02]){ const w=this.box(.08,.46,1.90,this.mats.glass); w.position.set(x,1.50,.02); g.add(w); }
+    // Roof rack
+    for(const x of [-.82,.82]){ const rl=this.box(.06,.08,3.40,this.mats.chrome); rl.position.set(x,1.86,0); g.add(rl); }
+    for(const z of [-1.1,0,1.0]){ const xb=this.box(1.66,.06,.08,this.mats.chrome); xb.position.set(0,1.88,z); g.add(xb); }
+    // Running boards
+    for(const x of [-1.18,1.18]){ const rb=this.box(.22,.08,3.0,this.mats.dark); rb.position.set(x,.42,0); g.add(rb); }
+    // Bumpers
+    const fb = this.box(2.14,.26,.16,this.mats.dark); fb.position.set(0,.38,2.42); g.add(fb);
+    const rbump = this.box(2.14,.26,.16,this.mats.dark); rbump.position.set(0,.38,-2.42); g.add(rbump);
+    // Lights
+    for(const x of [-.68,.68]){ const hl=this.box(.34,.18,.10,this.mats.headlight); hl.position.set(x,.82,2.40); g.add(hl); }
+    const tlBar = this.box(1.54,.08,.08,this.mats.taillight); tlBar.position.set(0,.92,-2.40); g.add(tlBar);
+    for(const x of [-.74,.74]){ const tl=this.box(.32,.16,.10,this.mats.taillight); tl.position.set(x,.82,-2.40); g.add(tl); }
+    // Mirrors
+    for(const x of [-1.14,1.14]){ const m=this.box(.10,.14,.22,bodyMat); m.position.set(x,1.20,.82); g.add(m); }
+    // Wheels (multi-spoke rims)
+    for(const wx of [-1.12,1.12]) for(const wz of [-1.62,1.62]) this.addWheel(g, wx,.36,wz,.36,.32,.22,.28);
+    // Fender flares
+    for(const wx of [-1.12,1.12]) for(const wz of [-1.62,1.62]){
+      const fw = this.box(.16,.12,.80,bodyMat); fw.position.set(wx*1.10,.62,wz); g.add(fw);
+    }
+    const fStripeS = this.box(.60,.02,.14,new THREE.MeshBasicMaterial({color:0xffe04a}));
+    fStripeS.position.set(0,1.06,1.95); g.add(fStripeS);
+    g.userData = {camHeight:1.44, camZ:1.8, length:4.6, width:2.16, label:'SUV'};
+    return g;
+  }
+
+  // ──── Van ────
+  van(colorHex){
+    const g = new THREE.Group();
+    const bodyMat = new THREE.MeshStandardMaterial({color:colorHex||0xc8cdd4, roughness:.5, metalness:.10});
+    const body = this.box(2.10,1.62,5.20,bodyMat); body.position.y=1.04; body.castShadow=true; g.add(body);
+    // Hood / engine bay
+    const hood = this.box(2.04,.46,1.20,bodyMat); hood.position.set(0,.54,1.94); g.add(hood);
+    // Windshield
+    const ws = this.box(1.92,.96,.10,this.mats.glass); ws.position.set(0,1.36,1.30); ws.rotation.x=.10; g.add(ws);
+    // Side windows
+    for(const x of [-1.04,1.04]){
+      const w1=this.box(.06,.62,1.40,this.mats.glass); w1.position.set(x,1.32,.30); g.add(w1);
+      const w2=this.box(.06,.62,1.40,this.mats.glass); w2.position.set(x,1.32,-1.10); g.add(w2);
+    }
+    // Rear door
+    const rw = this.box(1.66,1.12,.08,this.mats.dark); rw.position.set(0,1.16,-2.58); g.add(rw);
+    const rg = this.box(1.50,.46,.06,this.mats.glass); rg.position.set(0,1.46,-2.58); g.add(rg);
+    // Bumpers
+    const fb = this.box(2.08,.24,.14,this.mats.dark); fb.position.set(0,.34,2.58); g.add(fb);
+    const rb = this.box(2.08,.24,.14,this.mats.dark); rb.position.set(0,.34,-2.58); g.add(rb);
+    // Lights
+    for(const x of [-.70,.70]){ const hl=this.box(.32,.14,.08,this.mats.headlight); hl.position.set(x,.74,2.56); g.add(hl); }
+    for(const x of [-.74,.74]){ const tl=this.box(.30,.30,.08,this.mats.taillight); tl.position.set(x,.86,-2.58); g.add(tl); }
+    // Mirrors
+    for(const x of [-1.16,1.16]){ const m=this.box(.10,.18,.26,bodyMat); m.position.set(x,1.32,1.10); g.add(m); }
+    // Door line
+    for(const x of [-1.06,1.06]){ const dl=this.box(.04,.04,4.96,this.mats.dark); dl.position.set(x,1.10,0); g.add(dl); }
+    // Wheels (multi-spoke rims)
+    for(const wx of [-1.06,1.06]) for(const wz of [-1.84,1.78]) this.addWheel(g, wx,.34,wz,.34,.30,.20,.26);
+    // Fender bulges
+    for(const wx of [-1.06,1.06]) for(const wz of [-1.84,1.78]){
+      const fw = this.box(.14,.10,.76,bodyMat); fw.position.set(wx*1.06,.50,wz); g.add(fw);
+    }
+    const fStripeV = this.box(.60,.02,.14,new THREE.MeshBasicMaterial({color:0xffe04a}));
+    fStripeV.position.set(0,.78,2.45); g.add(fStripeV);
+    g.userData = {camHeight:1.48, camZ:1.8, length:5.2, width:2.10, label:'van'};
+    return g;
+  }
+
+  // ──── Generic vehicle by type ────
+  vehicle(type, colorHex){
+    if(type === 'suv') return this.suv(colorHex);
+    if(type === 'van') return this.van(colorHex);
+    return this.sedan(colorHex);
+  }
+
+  // ──── Building (4-side window strips, ~10 meshes) ────
+  building(w, h, d, shellMat, winMat){
+    const g = new THREE.Group();
+    const shell = this.box(w, h, d, shellMat); shell.position.y = h/2; shell.castShadow=true; shell.receiveShadow=true; g.add(shell);
+    const roof = this.box(w+.2, .55, d+.2, this.mats.dark); roof.position.y = h+.28; g.add(roof);
+    const base = this.box(w+.24, 1.0, d+.24, this.mats.trim); base.position.y = .5; g.add(base);
+    const rows = Math.max(2, Math.floor(h/3.6));
+    for(let r=0; r<rows; r++){
+      const y = 1.6 + r*(h-3)/Math.max(1, rows-1);
+      const wf = this.box(w*.78, .55, .04, winMat); wf.position.set(0,y,d/2+.02); g.add(wf);
+      const wb = this.box(w*.78, .55, .04, winMat); wb.position.set(0,y,-d/2-.02); g.add(wb);
+      const we = this.box(.04, .55, d*.78, winMat); we.position.set(w/2+.02,y,0); g.add(we);
+      const ww = this.box(.04, .55, d*.78, winMat); ww.position.set(-w/2-.02,y,0); g.add(ww);
+    }
+    return g;
+  }
+
+  // ──── Street lamp ────
+  streetLight(){
+    const g = new THREE.Group();
+    const pole = this.cyl(.05,.06,4.4,10,this.mats.pole); pole.position.y=2.2; pole.castShadow=true; g.add(pole);
+    const arm = this.box(1.0,.07,.07,this.mats.pole); arm.position.set(.42,4.14,0); g.add(arm);
+    const head = this.box(.34,.16,.26,this.mats.dark); head.position.set(.90,4.02,0); g.add(head);
+    const glow = new THREE.Mesh(new THREE.SphereGeometry(.10,10,10), this.mats.lampGlow); glow.position.set(.92,3.86,0); g.add(glow);
+    return g;
+  }
+
+  // ──── Stop sign ────
+  stopSign(){
+    const g = new THREE.Group();
+    const pole = this.cyl(.055,.055,2.6,8,this.mats.pole); pole.position.y=1.3; g.add(pole);
+    const sign = this.box(1.0,.9,.06,this.mats.signRed); sign.position.y=2.6; sign.rotation.z=Math.PI/4; g.add(sign);
+    return g;
+  }
+
+  _trafficSignalAssembly(){
+    const g = new THREE.Group();
+    const pole = this.cyl(.08,.08,4.8,12,this.mats.pole); pole.position.y=2.4; g.add(pole);
+    const arm = this.box(2.6,.12,.12,this.mats.pole); arm.position.set(-1.1,4.6,0); g.add(arm);
+    const housing = this.box(.60,1.85,.32,this.mats.dark); housing.position.set(-2.3,4.30,0); g.add(housing);
+    const lamps = {};
+    for(const [name,y,col] of [['red',4.95,0xff3344],['yellow',4.30,0xffd066],['green',3.65,0x42f58c]]){
+      const lampMat = new THREE.MeshBasicMaterial({color:0x14181c});
+      const s = new THREE.Mesh(new THREE.SphereGeometry(.20,16,16), lampMat);
+      s.position.set(-2.3, y, -.18);
+      const haloMat = new THREE.MeshBasicMaterial({color:0x000000, transparent:true, opacity:0});
+      const halo = new THREE.Mesh(new THREE.CircleGeometry(.32,18), haloMat);
+      halo.position.set(-2.3, y, -.22);
+      halo.rotation.y = Math.PI;
+      g.add(s); g.add(halo);
+      s.userData = {baseColor:col, mat:lampMat, halo, haloMat};
+      lamps[name] = s;
+    }
+    return {group:g, lamps, housing};
+  }
+
+  // ──── Traffic light ────
+  trafficLight(){
+    const g = new THREE.Group();
+    const pole = this.cyl(.08,.08,4.8,12,this.mats.pole); pole.position.y=2.4; g.add(pole);
+    const arm = this.box(2.6,.12,.12,this.mats.pole); arm.position.set(-1.1,4.6,0); g.add(arm);
+    const housing = this.box(.60,1.85,.32,this.mats.dark); housing.position.set(-2.3,4.30,0); g.add(housing);
+    const lamps = {};
+    const lampSets = [lamps];
+    const signalHeads = [housing];
+    // Bigger lamps, MeshBasicMaterial so the color is unaffected by ambient light,
+    // plus a thicker "halo" ring placed in front of the active lamp.
+    for(const [name,y,col] of [['red',4.95,0xff3344],['yellow',4.30,0xffd066],['green',3.65,0x42f58c]]){
+      const lampMat = new THREE.MeshBasicMaterial({color:0x14181c});
+      const s = new THREE.Mesh(new THREE.SphereGeometry(.20,16,16), lampMat);
+      s.position.set(-2.3, y, -.18);
+      // Halo disc — only visible when the lamp is the active one (becomes its real color)
+      const haloMat = new THREE.MeshBasicMaterial({color:0x000000, transparent:true, opacity:0});
+      const halo = new THREE.Mesh(new THREE.CircleGeometry(.32,18), haloMat);
+      halo.position.set(-2.3, y, -.22);
+      halo.rotation.y = Math.PI; // face -Z direction so driver sees it
+      g.add(s); g.add(halo);
+      s.userData = {baseColor:col, mat:lampMat, halo, haloMat};
+      lamps[name] = s;
+    }
+    const corner = 11.5;
+    for(const child of g.children){
+      child.position.x += corner;
+      child.position.z += corner;
+    }
+    const placements = [
+      {x: -corner, z: -corner, rot: Math.PI},
+      {x: corner, z: -corner, rot: -Math.PI/2},
+      {x: -corner, z: corner, rot: Math.PI/2},
+    ];
+    for(const p of placements){
+      const signal = this._trafficSignalAssembly();
+      signal.group.position.set(p.x, 0, p.z);
+      signal.group.rotation.y = p.rot;
+      g.add(signal.group);
+      lampSets.push(signal.lamps);
+      signalHeads.push(signal.housing);
+    }
+    g.userData = {lampSets, signalHeads, anchorMode:'intersection'};
+    return g;
+  }
+
+  // ──── Speed limit sign ────
+  speedSign(limit){
+    const g = new THREE.Group();
+    const pole = this.cyl(.055,.055,2.5,8,this.mats.pole); pole.position.y=1.25; g.add(pole);
+    const sign = this.box(.95,1.20,.06,this.mats.signWhite); sign.position.y=2.7; g.add(sign);
+    g.userData.limit = limit;
+    return g;
+  }
+
+  pedestrian(){
+    const g = new THREE.Group();
+    const torsoMat = new THREE.MeshStandardMaterial({color:0xe25d8a, roughness:.72});
+    const torso = this.box(.42,.72,.24,torsoMat); torso.position.y = 1.18; g.add(torso);
+    const legs = this.box(.28,.74,.18,this.mats.dark); legs.position.y = .42; g.add(legs);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(.19,14,14), new THREE.MeshStandardMaterial({color:0xf1d0b2, roughness:.82}));
+    head.position.y = 1.78; g.add(head);
+    const armL = this.box(.10,.54,.10,torsoMat); armL.position.set(-.28,1.16,0); g.add(armL);
+    const armR = this.box(.10,.54,.10,torsoMat); armR.position.set(.28,1.16,0); g.add(armR);
+    g.userData = {label:'pedestrian', width:.55, length:.55, height:1.95};
+    return g;
+  }
+}
+
+// =================== SIM ===================
+class Sim {
+  constructor(){
+    if(!window.THREE){ this._showErr('THREE.js failed to load.'); return; }
+    try { this._init(); } catch(e){ this._showErr('Init error:\n' + (e.stack||e)); }
+  }
+  _showErr(msg){
+    const el = $('err'); if(el){ el.textContent = msg; el.style.display='block'; }
+  }
+  _init(){
+    this.road = new CityRoute();
+    this.factory = new Factory();
+
+    // Scene
+    this.scene = new THREE.Scene();
+    this.scene.background = new THREE.Color(0xb0c4d8);
+    this.scene.fog = new THREE.Fog(0xb0c4d8, 80, 380);
+
+    this.stage = $('stage');
+    this.camera = new THREE.PerspectiveCamera(65, 1, .1, 600);
+    this.cameraTarget = new THREE.Vector3(0,1,30);
+
+    this.renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.setPixelRatio(Math.min(2, window.devicePixelRatio||1));
+    this.stage.appendChild(this.renderer.domElement);
+
+    // Lights
+    this.scene.add(new THREE.HemisphereLight(0xd6e4f0, 0x2d3a26, 1.18));
+    const sun = new THREE.DirectionalLight(0xffffff, 1.85);
+    sun.position.set(-50,90,-40);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048,2048);
+    sun.shadow.camera.left = -130; sun.shadow.camera.right = 130;
+    sun.shadow.camera.top = 130; sun.shadow.camera.bottom = -130;
+    this.scene.add(sun);
+
+    // Ground (big plane that follows car)
+    this.ground = new THREE.Mesh(new THREE.PlaneGeometry(5000,5000), this.factory.mats.grass);
+    this.ground.rotation.x = -Math.PI/2;
+    this.ground.position.y = -.04;
+    this.ground.receiveShadow = true;
+    this.scene.add(this.ground);
+
+    // Groups
+    this.cityGroup = new THREE.Group(); this.scene.add(this.cityGroup);
+    this.roadGroup = new THREE.Group(); this.scene.add(this.roadGroup);
+    this.dynamicGroup = new THREE.Group(); this.scene.add(this.dynamicGroup);
+    this.routeGroup = new THREE.Group(); this.scene.add(this.routeGroup);
+
+    // Ego vehicle
+    this.egoType = 'sedan';
+    this.egoCar = this.factory.vehicle(this.egoType, 0x2c3e50);
+    this.scene.add(this.egoCar);
+
+    // State
+    this.clock = new THREE.Clock();
+    this.paused = true;
+    this.mode = 'chase';
+    this.progress = 36;
+    this.lane = this.road.laneW*1.5;
+    this.targetLane = this.lane;
+    this.speed = 0;
+    this.targetMph = 80;
+    this.limitMph = 35;
+    this.steerYaw = 0;
+    this.laneVelocity = 0;
+    this.laneVel = 0;
+    this._smoothMph = null;
+    this.turnSignal = 'none';
+    this.actors = [];
+    this.pedestrians = [];
+    this.controls = [];
+    this.nextSpawnZ = this.progress + 80;
+    this.nextOncomingZ = this.progress + 100;
+    this.nextControlZ = this.progress + 120;
+    this.nextPedZ = this.progress + this.road.BLOCK;
+    this.state = 'Paused';
+    this.reason = 'cruise';
+    this.nearest = null;
+    this.destinationOptions = {
+      market: {label:'Market District', blocks:4},
+      campus: {label:'Tech Campus', blocks:7},
+      waterfront: {label:'Waterfront', blocks:10},
+    };
+    this.driveMode = 'infinite';
+    this.destination = null;
+    this._arrivalLatched = false;
+    this._arrivalToastUntil = 0;
+    this._cameraSnap = true;
+    this._intersectionLabel = null;
+    this._logEntries = [];
+    this._logT = 0;
+    this._lastLog = '';
+    this.cutupState = {targetActorId: null, laneLock: null, laneLockUntil: 0, passedUntil: new Map(), decisionCooldownUntil: 0};
+    this._routeLaneDisplay = this.targetLane;
+    this._routeLaneCandidate = this.targetLane;
+    this._routeLaneCandidateSince = 0;
+    this.perception = {
+      history: new Map(),
+      tracks: new Map(),
+      frame: {detections: [], tracks: [], stats: {detections: 0, tracks: 0, avgConfidence: 0, avgLatencyMs: 0}},
+      nextTrackId: 1,
+      bias: {x: 0, z: 0, yaw: 0},
+    };
+
+    this.minimap = $('minimap');
+    this.miniCtx = this.minimap.getContext('2d');
+
+    // Build initial city + scripted controls
+    this.rebuildCity();
+    this._seedScenario();
+    this.spawnAhead();
+
+    this.bindUI();
+    window.addEventListener('resize', () => this.resize());
+    this.resize();
+
+    this._addLog('Diagnostics OK, simulation ready');
+    this._addLog('Scenario: grid city, daytime, clear sky');
+
+    this.animate();
+  }
+
+  _seedScenario(){
+    const B = this.road.BLOCK;
+    // Pre-place a stoplight and stop sign at the first couple of intersections
+    this.addControl(B - 9, 'stoplight');
+    this.addControl(B*2 - 9, 'stop');
+    this.addControl(B*3 - 9, 'speedlimit', 35);
+    // Demo cars — kept well ahead of spawn so they can't phase into the ego at t=0.
+    this.addActor(this.progress + 95, this.road.laneW*1.5, true, false, 22);  // slow car in right lane
+    this.addActor(this.progress + 140, -this.road.laneW/2, true, true, 28); // oncoming inner
+    this.addActor(this.progress + 190, -this.road.laneW*1.5, true, true, 30); // oncoming outer
+  }
+
+  bindUI(){
+    $('startBtn').onclick = () => { this.paused = false; this._addLog('Engine engaged, path planning active'); };
+    $('pauseBtn').onclick = () => { this.paused = true; };
+    $('resetBtn').onclick = () => this.reset();
+    const _updateSpeedDisplay = () => { $('setSpeedDisplay').textContent = `${this.targetMph} mph`; };
+    $('speedDn').onclick = () => { this.targetMph = Math.max(30, this.targetMph - 10); _updateSpeedDisplay(); };
+    $('speedUp').onclick = () => { this.targetMph = Math.min(150, this.targetMph + 10); _updateSpeedDisplay(); };
+    const camButtons = [['camChase','chase'],['camSensor','sensor'],['camTop','top'],['camFusion','fusion'],['camAVStack','avstack']];
+    for(const [id, mode] of camButtons){
+      $(id).onclick = () => {
+        this.mode = mode;
+        this._cameraSnap = true;
+        for(const [bid] of camButtons) $(bid).classList.toggle('active', bid===id);
+        $('fusionCanvas').classList.toggle('active', mode==='fusion');
+        $('avStackCanvas').classList.toggle('active', mode==='avstack');
+        $('fusionHud').classList.toggle('active', mode==='fusion');
+      };
+    }
+    for(const btn of document.querySelectorAll('.vbtn')){
+      btn.onclick = () => {
+        for(const b of document.querySelectorAll('.vbtn')) b.classList.remove('active');
+        btn.classList.add('active');
+        this.egoType = btn.dataset.veh;
+        this.scene.remove(this.egoCar);
+        this.egoCar = this.factory.vehicle(this.egoType, 0x2c3e50);
+        this.scene.add(this.egoCar);
+        this._cameraSnap = true;
+      };
+    }
+    for(const btn of document.querySelectorAll('.destbtn')){
+      btn.onclick = () => {
+        this.setDriveMode(btn.dataset.mode, btn.dataset.dest || null);
+      };
+    }
+  }
+
+  setDriveMode(mode, destId=null){
+    this.driveMode = mode;
+    this._arrivalLatched = false;
+    this._arrivalToastUntil = 0;
+    if(mode === 'destination' && destId && this.destinationOptions[destId]){
+      const opt = this.destinationOptions[destId];
+      this.destination = {id:destId, label:opt.label, targetZ:this.progress + opt.blocks*this.road.BLOCK};
+      this.paused = false;
+      this._addLog(`Navigation set to ${opt.label}`);
+    } else if(mode === 'cutup'){
+      this.destination = null;
+      this._addLog('Cut-up traffic mode engaged');
+    } else {
+      this.destination = null;
+      this._addLog('Infinite drive mode engaged');
+    }
+    for(const btn of document.querySelectorAll('.destbtn')){
+      const active = btn.dataset.mode === mode && (!btn.dataset.dest || btn.dataset.dest === destId);
+      btn.classList.toggle('active', active);
+    }
+    document.getElementById('cutupDisclaimer').style.display = mode === 'cutup' ? 'block' : 'none';
+  }
+
+  reset(){
+    this.paused = true;
+    this.progress = 36;
+    this.lane = this.road.laneW*1.5;
+    this.targetLane = this.lane;
+    this.speed = 0;
+    this.pedestrians.forEach(p => this.dynamicGroup.remove(p.mesh));
+    this.actors.forEach(a => this.dynamicGroup.remove(a.mesh));
+    this.controls.forEach(c => this.dynamicGroup.remove(c.mesh));
+    this.pedestrians = [];
+    this.actors = [];
+    this.controls = [];
+    this.nextSpawnZ = this.progress + 80;
+    this.nextOncomingZ = this.progress + 100;
+    this.nextControlZ = this.progress + 120;
+    this.nextPedZ = this.progress + this.road.BLOCK;
+    this.state = 'Paused';
+    this.reason = 'cruise';
+    this.nearest = null;
+    this.turnSignal = 'none';
+    this.driveMode = 'infinite';
+    this.destination = null;
+    this._arrivalLatched = false;
+    this._arrivalToastUntil = 0;
+    this._intersectionLabel = null;
+    this._cameraSnap = true;
+    this._logEntries = []; this._logT = 0; this._lastLog = '';
+    this.cutupState = {targetActorId: null, laneLock: null, laneLockUntil: 0, passedUntil: new Map(), decisionCooldownUntil: 0};
+    this._routeLaneDisplay = this.targetLane;
+    this._routeLaneCandidate = this.targetLane;
+    this._routeLaneCandidateSince = 0;
+    if(this.perception){
+      this.perception.history.clear();
+      this.perception.tracks.clear();
+      this.perception.frame = {detections: [], tracks: [], stats: {detections: 0, tracks: 0, avgConfidence: 0, avgLatencyMs: 0}};
+      this.perception.nextTrackId = 1;
+      this.perception.bias = {x: 0, z: 0, yaw: 0};
+    }
+    this.rebuildCity();
+    this._seedScenario();
+    this.spawnAhead();
+    for(const btn of document.querySelectorAll('.destbtn')){
+      btn.classList.toggle('active', btn.dataset.mode === 'infinite');
+    }
+    document.getElementById('cutupDisclaimer').style.display = 'none';
+    this._addLog('Scenario reset');
+  }
+
+  resize(){
+    const r = this.stage.getBoundingClientRect();
+    this.renderer.setSize(r.width, r.height);
+    this.camera.aspect = r.width / r.height;
+    this.camera.updateProjectionMatrix();
+  }
+
+  // ──── CITY GENERATION ────
+  rebuildCity(){
+    this.cityGroup.traverse(c => { if(c.geometry) c.geometry.dispose(); });
+    this.cityGroup.clear();
+    while(this.roadGroup.children.length){
+      const m = this.roadGroup.children.pop();
+      if(m.geometry) m.geometry.dispose();
+    }
+    const carPos = this.road.point(this.progress, 0);
+    this._lastCityCx = carPos.x;
+    this._lastCityCz = carPos.z;
+
+    const B = this.road.BLOCK;
+    const radius = 260;
+    const i0 = Math.floor((carPos.x - radius)/B);
+    const i1 = Math.ceil((carPos.x + radius)/B);
+    const j0 = Math.floor((carPos.z - radius)/B);
+    const j1 = Math.ceil((carPos.z + radius)/B);
+
+    const roadW = this.road.width;
+    const swW = this.road.sidewalk;
+    const halfRoad = roadW/2;
+    const ixSize = roadW + 2*swW;     // intersection paving covers road + sidewalk corners
+    const swLen = B - ixSize;          // sidewalks stop at the intersection edge
+    const lenInner = B - ixSize - 4;   // lane markings pull back further inside the block
+    const f = this.factory;
+
+    // EW edges
+    for(let j=j0; j<=j1; j++){
+      for(let i=i0; i<i1; i++){
+        const cx = (i+.5)*B, cz = j*B;
+        const road = f.box(B, .04, roadW, f.mats.asphalt); road.position.set(cx,.02,cz); road.receiveShadow=true; this.roadGroup.add(road);
+        for(const sgn of [-1,1]){
+          const sw = f.box(swLen, .20, swW, f.mats.sidewalk); sw.position.set(cx,.10,cz+sgn*(halfRoad+swW/2)); sw.receiveShadow=true; this.roadGroup.add(sw);
+        }
+        const ylw = f.box(lenInner,.045,.15,f.mats.yellow); ylw.position.set(cx,.043,cz); this.roadGroup.add(ylw);
+        for(const sgn of [-1,1]){
+          const dvz = cz + sgn*this.road.laneW;
+          const dashCount = 5, dashLen = lenInner/dashCount*.55;
+          for(let d=0; d<dashCount; d++){
+            const dx = cx - lenInner/2 + (d+.5)*lenInner/dashCount;
+            const dash = f.box(dashLen,.045,.11,f.mats.white); dash.position.set(dx,.043,dvz); this.roadGroup.add(dash);
+          }
+        }
+      }
+    }
+    // NS edges
+    for(let i=i0; i<=i1; i++){
+      for(let j=j0; j<j1; j++){
+        const cx = i*B, cz = (j+.5)*B;
+        const road = f.box(roadW,.04,B,f.mats.asphalt); road.position.set(cx,.02,cz); road.receiveShadow=true; this.roadGroup.add(road);
+        for(const sgn of [-1,1]){
+          const sw = f.box(swW,.20,swLen,f.mats.sidewalk); sw.position.set(cx+sgn*(halfRoad+swW/2),.10,cz); sw.receiveShadow=true; this.roadGroup.add(sw);
+        }
+        const ylw = f.box(.15,.045,lenInner,f.mats.yellow); ylw.position.set(cx,.043,cz); this.roadGroup.add(ylw);
+        for(const sgn of [-1,1]){
+          const dvx = cx + sgn*this.road.laneW;
+          const dashCount = 5, dashLen = lenInner/dashCount*.55;
+          for(let d=0; d<dashCount; d++){
+            const dz = cz - lenInner/2 + (d+.5)*lenInner/dashCount;
+            const dash = f.box(.11,.045,dashLen,f.mats.white); dash.position.set(dvx,.043,dz); this.roadGroup.add(dash);
+          }
+        }
+      }
+    }
+    // Intersections + corner sidewalks
+    for(let i=i0; i<=i1; i++){
+      for(let j=j0; j<=j1; j++){
+        const ix = i*B, iz = j*B;
+        const ibox = f.box(ixSize,.055,ixSize,f.mats.asphalt); ibox.position.set(ix,.025,iz); ibox.receiveShadow=true; this.roadGroup.add(ibox);
+        for(const sx of [-1,1]) for(const sz of [-1,1]){
+          const cn = f.box(swW,.20,swW,f.mats.sidewalk); cn.position.set(ix+sx*(halfRoad+swW/2),.10,iz+sz*(halfRoad+swW/2)); this.roadGroup.add(cn);
+        }
+      }
+    }
+    // Street lamps (1 per edge, alternating side)
+    for(let j=j0; j<=j1; j++){
+      for(let i=i0; i<i1; i++){
+        const lx=(i+.5)*B, lz=j*B, sgn=((i+j)&1)?1:-1;
+        const lamp = f.streetLight();
+        lamp.position.set(lx, 0, lz + sgn*(halfRoad+swW*.5));
+        lamp.rotation.y = sgn>0 ? Math.PI/2 : -Math.PI/2;
+        this.cityGroup.add(lamp);
+      }
+    }
+    for(let i=i0; i<=i1; i++){
+      for(let j=j0; j<j1; j++){
+        const lx=i*B, lz=(j+.5)*B, sgn=((i+j)&1)?1:-1;
+        const lamp = f.streetLight();
+        lamp.position.set(lx + sgn*(halfRoad+swW*.5), 0, lz);
+        lamp.rotation.y = sgn>0 ? Math.PI : 0;
+        this.cityGroup.add(lamp);
+      }
+    }
+    // Buildings strictly INSIDE block interiors
+    const palette = [
+      [f.mats.facade1, f.mats.lit],
+      [f.mats.facade2, f.mats.lit],
+      [f.mats.facade3, f.mats.lit],
+      [f.mats.facade4, f.mats.lit],
+    ];
+    const rngFn = (seed) => { let s=(seed>>>0)||1; return () => { s=(Math.imul(s,1664525)+1013904223)>>>0; return s/4294967296; }; };
+    const interiorHalf = (B - 2*(halfRoad+swW))/2;
+    for(let i=i0; i<i1; i++){
+      for(let j=j0; j<j1; j++){
+        const cx=(i+.5)*B, cz=(j+.5)*B;
+        const r = rngFn(((i&0xffff)*73856093)^((j&0xffff)*19349663));
+        const safe = interiorHalf - 2;
+        // Always place 4 corner buildings — gives every block real city density.
+        const cornerOff = Math.min(safe - 6, 19);
+        for(const sx of [-1,1]) for(const sz of [-1,1]){
+          const [mA,mB] = palette[Math.floor(r()*palette.length)];
+          const w = 8 + r()*5;
+          const d = 8 + r()*5;
+          const h = 10 + r()*22;
+          // Face one of the two adjacent roads at random
+          const yaw = r() < 0.5 ? (sx>0?Math.PI/2:-Math.PI/2) : (sz>0?0:Math.PI);
+          const t = f.building(w,h,d,mA,mB);
+          t.position.set(cx + sx*cornerOff, 0, cz + sz*cornerOff);
+          t.rotation.y = yaw;
+          this.cityGroup.add(t);
+        }
+        // ~55% of blocks also get a taller central tower for variety.
+        if(r() < 0.55){
+          const [mA,mB] = palette[Math.floor(r()*palette.length)];
+          const w = 11 + r()*6, d = 11 + r()*6, h = 18 + r()*30;
+          const t = f.building(w,h,d,mA,mB);
+          t.position.set(cx + (r()-.5)*3, 0, cz + (r()-.5)*3);
+          t.rotation.y = Math.floor(r()*4)*Math.PI/2;
+          this.cityGroup.add(t);
+        }
+        // ~30% of blocks get a mid-side building between the corners.
+        if(r() < 0.30){
+          const side = Math.floor(r()*4); // 0=N, 1=E, 2=S, 3=W
+          const [mA,mB] = palette[Math.floor(r()*palette.length)];
+          const w = 9 + r()*5, d = 9 + r()*5, h = 12 + r()*20;
+          let px=cx, pz=cz, yaw=0;
+          if(side===0){ pz = cz + (safe-6); yaw = 0; }
+          else if(side===1){ px = cx + (safe-6); yaw = Math.PI/2; }
+          else if(side===2){ pz = cz - (safe-6); yaw = Math.PI; }
+          else { px = cx - (safe-6); yaw = -Math.PI/2; }
+          const t = f.building(w,h,d,mA,mB);
+          t.position.set(px, 0, pz);
+          t.rotation.y = yaw;
+          this.cityGroup.add(t);
+        }
+      }
+    }
+  }
+
+  // ──── ACTORS / CONTROLS ────
+  addActor(z, lateral, moving=true, oncoming=false, mph=null){
+    const colors = [0x8a304a, 0x244a6c, 0x4a6332, 0x5e3a28, 0x383838, 0x6c5f9e, 0x9aa4b0, 0xc8cdd4];
+    const types = ['sedan','suv','van'];
+    const type = moving ? types[Math.floor(Math.random()*types.length)] : (Math.random()<.5?'sedan':'suv');
+    const color = colors[Math.floor(Math.random()*colors.length)];
+    const mesh = this.factory.vehicle(type, color);
+    this.dynamicGroup.add(mesh);
+    const speedMph = !moving ? 0 : (mph!=null ? mph : (oncoming ? 18+Math.random()*10 : 22+Math.random()*12));
+    this.actors.push({
+      id: Math.random().toString(36).slice(2,8),
+      z, lateral, type, moving, oncoming, color,
+      speed: mphToMs(speedMph),
+      limitMph: this.limitMph,
+      ruleState: {servedStops:new Set(), stopHold:0, stopControlId:null},
+      mesh,
+      label: type
+    });
+  }
+
+  addControl(z, type, value){
+    const f = this.factory;
+    const m = type==='stoplight' ? f.trafficLight() : type==='stop' ? f.stopSign() : f.speedSign(value);
+    this.dynamicGroup.add(m);
+    this.controls.push({
+      id: Math.random().toString(36).slice(2,8),
+      z, type, value, mesh:m,
+      anchorOffset: type==='stoplight' ? 9 : 0,
+      offset: Math.random()*9,
+      served:false, stopHold:0
+    });
+  }
+
+  addPedestrian(z, alongOffset=0, fromSide=1, speed=1.3){
+    const mesh = this.factory.pedestrian();
+    this.dynamicGroup.add(mesh);
+    const sidewalkEdge = this.road.width*.5 + this.road.sidewalk - 1.1;
+    this.pedestrians.push({
+      id: Math.random().toString(36).slice(2,8),
+      z,
+      alongOffset,
+      across: fromSide * sidewalkEdge,
+      dir: -Math.sign(fromSide || 1),
+      speed,
+      mesh,
+      label:'pedestrian'
+    });
+  }
+
+  spawnAhead(){
+    const ahead = this.progress + 260;
+    const B = this.road.BLOCK;
+    while(this.nextSpawnZ < ahead){
+      this.addActor(this.nextSpawnZ, Math.random()<.5 ? this.road.laneW/2 : this.road.laneW*1.5, true, false);
+      this.nextSpawnZ += 50 + Math.random()*60;
+    }
+    while(this.nextOncomingZ < ahead){
+      this.addActor(this.nextOncomingZ, Math.random()<.5 ? -this.road.laneW/2 : -this.road.laneW*1.5, true, true);
+      this.nextOncomingZ += 60 + Math.random()*70;
+    }
+    // Sparser controls — most intersections are OPEN. 22% stoplight, 13% stop,
+    // 65% open. Gives a much less cluttered city.
+    const firstIxZ = Math.ceil(this.progress / B) * B;
+    for(let iz = firstIxZ; iz < ahead; iz += B){
+      const placementZ = iz - 9;
+      if(placementZ <= this.progress + 30) continue;
+      if(this.controls.find(c => Math.abs(c.z - placementZ) < 20)) continue;
+      const r = Math.random();
+      if(r < 0.22) this.addControl(placementZ, 'stoplight');
+      else if(r < 0.35) this.addControl(placementZ, 'stop');
+      // else: open intersection, no control
+    }
+    // Occasional speed-limit sign mid-segment
+    while(this.nextControlZ < ahead){
+      if(this.nextControlZ > this.progress + 30 && this.nextControlZ % B > 25 && this.nextControlZ % B < B - 25){
+        this.addControl(this.nextControlZ, 'speedlimit', 25 + Math.floor(Math.random()*4)*5);
+      }
+      this.nextControlZ += B*1.6 + Math.random()*40;
+    }
+    while(this.nextPedZ < ahead){
+      const crosswalkZ = this.nextPedZ + (Math.random() < 0.5 ? -3.5 : 3.5);
+      if(!this.pedestrians.find(p => Math.abs(p.z - crosswalkZ) < 14) && Math.random() < 0.55){
+        this.addPedestrian(crosswalkZ, Math.random() < 0.5 ? -3.0 : 3.0, Math.random() < 0.5 ? -1 : 1, 0.95 + Math.random()*0.55);
+      }
+      this.nextPedZ += B * (1.1 + Math.random()*0.8);
+    }
+  }
+
+  lightState(c){
+    const t = (performance.now()/1000 + c.offset) % 12;
+    if(t < 7) return 'green';
+    if(t < 9) return 'yellow';
+    return 'red';
+  }
+
+  snappedLane(lat){
+    const innerLane = this.road.laneW*1.5;  // right (normal) lane
+    const outerLane = this.road.laneW/2;    // left (overtaking) lane
+    return Math.abs(lat - outerLane) < Math.abs(lat - innerLane) ? outerLane : innerLane;
+  }
+
+  _laneConflict(actor, lane, margin=.35){
+    const egoW = this.egoCar?.userData?.width || 2.0;
+    const actorW = actor?.mesh?.userData?.width || 2.0;
+    return Math.abs(actor.lateral - lane) < (egoW + actorW)*0.5 + margin;
+  }
+
+  _laneSweepConflict(actor, laneA, laneB, margin=.35){
+    const egoW = this.egoCar?.userData?.width || 2.0;
+    const actorW = actor?.mesh?.userData?.width || 2.0;
+    const reach = (egoW + actorW) * 0.5 + margin;
+    const minLane = Math.min(laneA, laneB) - reach;
+    const maxLane = Math.max(laneA, laneB) + reach;
+    return actor.lateral >= minLane && actor.lateral <= maxLane;
+  }
+
+  _wrapAngle(a){
+    while(a > Math.PI) a -= TAU;
+    while(a < -Math.PI) a += TAU;
+    return a;
+  }
+
+  _lerpAngle(a, b, t){
+    return a + this._wrapAngle(b - a) * t;
+  }
+
+  _gauss(std=1){
+    let u = 0, v = 0;
+    while(u === 0) u = Math.random();
+    while(v === 0) v = Math.random();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(TAU * v) * std;
+  }
+
+  _perceptionSources(){
+    const sources = [];
+    for(const a of this.actors){
+      sources.push({
+        key: `car:${a.id}`,
+        kind: 'vehicle',
+        rawLabel: a.type,
+        mesh: a.mesh,
+        moving: a.moving,
+        oncoming: a.oncoming,
+        lateral: a.lateral,
+        speed: a.speed,
+        width: a.mesh?.userData?.width || 2.0,
+        length: a.mesh?.userData?.length || 4.5,
+        height: a.mesh?.userData?.height || (a.type === 'van' ? 2.05 : a.type === 'suv' ? 1.8 : 1.55),
+        color: a.oncoming ? '#ff5c7a' : '#a7c3d9',
+      });
+    }
+    for(const p of this.pedestrians){
+      sources.push({
+        key: `ped:${p.id}`,
+        kind: 'pedestrian',
+        rawLabel: 'pedestrian',
+        mesh: p.mesh,
+        moving: true,
+        oncoming: false,
+        lateral: p.across,
+        speed: p.speed,
+        width: p.mesh?.userData?.width || 0.55,
+        length: p.mesh?.userData?.length || 0.55,
+        height: p.mesh?.userData?.height || 1.95,
+        color: '#ff7aa8',
+      });
+    }
+    return sources;
+  }
+
+  _sampleHistory(hist, sampleTime){
+    if(!hist || !hist.length) return null;
+    if(sampleTime <= hist[0].t) return hist[0];
+    for(let i = hist.length - 1; i >= 0; i--){
+      const a = hist[i];
+      if(a.t > sampleTime) continue;
+      if(i === hist.length - 1) return a;
+      const b = hist[i + 1];
+      const span = Math.max(1e-6, b.t - a.t);
+      const t = clamp((sampleTime - a.t) / span, 0, 1);
+      return {
+        ...a,
+        x: lerp(a.x, b.x, t),
+        y: lerp(a.y, b.y, t),
+        z: lerp(a.z, b.z, t),
+        yaw: this._lerpAngle(a.yaw, b.yaw, t),
+        width: lerp(a.width, b.width, t),
+        length: lerp(a.length, b.length, t),
+        height: lerp(a.height, b.height, t),
+        speed: lerp(a.speed, b.speed, t),
+      };
+    }
+    return hist[hist.length - 1];
+  }
+
+  _projectWorldBox(center, size, yaw, W, H){
+    const halfW = size.width * 0.5;
+    const halfL = size.length * 0.5;
+    const halfH = size.height * 0.5;
+    const c = Math.cos(yaw);
+    const s = Math.sin(yaw);
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity, visible = 0;
+    for(const sx of [-1, 1]){
+      for(const sy of [-1, 1]){
+        for(const sz of [-1, 1]){
+          const lx = sx * halfW;
+          const ly = sy * halfH;
+          const lz = sz * halfL;
+          const corner = new THREE.Vector3(
+            center.x + lx * c + lz * s,
+            center.y + ly,
+            center.z - lx * s + lz * c
+          );
+          const proj = corner.project(this.camera);
+          if(proj.z < -1 || proj.z > 1) continue;
+          const sxp = (proj.x + 1) * 0.5 * W;
+          const syp = (-proj.y + 1) * 0.5 * H;
+          minX = Math.min(minX, sxp);
+          minY = Math.min(minY, syp);
+          maxX = Math.max(maxX, sxp);
+          maxY = Math.max(maxY, syp);
+          visible++;
+        }
+      }
+    }
+    if(!visible) return null;
+    const pad = 3;
+    return {
+      left: minX - pad,
+      top: minY - pad,
+      width: Math.max(14, maxX - minX + pad * 2),
+      height: Math.max(12, maxY - minY + pad * 2)
+    };
+  }
+
+  _sensorProfiles(){
+    return {
+      camera: {name:'camera', rangeVehicle:92, rangePed:58, halfFov:0.78, latency:0.14, posSigma:0.28, sizeSigma:0.10, yawSigma:0.05, velocitySigma:0.55, classSigma:0.18, minConfidence:0.18, dropout:0.10, occlusionMargin:0.9, canClassify:true, canSeeThrough:false},
+      lidar: {name:'lidar', rangeVehicle:108, rangePed:66, halfFov:1.00, latency:0.08, posSigma:0.10, sizeSigma:0.05, yawSigma:0.03, velocitySigma:0.40, classSigma:0.32, minConfidence:0.12, dropout:0.05, occlusionMargin:1.5, canClassify:false, canSeeThrough:false},
+      radar: {name:'radar', rangeVehicle:130, rangePed:72, halfFov:0.54, latency:0.05, posSigma:0.42, sizeSigma:0.18, yawSigma:0.15, velocitySigma:0.16, classSigma:0.48, minConfidence:0.08, dropout:0.15, occlusionMargin:0.0, canClassify:false, canSeeThrough:true},
+    };
+  }
+
+  _isOccluded(source, sample, sensorPos, sensorYaw, modality, allSamples){
+    if(modality.canSeeThrough) return false;
+    const sensorFx = Math.sin(sensorYaw);
+    const sensorFz = Math.cos(sensorYaw);
+    const sensorRx = Math.cos(sensorYaw);
+    const sensorRz = -Math.sin(sensorYaw);
+    const dx = sample.x - sensorPos.x;
+    const dz = sample.z - sensorPos.z;
+    const range = Math.hypot(dx, dz);
+    const bearing = Math.atan2(dx * sensorRz + dz * sensorRx, Math.max(0.001, dx * sensorFx + dz * sensorFz));
+    const corridor = modality.name === 'camera' ? 0.09 : 0.065;
+    for(const other of allSamples){
+      if(other.key === source.key) continue;
+      const odx = other.x - sensorPos.x;
+      const odz = other.z - sensorPos.z;
+      const oRange = Math.hypot(odx, odz);
+      if(oRange <= 0.5 || oRange >= range - modality.occlusionMargin) continue;
+      const oBearing = Math.atan2(odx * sensorRz + odz * sensorRx, Math.max(0.001, odx * sensorFx + odz * sensorFz));
+      if(Math.abs(this._wrapAngle(oBearing - bearing)) > corridor) continue;
+      if(oRange < range - modality.occlusionMargin) return true;
+    }
+    return false;
+  }
+
+  _trackRisk(track){
+    const forward = Math.max(0.001, track.latestRange ?? 999);
+    const speed = Math.hypot(track.velocity?.x || 0, track.velocity?.z || 0);
+    const closing = track.kind === 'pedestrian'
+      ? (track.intent === 'crossing' ? 1 : 0.7)
+      : (track.oncoming ? 1.1 : 0.55);
+    const ttg = forward / Math.max(0.1, Math.max(1.2, Math.abs(speed) + 0.3));
+    const proximity = clamp(1 - forward / (track.kind === 'pedestrian' ? 48 : 95), 0, 1);
+    const ttc = clamp(1 - ttg / (track.kind === 'pedestrian' ? 3.5 : 5.5), 0, 1);
+    const support = clamp((track.support || 1) / 3, 0.32, 1);
+    return clamp((proximity * 0.45 + ttc * 0.35 + closing * 0.12) * support, 0, 1);
+  }
+
+  _trackIntent(source, sample, sensorPos){
+    if(source.kind === 'pedestrian') return 'crossing';
+    const dx = sample.x - sensorPos.x;
+    const dz = sample.z - sensorPos.z;
+    const forward = dx * Math.sin(this.road.yaw(this.progress)) + dz * Math.cos(this.road.yaw(this.progress));
+    if(source.oncoming) return 'oncoming';
+    if(source.moving && forward > 0 && Math.abs(source.lateral - this.targetLane) < 1.2) return 'following';
+    if(!source.moving) return 'stationary';
+    return 'cruising';
+  }
+
+  updatePerception(dt){
+    if(!this.perception) return;
+    const now = performance.now() / 1000;
+    const yaw = this.road.yaw(this.progress);
+    const bias = this.perception.bias || (this.perception.bias = {x:0, z:0, yaw:0});
+    bias.x = lerp(bias.x, this._gauss(0.02), 0.012);
+    bias.z = lerp(bias.z, this._gauss(0.02), 0.012);
+    bias.yaw = clamp(lerp(bias.yaw, this._gauss(0.0025), 0.01), -0.025, 0.025);
+    const sensorYaw = yaw + bias.yaw;
+    const fx = Math.sin(sensorYaw), fz = Math.cos(sensorYaw);
+    const rx = Math.cos(sensorYaw), rz = -Math.sin(sensorYaw);
+    const sensorPos = this.egoCar.position.clone();
+    sensorPos.y = this.egoCar.userData?.camHeight || 1.2;
+    sensorPos.x += fx * (this.egoCar.userData?.camZ || 1.6);
+    sensorPos.z += fz * (this.egoCar.userData?.camZ || 1.6);
+    sensorPos.x += bias.x;
+    sensorPos.z += bias.z;
+
+    const sources = this._perceptionSources();
+    const historyMap = this.perception.history;
+    const activeKeys = new Set();
+    const profiles = this._sensorProfiles();
+    for(const source of sources){
+      activeKeys.add(source.key);
+      let hist = historyMap.get(source.key);
+      if(!hist){
+        hist = [];
+        historyMap.set(source.key, hist);
+      }
+      hist.push({
+        t: now,
+        x: source.mesh.position.x,
+        y: (source.mesh.position.y || 0) + source.height * 0.5,
+        z: source.mesh.position.z,
+        yaw: source.mesh.rotation.y,
+        width: source.width,
+        length: source.length,
+        height: source.height,
+        speed: source.speed,
+      });
+      if(hist.length > 120) hist.shift();
+    }
+
+    const trackMap = this.perception.tracks;
+    for(const track of trackMap.values()) track.updated = false;
+
+    const cameraDetections = [];
+    const lidarReturns = [];
+    const radarReturns = [];
+    let totalConfidence = 0;
+    let totalLatency = 0;
+    let visibleCount = 0;
+    let totalRisk = 0;
+    let cameraHits = 0;
+    let lidarHits = 0;
+    let radarHits = 0;
+
+    const baseStates = [];
+    for(const source of sources){
+      const hist = historyMap.get(source.key);
+      const sample = this._sampleHistory(hist, now - 0.04) || hist?.[hist.length - 1];
+      if(!sample) continue;
+      const dx = sample.x - sensorPos.x;
+      const dz = sample.z - sensorPos.z;
+      const forward = dx * fx + dz * fz;
+      const right = dx * rx + dz * rz;
+      const range = Math.hypot(dx, dz);
+      const bearing = Math.atan2(right, Math.max(0.001, forward));
+      const laneBias = source.kind === 'vehicle' ? Math.abs(source.lateral - this.lane) : Math.abs(source.mesh.position.x - this.egoCar.position.x);
+      const maxRange = source.kind === 'vehicle' ? 130 : 82;
+      if(forward < -2 || range > maxRange + 8) continue;
+      baseStates.push({source, hist, sample, forward, right, range, bearing, laneBias});
+    }
+
+    for(const state of baseStates){
+      const {source, hist, sample, laneBias} = state;
+      const observations = {};
+      for(const modalityName of ['camera', 'lidar', 'radar']){
+        const profile = profiles[modalityName];
+        const rangeLimit = source.kind === 'vehicle' ? profile.rangeVehicle : profile.rangePed;
+        const modalitySample = this._sampleHistory(hist, now - profile.latency) || sample;
+        const dx = modalitySample.x - sensorPos.x;
+        const dz = modalitySample.z - sensorPos.z;
+        const modalityForward = dx * fx + dz * fz;
+        const modalityRight = dx * rx + dz * rz;
+        const modalityRange = Math.hypot(dx, dz);
+        const modalityBearing = Math.atan2(modalityRight, Math.max(0.001, modalityForward));
+        if(modalityForward < -2 || modalityRange > rangeLimit || Math.abs(modalityBearing) > profile.halfFov) continue;
+        const occluded = this._isOccluded(source, modalitySample, sensorPos, sensorYaw, profile, baseStates.map(s => ({key:s.source.key, x:s.sample.x, z:s.sample.z, kind:s.source.kind, width:s.source.width, length:s.source.length})));
+        if(occluded && !(profile.canSeeThrough || (modalityName === 'lidar' && source.kind === 'pedestrian' && modalityRange < 22))) continue;
+
+        const rangeFactor = clamp(1 - modalityRange / rangeLimit, 0.08, 1);
+        const bearingFactor = clamp(1 - Math.abs(modalityBearing) / profile.halfFov, 0.08, 1);
+        const laneFactor = source.kind === 'vehicle'
+          ? clamp(1 - laneBias / (modalityName === 'radar' ? 8.5 : modalityName === 'lidar' ? 6.2 : 5.2), 0.12, 1)
+          : clamp(1 - laneBias / 8.0, 0.12, 1);
+        const visibilityFactor = occluded ? (modalityName === 'camera' ? 0.06 : 0.30) : 1;
+        const modalityBase = modalityName === 'camera' ? 0.94 : modalityName === 'lidar' ? 0.88 : 0.80;
+        const confidence = clamp(modalityBase * (0.36 + 0.64 * rangeFactor) * (0.56 + 0.44 * bearingFactor) * laneFactor * visibilityFactor, profile.minConfidence, 0.99);
+        if(confidence < profile.minConfidence && Math.random() < profile.dropout) continue;
+
+        const noisyForward = this._gauss((profile.posSigma + modalityRange * 0.0045) * (source.kind === 'pedestrian' ? 1.12 : 1));
+        const noisyRight = this._gauss((profile.posSigma * 0.68 + modalityRange * 0.0025) * (source.kind === 'pedestrian' ? 1.05 : 1));
+        const noisyUp = this._gauss(source.kind === 'pedestrian' ? 0.05 : 0.035);
+        const center = {
+          x: modalitySample.x + rx * noisyRight + fx * noisyForward,
+          y: modalitySample.y + noisyUp,
+          z: modalitySample.z + rz * noisyRight + fz * noisyForward,
+        };
+        const size = {
+          width: modalitySample.width * (1 + this._gauss(profile.sizeSigma)),
+          length: modalitySample.length * (1 + this._gauss(profile.sizeSigma)),
+          height: modalitySample.height * (1 + this._gauss(profile.sizeSigma * 0.6)),
+        };
+        const yawObs = this._wrapAngle(modalitySample.yaw + this._gauss(profile.yawSigma));
+        const velocity = {
+          x: Math.sin(modalitySample.yaw) * modalitySample.speed + this._gauss(profile.velocitySigma),
+          z: Math.cos(modalitySample.yaw) * modalitySample.speed + this._gauss(profile.velocitySigma),
+        };
+        const label = source.kind === 'pedestrian'
+          ? 'pedestrian'
+          : (modalityName === 'camera' && confidence > 0.72 && modalityRange < 44 ? source.rawLabel : 'vehicle');
+        const obs = {modality: modalityName, label, confidence, center, size, yaw: yawObs, velocity, range: modalityRange, bearing: modalityBearing, occluded, latencyMs: profile.latency * 1000};
+        observations[modalityName] = obs;
+
+        if(modalityName === 'camera'){
+          cameraHits++;
+          cameraDetections.push({
+            ...obs,
+            kind: source.kind === 'vehicle' ? 'car' : 'pedestrian',
+            classLabel: source.kind === 'pedestrian' ? 'pedestrian' : 'vehicle',
+            subLabel: source.rawLabel,
+            risk: 0,
+            support: 1,
+          });
+        } else if(modalityName === 'lidar'){
+          lidarHits++;
+          const pointCount = source.kind === 'pedestrian' ? 8 : 16;
+          const c = Math.cos(yawObs), s = Math.sin(yawObs);
+          for(let i = 0; i < pointCount; i++){
+            const sx = (Math.random() - 0.5) * size.width * (source.kind === 'pedestrian' ? 0.85 : 1.0);
+            const sz = (Math.random() - 0.5) * size.length * (source.kind === 'pedestrian' ? 0.8 : 1.0);
+            const sy = (Math.random() - 0.5) * size.height * 0.28;
+            const point = new THREE.Vector3(
+              center.x + sx * c + sz * s,
+              center.y + sy,
+              center.z - sx * s + sz * c
+            );
+            lidarReturns.push({
+              x: point.x,
+              y: point.y,
+              z: point.z,
+              intensity: clamp(0.25 + confidence * 0.65 - modalityRange / 160, 0.08, 0.95),
+              trackKey: source.key,
+              kind: source.kind === 'pedestrian' ? 'pedestrian' : 'car',
+              confidence,
+              range: modalityRange,
+            });
+          }
+        } else {
+          radarHits++;
+          radarReturns.push({
+            trackKey: source.key,
+            kind: source.kind === 'pedestrian' ? 'pedestrian' : 'car',
+            range: modalityRange,
+            bearing: modalityBearing,
+            radialVelocity: velocity.x * fx + velocity.z * fz,
+            confidence,
+          });
+        }
+      }
+
+      const support = Object.keys(observations).length;
+      if(!support) continue;
+
+      const cameraObs = observations.camera || null;
+      const lidarObs = observations.lidar || null;
+      const radarObs = observations.radar || null;
+      const weightFor = obs => obs.confidence * (obs.modality === 'camera' ? 0.38 : obs.modality === 'lidar' ? 0.42 : 0.20);
+      let centerWeight = 0;
+      let fusedX = 0, fusedY = 0, fusedZ = 0;
+      let sizeWeight = 0;
+      let fusedW = 0, fusedL = 0, fusedH = 0;
+      let yawSin = 0, yawCos = 0, yawWeight = 0;
+      let velX = 0, velZ = 0, velWeight = 0;
+      for(const obs of Object.values(observations)){
+        const wPos = weightFor(obs);
+        fusedX += obs.center.x * wPos;
+        fusedY += obs.center.y * wPos;
+        fusedZ += obs.center.z * wPos;
+        centerWeight += wPos;
+
+        const wSize = obs.modality === 'lidar' ? obs.confidence * 0.46 : obs.modality === 'camera' ? obs.confidence * 0.38 : obs.confidence * 0.16;
+        fusedW += obs.size.width * wSize;
+        fusedL += obs.size.length * wSize;
+        fusedH += obs.size.height * wSize;
+        sizeWeight += wSize;
+
+        const wYaw = obs.modality === 'radar' ? obs.confidence * 0.20 : obs.confidence * 0.40;
+        yawSin += Math.sin(obs.yaw) * wYaw;
+        yawCos += Math.cos(obs.yaw) * wYaw;
+        yawWeight += wYaw;
+
+        const wVel = obs.modality === 'radar' ? obs.confidence * 0.56 : obs.modality === 'lidar' ? obs.confidence * 0.28 : obs.confidence * 0.16;
+        velX += obs.velocity.x * wVel;
+        velZ += obs.velocity.z * wVel;
+        velWeight += wVel;
+      }
+      const fusedCenter = {
+        x: centerWeight > 1e-6 ? fusedX / centerWeight : sample.x,
+        y: centerWeight > 1e-6 ? fusedY / centerWeight : sample.y,
+        z: centerWeight > 1e-6 ? fusedZ / centerWeight : sample.z,
+      };
+      const fusedSize = {
+        width: sizeWeight > 1e-6 ? fusedW / sizeWeight : source.width,
+        length: sizeWeight > 1e-6 ? fusedL / sizeWeight : source.length,
+        height: sizeWeight > 1e-6 ? fusedH / sizeWeight : source.height,
+      };
+      const fusedYaw = yawWeight > 1e-6 ? Math.atan2(yawSin / yawWeight, yawCos / yawWeight) : sample.yaw;
+      const fusedVelocity = {
+        x: velWeight > 1e-6 ? velX / velWeight : Math.sin(sample.yaw) * sample.speed,
+        z: velWeight > 1e-6 ? velZ / velWeight : Math.cos(sample.yaw) * sample.speed,
+      };
+      const fusedConfidence = clamp(Object.values(observations).reduce((sum, obs) => sum + obs.confidence, 0) / support, 0.06, 0.99);
+      const bestCamera = cameraObs || null;
+      const displayLabel = source.kind === 'pedestrian'
+        ? 'pedestrian'
+        : (bestCamera && bestCamera.confidence > 0.68 && bestCamera.label !== 'vehicle' ? bestCamera.label : (source.rawLabel || 'vehicle'));
+      const intent = this._trackIntent(source, bestCamera?.center || lidarObs?.center || radarObs?.center || sample, sensorPos);
+
+      let track = trackMap.get(source.key);
+      if(!track){
+        track = {
+          trackId: this.perception.nextTrackId++,
+          sourceKey: source.key,
+          kind: source.kind === 'vehicle' ? 'car' : 'pedestrian',
+          classLabel: source.kind === 'vehicle' ? 'vehicle' : 'pedestrian',
+          subLabel: source.kind === 'vehicle' ? source.rawLabel : 'pedestrian',
+          label: displayLabel,
+          color: source.kind === 'pedestrian' ? '#ff87ad' : source.oncoming ? '#ff7890' : '#79dfff',
+          center: {...fusedCenter},
+          size: {...fusedSize},
+          yaw: fusedYaw,
+          velocity: {...fusedVelocity},
+          confidence: fusedConfidence,
+          support,
+          modalities: {camera: !!cameraObs, lidar: !!lidarObs, radar: !!radarObs},
+          intent,
+          risk: 0,
+          uncertainty: 1,
+          age: 0,
+          misses: 0,
+          visible: true,
+          updated: true,
+          lastSeen: now,
+          latestRange: 0,
+          latestBearing: 0,
+          laneBias,
+          moving: source.moving,
+          oncoming: source.oncoming,
+          history: [],
+        };
+        trackMap.set(source.key, track);
+      } else {
+        track.center.x = lerp(track.center.x, fusedCenter.x, 0.46);
+        track.center.y = lerp(track.center.y, fusedCenter.y, 0.36);
+        track.center.z = lerp(track.center.z, fusedCenter.z, 0.46);
+        track.size.width = lerp(track.size.width, fusedSize.width, 0.30);
+        track.size.length = lerp(track.size.length, fusedSize.length, 0.30);
+        track.size.height = lerp(track.size.height, fusedSize.height, 0.24);
+        track.velocity.x = lerp(track.velocity.x || 0, fusedVelocity.x, 0.32);
+        track.velocity.z = lerp(track.velocity.z || 0, fusedVelocity.z, 0.32);
+        track.yaw = this._lerpAngle(track.yaw, fusedYaw, 0.28);
+        track.confidence = clamp(track.confidence * 0.55 + fusedConfidence * 0.45, 0.05, 0.99);
+        track.support = support;
+        track.modalities = {camera: !!cameraObs, lidar: !!lidarObs, radar: !!radarObs};
+        track.intent = intent;
+        track.color = source.kind === 'pedestrian' ? '#ff87ad' : source.oncoming ? '#ff7890' : '#79dfff';
+        track.moving = source.moving;
+        track.oncoming = source.oncoming;
+        track.visible = true;
+        track.updated = true;
+        track.misses = 0;
+        track.lastSeen = now;
+      }
+
+      track.age = (track.age || 0) + dt;
+      track.latestRange = Math.hypot(track.center.x - sensorPos.x, track.center.z - sensorPos.z);
+      const relX = track.center.x - sensorPos.x;
+      const relZ = track.center.z - sensorPos.z;
+      track.latestBearing = Math.atan2(relX * rz + relZ * rx, Math.max(0.001, relX * fx + relZ * fz));
+      track.risk = this._trackRisk(track);
+      track.uncertainty = clamp(1 - support / 3 + (1 - track.confidence) * 0.45 + track.risk * 0.35, 0.04, 1);
+      track.label = source.kind === 'pedestrian'
+        ? 'pedestrian'
+        : (bestCamera && bestCamera.confidence > 0.68 && bestCamera.label !== 'vehicle' ? bestCamera.label : (track.subLabel || source.rawLabel || 'vehicle'));
+      track.displayLabel = track.label;
+      track.subLabel = source.kind === 'pedestrian' ? 'pedestrian' : (bestCamera && bestCamera.confidence > 0.74 ? bestCamera.label : (track.subLabel || source.rawLabel || 'vehicle'));
+      track.trackId = track.trackId || this.perception.nextTrackId++;
+      track.history.push({t: now, x: track.center.x, y: track.center.y, z: track.center.z, confidence: track.confidence});
+      if(track.history.length > 14) track.history.shift();
+      track.predictedPath = [];
+      for(let step = 0.6; step <= 2.4; step += 0.6){
+        track.predictedPath.push({x: track.center.x + (track.velocity.x || 0) * step, z: track.center.z + (track.velocity.z || 0) * step, t: step});
+      }
+
+      cameraDetections.push(...(cameraObs ? [{
+        sourceKey: source.key,
+        trackId: track.trackId,
+        kind: source.kind === 'vehicle' ? 'car' : 'pedestrian',
+        classLabel: source.kind === 'vehicle' ? 'vehicle' : 'pedestrian',
+        subLabel: source.kind === 'vehicle' ? source.rawLabel : 'pedestrian',
+        label: cameraObs.label,
+        color: source.kind === 'pedestrian' ? '#ff87ad' : source.oncoming ? '#ff7890' : '#79dfff',
+        center: cameraObs.center,
+        size: cameraObs.size,
+        yaw: cameraObs.yaw,
+        confidence: cameraObs.confidence,
+        range: cameraObs.range,
+        bearing: cameraObs.bearing,
+        modality: 'camera',
+        risk: track.risk,
+        support,
+        latencyMs: cameraObs.latencyMs,
+        occluded: cameraObs.occluded,
+      }] : []));
+
+      const averageLatency = Object.values(observations).reduce((sum, obs) => sum + obs.latencyMs * obs.confidence, 0) / Math.max(1e-6, Object.values(observations).reduce((sum, obs) => sum + obs.confidence, 0));
+      totalConfidence += track.confidence;
+      totalLatency += averageLatency;
+      totalRisk += track.risk;
+      visibleCount++;
+    }
+
+    for(const track of trackMap.values()){
+      if(track.updated) continue;
+      track.center.x += (track.velocity.x || 0) * dt;
+      track.center.z += (track.velocity.z || 0) * dt;
+      track.velocity.x *= Math.exp(-dt * 0.45);
+      track.velocity.z *= Math.exp(-dt * 0.45);
+      track.confidence = Math.max(0.05, track.confidence * Math.exp(-dt * 0.55));
+      track.misses = (track.misses || 0) + 1;
+      track.visible = false;
+      track.updated = false;
+      const dxTrack = track.center.x - sensorPos.x;
+      const dzTrack = track.center.z - sensorPos.z;
+      track.latestRange = Math.hypot(dxTrack, dzTrack);
+      track.latestBearing = Math.atan2(dxTrack * rx + dzTrack * rz, Math.max(0.001, dxTrack * fx + dzTrack * fz));
+      track.label = track.classLabel === 'vehicle' ? (track.confidence > 0.74 ? track.subLabel : 'vehicle') : 'pedestrian';
+      track.history.push({t: now, x: track.center.x, y: track.center.y, z: track.center.z, confidence: track.confidence});
+      if(track.history.length > 12) track.history.shift();
+    }
+
+    for(const [key, track] of trackMap){
+      if(track.misses > 18 || track.confidence < 0.04){
+        trackMap.delete(key);
+        historyMap.delete(key);
+      }
+    }
+    for(const key of Array.from(historyMap.keys())){
+      if(!activeKeys.has(key) && !trackMap.has(key)) historyMap.delete(key);
+    }
+
+    const trackList = Array.from(trackMap.values()).sort((a, b) => a.sourceKey.localeCompare(b.sourceKey));
+    const avgConfidence = trackList.length ? trackList.reduce((sum, track) => sum + track.confidence, 0) / trackList.length : 0;
+    this.perception.frame = {
+      detections: cameraDetections,
+      cameraDetections,
+      lidarReturns,
+      radarReturns,
+      tracks: trackList,
+      stats: {
+        detections: cameraDetections.length,
+        cameraHits,
+        lidarHits,
+        radarHits,
+        tracks: trackList.length,
+        avgConfidence,
+        avgLatencyMs: visibleCount ? totalLatency / visibleCount : 0,
+        avgRisk: trackList.length ? totalRisk / trackList.length : 0,
+      },
+    };
+  }
+
+  _limitEgoProgress(nextProgress, lane){
+    const egoLen = this.egoCar?.userData?.length || 4.5;
+    const egoW   = this.egoCar?.userData?.width  || 2.0;
+    let best = null;
+    for(const a of this.actors){
+      const actorLen = a.mesh?.userData?.length || 4.5;
+      const actorW   = a.mesh?.userData?.width  || 2.0;
+      const closingSpeed = Math.max(0, this.speed - (a.oncoming ? 0 : a.speed));
+      if(a.oncoming){
+        // Oncoming cars approach from ahead — block if laterally overlapping and closing.
+        if(a.z < this.progress) continue;           // already behind us
+        if(a.z > this.progress + 90) continue;      // too far to matter this frame
+        if(!this._laneSweepConflict(a, this.lane, lane, 0.45)) continue;
+        const maxProgress = a.z - (egoLen + actorLen) * 0.5 - (2.6 + closingSpeed * 0.12);
+        if(maxProgress >= nextProgress) continue;
+        if(!best || maxProgress < best.maxProgress) best = {actor:a, maxProgress};
+      } else {
+        // Same-direction cars: small rear buffer so we catch actors we're about to pass mid-frame.
+        if(a.z < this.progress - egoLen * 0.5) continue;
+        if(!this._laneSweepConflict(a, this.lane, lane, 0.45)) continue;
+        const maxProgress = a.z - (egoLen + actorLen) * 0.5 - (2.4 + closingSpeed * 0.18);
+        if(maxProgress >= nextProgress) continue;
+        if(!best || maxProgress < best.maxProgress) best = {actor:a, maxProgress};
+      }
+    }
+    return best;
+  }
+
+  _pedestrianRoadZ(p){
+    return p.z + p.alongOffset;
+  }
+
+  _pedestrianBlocksLane(p, lane, vehicleWidth=2.0){
+    const roadHalf = this.road.width * 0.5;
+    if(Math.abs(p.across) > roadHalf + 0.45) return false;
+    const pedHalf = (p.mesh?.userData?.width || 0.55) * 0.5;
+    const vehHalf = vehicleWidth * 0.5;
+    return Math.abs(p.across - lane) < pedHalf + vehHalf + 0.18;
+  }
+
+  _pedestrianBlocksLaneSpan(p, laneA, laneB, vehicleWidth=2.0, extraMargin=0){
+    const roadHalf = this.road.width * 0.5;
+    if(Math.abs(p.across) > roadHalf + 0.45) return false;
+    const pedHalf = (p.mesh?.userData?.width || 0.55) * 0.5;
+    const vehHalf = vehicleWidth * 0.5;
+    const reach = pedHalf + vehHalf + 0.18 + extraMargin;
+    const minLane = Math.min(laneA, laneB) - reach;
+    const maxLane = Math.max(laneA, laneB) + reach;
+    return p.across >= minLane && p.across <= maxLane;
+  }
+
+  _limitPedestrianProgress(nextProgress, lane){
+    const egoW = this.egoCar?.userData?.width || 2.0;
+    let best = null;
+    for(const p of this.pedestrians){
+      const pedZ = this._pedestrianRoadZ(p);
+      if(pedZ <= this.progress - 1.5) continue;
+      if(!this._pedestrianBlocksLaneSpan(p, lane, this.targetLane, egoW, 1.15)) continue;
+      const maxProgress = pedZ - 10.5;
+      if(maxProgress >= nextProgress) continue;
+      if(!best || maxProgress < best.maxProgress) best = {ped:p, maxProgress};
+    }
+    return best;
+  }
+
+  // ──── PLANNING ────
+  _closestLaneChangeBlocker(targetLane, aheadDist=18, rearDist=6){
+    if(Math.abs(targetLane - this.lane) < 0.18) return null;
+    const dir = Math.sign(targetLane - this.lane) || 0;
+    let best = null;
+    for(const a of this.actors){
+      if(a.oncoming) continue;
+      const dz = a.z - this.progress;
+      if(dz < -rearDist || dz > aheadDist) continue;
+      if(!this._laneSweepConflict(a, this.lane, targetLane, 0.58)) continue;
+      const onTargetSide = dir < 0 ? a.lateral < this.lane + 0.2 : a.lateral > this.lane - 0.2;
+      if(!onTargetSide) continue;
+      if(!best || dz < best.distance) best = {actor:a, distance:dz};
+    }
+    return best;
+  }
+
+  closestActorAhead(targetLane, maxDist=100, predicate=null){
+    let best = null;
+    for(const a of this.actors){
+      if(a.oncoming) continue;
+      if(predicate && !predicate(a)) continue;
+      const dz = a.z - this.progress;
+      if(dz < 2 || dz > maxDist) continue;
+      if(!this._laneConflict(a, targetLane, .1)) continue;
+      if(!best || dz < best.distance) best = {actor:a, distance:dz};
+    }
+    return best;
+  }
+
+  _actorsAheadInLane(targetLane, maxDist=100, predicate=null){
+    const list = [];
+    for(const a of this.actors){
+      if(a.oncoming) continue;
+      if(predicate && !predicate(a)) continue;
+      const dz = a.z - this.progress;
+      if(dz < 2 || dz > maxDist) continue;
+      if(!this._laneConflict(a, targetLane, .1)) continue;
+      list.push({actor:a, distance:dz});
+    }
+    list.sort((a, b) => a.distance - b.distance);
+    return list;
+  }
+
+  closestControlAhead(maxDist=80){
+    let best = null;
+    for(const c of this.controls){
+      const dz = c.z - this.progress;
+      if(dz < -2 || dz > maxDist) continue;
+      if(!best || dz < best.distance) best = {ctrl:c, distance:dz};
+    }
+    return best;
+  }
+
+  _closestControlAheadForActor(actor, maxDist=80, predicate=null){
+    let best = null;
+    for(const c of this.controls){
+      if(predicate && !predicate(c)) continue;
+      const dz = actor.oncoming ? (actor.z - c.z) : (c.z - actor.z);
+      if(dz < -2 || dz > maxDist) continue;
+      if(!best || dz < best.distance) best = {ctrl:c, distance:dz};
+    }
+    return best;
+  }
+
+  _closestPedestrianAheadForActor(actor, maxDist=32){
+    let best = null;
+    const actorWidth = actor.mesh?.userData?.width || 2.0;
+    for(const p of this.pedestrians){
+      const pz = this._pedestrianRoadZ(p);
+      const dz = actor.oncoming ? (actor.z - pz) : (pz - actor.z);
+      if(dz < 2 || dz > maxDist) continue;
+      if(!this._pedestrianBlocksLane(p, actor.lateral, actorWidth)) continue;
+      if(!best || dz < best.distance) best = {ped:p, distance:dz};
+    }
+    return best;
+  }
+
+  _actorTrafficPlan(actor, dt){
+    if(!actor.moving) return {desiredMph:0, reason:'stationary', nearest:null};
+    actor.limitMph = actor.limitMph ?? this.limitMph;
+    actor.ruleState = actor.ruleState || {servedStops:new Set(), stopHold:0, stopControlId:null};
+
+    const baseMph = msToMph(actor.speed);
+    let desiredMph = Math.min(baseMph, actor.limitMph || baseMph);
+    let reason = 'cruise';
+    let nearest = null;
+
+    const speedLimit = this._closestControlAheadForActor(actor, 12, c => c.type==='speedlimit' && Number.isFinite(c.value));
+    if(speedLimit && speedLimit.ctrl.value){
+      actor.limitMph = speedLimit.ctrl.value;
+      desiredMph = Math.min(desiredMph, actor.limitMph);
+      nearest = {kind:'speedlimit', label:`limit ${speedLimit.ctrl.value}`, distance:speedLimit.distance};
+    }
+
+    const ctrl = this._closestControlAheadForActor(actor, 60, c => c.type === 'stoplight' || c.type === 'stop');
+    if(ctrl){
+      const c = ctrl.ctrl, d = ctrl.distance;
+      if(c.type === 'stoplight'){
+        const s = this.lightState(c);
+        if(s === 'red' && d < 38){
+          desiredMph = Math.min(desiredMph, Math.max(0, (d - 8.5) * 1.0));
+          reason = 'red-light';
+          nearest = {kind:'stoplight', label:'red light', distance:d};
+        } else if(s === 'yellow' && d < 26 && d > 10){
+          desiredMph = Math.min(desiredMph, 12);
+          reason = 'yellow-light';
+          nearest = {kind:'stoplight', label:'yellow light', distance:d};
+        } else if(!nearest || d < nearest.distance){
+          nearest = {kind:'stoplight', label:`${s} light`, distance:d};
+        }
+      } else if(c.type === 'stop'){
+        if(!actor.ruleState.servedStops.has(c.id) && d < 32){
+          desiredMph = Math.min(desiredMph, Math.max(0, (d - 8) * 0.9));
+          reason = 'stop-sign';
+          nearest = {kind:'stop', label:'stop sign', distance:d};
+          if(d < 9 && desiredMph < 1.25){
+            if(actor.ruleState.stopControlId !== c.id){
+              actor.ruleState.stopControlId = c.id;
+              actor.ruleState.stopHold = 0;
+            }
+            actor.ruleState.stopHold += dt;
+            if(actor.ruleState.stopHold > 1.0){
+              actor.ruleState.servedStops.add(c.id);
+              reason = 'cleared-stop';
+            }
+          } else if(actor.ruleState.stopControlId !== c.id){
+            actor.ruleState.stopControlId = c.id;
+            actor.ruleState.stopHold = 0;
+          }
+        } else if(actor.ruleState.servedStops.has(c.id) && (!nearest || d < nearest.distance)){
+          nearest = {kind:'stop', label:'stop sign', distance:d};
+        }
+      }
+    }
+
+    const ped = this._closestPedestrianAheadForActor(actor, 30);
+    if(ped){
+      desiredMph = Math.min(desiredMph, Math.max(0, (ped.distance - 4) * 0.8));
+      reason = desiredMph < 1 ? 'pedestrian-stop' : 'pedestrian';
+      nearest = {kind:'pedestrian', label:'pedestrian', distance:ped.distance};
+    }
+
+    return {desiredMph:Math.max(0, desiredMph), reason, nearest};
+  }
+
+  laneClear(targetLane, ahead=35, rear=14, lateralMargin=.1){
+    for(const a of this.actors){
+      if(a.oncoming) continue;
+      const dz = a.z - this.progress;
+      if(dz < -rear || dz > ahead) continue;
+      if(this._laneConflict(a, targetLane, lateralMargin)) return false;
+    }
+    return true;
+  }
+
+  _oppositeLaneClear(aheadDist = 100){
+    const oppLane = -(this.road.laneW / 2);
+    for(const a of this.actors){
+      if(!a.oncoming) continue;
+      const dz = a.z - this.progress;
+      if(dz < 0 || dz > aheadDist) continue;
+      if(this._laneConflict(a, oppLane, 0.6)) return false;
+    }
+    return true;
+  }
+
+  _oppositeLaneEmpty(aheadDist = 180){
+    for(const a of this.actors){
+      if(!a.oncoming) continue;
+      const dz = a.z - this.progress;
+      if(dz >= 0 && dz <= aheadDist) return false;
+    }
+    return true;
+  }
+
+  closestPedestrianAhead(maxDist=32, laneStart=this.lane, laneEnd=laneStart, extraMargin=0){
+    let best = null;
+    for(const p of this.pedestrians){
+      const dz = this._pedestrianRoadZ(p) - this.progress;
+      if(dz < 2 || dz > maxDist) continue;
+      if(!this._pedestrianBlocksLaneSpan(p, laneStart, laneEnd, this.egoCar?.userData?.width || 2.0, extraMargin)) continue;
+      if(!best || dz < best.distance) best = {ped:p, distance:dz};
+    }
+    return best;
+  }
+
+  plan(dt){
+    const innerLane = this.road.laneW*1.5;  // right (normal) lane — US right-hand traffic
+    const outerLane = this.road.laneW/2;    // left (overtaking) lane
+    const laneChanging = Math.abs(this.targetLane - this.lane) > .22;
+    const currentLane = laneChanging ? this.targetLane : this.snappedLane(this.lane);
+    const aggressive = this.driveMode === 'cutup';
+    const cutupBrakeDecel = aggressive ? 9.0 : 4.5;
+    const cutupSafeGap = aggressive ? Math.max(12, 8 + this.speed * 0.26) : 15;
+    const cutupLaneLead = aggressive ? Math.max(22, 10 + this.speed * 0.48) : 35;
+    const cutupLaneRear = aggressive ? Math.max(8, 3.5 + this.speed * 0.18) : 14;
+    const cutupLaneMargin = aggressive ? 0.2 : 0.1;
+    const cutupLookahead = aggressive ? Math.max(125, cutupSafeGap + this.speed * 4.2) : 70;
+    const oppositeSightDist = aggressive ? Math.max(180, cutupLookahead * 1.9) : 120;
+    const pedBrakeDecel = aggressive ? 4.2 : 3.8;
+    const pedHardGap = aggressive ? 10.5 : 12;
+    const pedSafeGap = aggressive ? Math.max(9.5, 6 + this.speed * 0.18) : 12;
+    const pedApproachGap = aggressive ? Math.max(24, pedHardGap + 8 + this.speed * 0.35) : 16;
+    const pedYieldMargin = aggressive ? 2.6 : 1.0;
+    const cruiseMph = aggressive ? clamp(this.targetMph, 30, 150) : Math.min(this.targetMph, this.limitMph);
+    let desiredLane = currentLane;
+    let desiredMph = cruiseMph;
+    let reason = aggressive ? 'cutup' : 'cruise';
+    let nearest = null;
+    const now = this._logT;
+
+    // Off-road recovery: if the car has drifted past road boundaries steer back immediately.
+    const roadRightEdge = this.road.laneW * 2 + this.road.shoulder;
+    const roadLeftEdge  = -(this.road.laneW + this.road.shoulder);
+    if(this.lane > roadRightEdge || this.lane < roadLeftEdge){
+      if(aggressive){ this.cutupState.laneLock = null; this.cutupState.laneLockUntil = 0; }
+      const recoverLane = this.lane < 0 ? innerLane : outerLane;
+      return {desiredLane: recoverLane, desiredMph: Math.min(cruiseMph, 30), reason: 'recovery', nearest: null};
+    }
+
+    if(aggressive){
+      for(const [id, until] of this.cutupState.passedUntil){
+        if(until <= now) this.cutupState.passedUntil.delete(id);
+      }
+      if(this.cutupState.laneLockUntil && this.cutupState.laneLockUntil <= now){
+        this.cutupState.laneLock = null;
+        this.cutupState.laneLockUntil = 0;
+      }
+      // Safety: only use the opposite lane when no oncoming cars are visible in sight distance.
+      if(this.cutupState.laneLock != null && this.cutupState.laneLock < 0 && !this._oppositeLaneEmpty(oppositeSightDist)){
+        this.cutupState.laneLock = null;
+        this.cutupState.laneLockUntil = 0;
+      }
+      if(this.cutupState.decisionCooldownUntil && this.cutupState.decisionCooldownUntil <= now){
+        this.cutupState.decisionCooldownUntil = 0;
+      }
+    }
+    if(this.destination){
+      const remain = this.destination.targetZ - this.progress;
+      nearest = {kind:'destination', label:this.destination.label, distance:Math.max(0, remain)};
+      // Pull toward curb well before stopping — only in non-aggressive mode
+      if(!aggressive){
+        const curbLane = this.road.laneW * 2 - 0.5; // ~6.3m, near right curb
+        if(remain < 90)  desiredLane = innerLane;  // merge right first
+        if(remain < 28)  desiredLane = curbLane;   // drift to curb
+      }
+      if(remain < 55){
+        desiredMph = Math.min(desiredMph, Math.max(0, (remain - 4)*0.9));
+        // Don't stop inside an intersection — coast through at low speed first
+        const inter = this.road.nextIntersection(this.progress);
+        const insideIntersection = inter.turn !== 'straight' && inter.distZ < 20;
+        if(remain < 7 && !insideIntersection){
+          reason = 'arrival';
+        } else if(remain < 7){
+          desiredMph = Math.min(desiredMph, 4);
+          reason = 'destination';
+        } else {
+          reason = 'destination';
+        }
+      }
+    }
+
+    // Speed limit pickup
+    const speedLimitAhead = this.controls.find(c => c.type==='speedlimit' && c.z - this.progress > -3 && c.z - this.progress < 8);
+    if(speedLimitAhead){
+      if(this.limitMph !== speedLimitAhead.value){
+        this.limitMph = speedLimitAhead.value;
+        this._addLog(`Speed limit changed to ${this.limitMph} mph`);
+      }
+      if(!aggressive) desiredMph = Math.min(desiredMph, this.limitMph);
+    }
+
+    // Traffic-rule control — normal mode obeys all signals, cut-up ignores them completely
+    if(!aggressive){
+      const ctrl = this.closestControlAhead(80);
+      if(ctrl){
+        const c = ctrl.ctrl, d = ctrl.distance;
+        if(c.type === 'stoplight'){
+          const s = this.lightState(c);
+          if(s === 'red'){
+            // Cautious: smooth deceleration, stop at ~9m before the line
+            desiredMph = Math.max(0, (d - 9) * 1.1);
+            reason = 'red-light';
+            nearest = {kind:'stoplight', label:`red light`, distance:d};
+          } else if(s === 'yellow' && d < 45){
+            desiredMph = Math.min(desiredMph, 18);
+            reason = 'yellow-light';
+            nearest = {kind:'stoplight', label:`yellow light`, distance:d};
+          } else {
+            nearest = {kind:'stoplight', label:`${s} light`, distance:d};
+          }
+        } else if(c.type === 'stop'){
+          if(d < 40){
+            nearest = {kind:'stop', label:'stop sign', distance:d};
+            if(!c.served){
+              desiredMph = Math.max(0, (d - 9) * 0.9);
+              reason = 'stop-sign';
+              if(this.speed < mphToMs(1.5) && d < 11){
+                c.stopHold += dt;
+                if(c.stopHold > 1.5){
+                  c.served = true;
+                  this._addLog('Full stop complete, proceeding through intersection');
+                }
+              }
+            } else {
+              desiredMph = Math.min(desiredMph, 16 + d*.5);
+              reason = 'cleared-stop';
+            }
+          }
+        }
+      }
+    }
+
+    const ped = this.closestPedestrianAhead(aggressive ? 130 : 90, this.lane, laneChanging ? this.targetLane : currentLane, pedYieldMargin);
+    if(ped){
+      if(aggressive){
+        // Try to dodge into the other lane; only brake if dodge is impossible
+        const dodgeLane = currentLane === innerLane ? outerLane : innerLane;
+        const canDodge = !this.closestPedestrianAhead(55, dodgeLane, dodgeLane, 1.4) && this.laneClear(dodgeLane, Math.max(26, cutupLaneLead * 0.7), Math.max(8, cutupLaneRear * 0.7), cutupLaneMargin);
+        const pedStopMs = Math.sqrt(Math.max(0, 2 * pedBrakeDecel * (ped.distance - pedHardGap)));
+        const pedApproachMph = ped.distance > pedApproachGap ? cruiseMph : Math.max(6, (ped.distance - pedHardGap) * 2.6);
+        if(canDodge && ped.distance > Math.max(18, pedSafeGap + 8)){
+          desiredLane = dodgeLane;
+          reason = 'avoiding';
+          desiredMph = Math.min(desiredMph, Math.max(32, ped.distance * 2.3));
+        } else {
+          desiredMph = Math.min(desiredMph, msToMph(pedStopMs), pedApproachMph);
+          reason = ped.distance < pedHardGap + 1.0 ? 'pedestrian-stop' : 'pedestrian';
+        }
+      } else {
+        // Cautious: detect from far, stop with large buffer, never swerve
+        desiredMph = Math.min(desiredMph, Math.max(0, (ped.distance - 12) * 0.6));
+        reason = desiredMph < 1 ? 'pedestrian-stop' : 'pedestrian';
+      }
+      nearest = {kind:'pedestrian', label:'pedestrian', distance:ped.distance};
+    }
+
+    // Follow / overtake
+    const ignorePassed = aggressive ? (a => !this.cutupState.passedUntil.has(a.id)) : null;
+    const altLane = currentLane === innerLane ? outerLane : innerLane;
+    const currentBlockers = aggressive ? this._actorsAheadInLane(currentLane, 220, ignorePassed) : [];
+    const altBlockers = aggressive ? this._actorsAheadInLane(altLane, 220, ignorePassed) : [];
+    const currentAhead = aggressive ? currentBlockers[0] || null : this.closestActorAhead(currentLane, 70, ignorePassed);
+    const altAhead = aggressive ? altBlockers[0] || null : null;
+    const currentGap = currentAhead ? currentAhead.distance : Infinity;
+    const altGap = altAhead ? altAhead.distance : Infinity;
+    if(aggressive){
+      let laneToPass = this.cutupState.laneLock;
+      let allowReplan = !laneToPass;
+      const coolingDown = !laneChanging && !laneToPass && now < (this.cutupState.decisionCooldownUntil || 0);
+      if(coolingDown) allowReplan = false;
+      if(laneToPass != null && laneToPass >= 0){
+        const lockReached = Math.abs(this.lane - laneToPass) < 0.55;
+        if(lockReached){
+          const lockedAhead = this.closestActorAhead(laneToPass, Math.max(42, cutupLaneLead * 0.9), ignorePassed);
+          if(!lockedAhead || lockedAhead.distance > Math.max(55, cutupLaneLead * 1.15)){
+            this.cutupState.laneLock = null;
+            this.cutupState.laneLockUntil = 0;
+            this.cutupState.decisionCooldownUntil = now + 1.15;
+            laneToPass = null;
+            allowReplan = false;
+          }
+        } else {
+          allowReplan = false;
+        }
+      }
+
+      // Only evaluate new lane decisions when there's no active lock.
+      // Use snapped actual lane (not mid-transition targetLane) to avoid oscillation.
+      if(allowReplan){
+        const evalLane = this.snappedLane(this.lane);
+        const evalAlt  = evalLane === innerLane ? outerLane : innerLane;
+        const evalBlockers = this._actorsAheadInLane(evalLane, cutupLookahead, ignorePassed);
+        const evalAhead  = evalBlockers[0] || null;
+        const evalGap    = evalAhead ? evalAhead.distance : Infinity;
+        const evalAltFirst = this._actorsAheadInLane(evalAlt, cutupLookahead, ignorePassed)[0] || null;
+        const evalAltGap   = evalAltFirst ? evalAltFirst.distance : Infinity;
+
+        const evalClosing = evalAhead ? Math.max(1.0, this.speed - evalAhead.actor.speed) : 1.0;
+        const evalTtc = evalAhead ? evalGap / evalClosing : Infinity;
+        if(evalAhead && (evalGap < cutupLookahead || evalTtc < 6.5)){
+          const urgentBlocker = evalGap < Math.max(50, cutupSafeGap + 14) || evalTtc < 5.4;
+          // Try the other same-direction lane first
+          const altClear = this.laneClear(evalAlt, cutupLaneLead, cutupLaneRear, cutupLaneMargin);
+          const currentLaneBlocked = evalGap < Math.max(cutupLookahead * 0.8, cutupSafeGap + 18);
+          const altLaneBlocked = !!evalAltFirst && evalAltGap < Math.max(cutupLookahead * 0.85, evalGap + 24);
+          const normalLanesBlocked = currentLaneBlocked && (altLaneBlocked || !altClear);
+          const altUseful = altClear && (evalAltGap > evalGap + 6 || (urgentBlocker && evalAltGap > cutupSafeGap + 16));
+          if(
+            (normalLanesBlocked || (urgentBlocker && !altUseful && evalAltGap < evalGap + 10)) &&
+            (evalGap < Math.max(72, cutupSafeGap + 26) || evalTtc < 6.2) &&
+            this._oppositeLaneEmpty(oppositeSightDist)
+          ){
+            // Both same-direction lanes are boxed in, and the oncoming lane is empty.
+            const oppLane = -(this.road.laneW / 2);
+            laneToPass = oppLane;
+            this.cutupState.laneLock = oppLane;
+            this.cutupState.laneLockUntil = now + 5.5;
+            this.cutupState.decisionCooldownUntil = now + 0.8;
+            this.cutupState.targetActorId = evalAhead.actor.id;
+          } else if(altUseful){
+            laneToPass = evalAlt;
+            this.cutupState.laneLock = evalAlt;
+            this.cutupState.laneLockUntil = now + 6.0;
+            this.cutupState.decisionCooldownUntil = now + 0.9;
+            this.cutupState.targetActorId = evalAhead.actor.id;
+          }
+        }
+      }
+
+      if(laneToPass != null){
+        const isOppLane = laneToPass < 0;
+        const laneAhead = isOppLane ? null : (laneToPass === altLane ? altAhead : currentAhead);
+        desiredLane = laneToPass;
+        reason = 'cutup';
+        if(laneAhead){
+          if(!nearest || laneAhead.distance < nearest.distance) nearest = {kind:'car', label:laneAhead.actor.label, distance:laneAhead.distance};
+          if(laneAhead.actor.id === this.cutupState.targetActorId && laneAhead.distance < 48) this.cutupState.laneLockUntil = now + 6.0;
+          // Physics-based: max speed such that full 18 m/s² braking reaches NPC speed at 5 m gap
+          const lNpcMs = laneAhead.actor.speed;
+          const lMaxMs = lNpcMs + Math.sqrt(Math.max(0, 2 * cutupBrakeDecel * (laneAhead.distance - cutupSafeGap)));
+          // Always respect the physics cap — never raise speed into a blocked lane
+          desiredMph = Math.min(desiredMph, msToMph(lMaxMs));
+          if(laneAhead.distance < cutupSafeGap - 2){
+            // Too close — abort lane lock, fall back to blocked-lane braking
+            this.cutupState.laneLock = null;
+            this.cutupState.laneLockUntil = 0;
+          }
+        } else {
+          // Clear lane — push to cruise
+          desiredMph = Math.max(desiredMph, cruiseMph);
+        }
+      } else if(currentAhead && currentGap < cutupLookahead){
+        // Blocked with no active lane lock — physics-based braking so we never need the hard clamp.
+        // npcMs + √(2·18·(gap−safeGap)) = max speed that allows full-decel stop at safe distance.
+        reason = 'cutup';
+        nearest = nearest || {kind:'car', label:currentAhead.actor.label, distance:currentGap};
+        const npcMs  = currentAhead.actor.speed;
+        const maxSafeMs  = npcMs + Math.sqrt(Math.max(0, 2 * cutupBrakeDecel * (currentGap - cutupSafeGap)));
+        const maxSafeMph = msToMph(maxSafeMs);
+        // If speed must drop significantly, try the opposite lane as an escape first
+        const oppLane = -(this.road.laneW / 2);
+        const altClearNow = this.laneClear(altLane, cutupLaneLead, cutupLaneRear, cutupLaneMargin);
+        const altAheadNow = this._actorsAheadInLane(altLane, cutupLookahead, ignorePassed)[0] || null;
+        const altGapNow = altAheadNow ? altAheadNow.distance : Infinity;
+        const currentLaneBlocked = currentGap < Math.max(cutupLookahead * 0.8, cutupSafeGap + 18);
+        const altLaneBlocked = !!altAheadNow && altGapNow < Math.max(cutupLookahead * 0.85, currentGap + 24);
+        const normalLanesBlocked = currentLaneBlocked && (altLaneBlocked || !altClearNow);
+        const urgentCurrentBlock = currentGap < Math.max(50, cutupSafeGap + 14) || maxSafeMph < cruiseMph * 0.76;
+        const altUsefulNow = altClearNow && (altGapNow > currentGap + 6 || (urgentCurrentBlock && altGapNow > cutupSafeGap + 16));
+        if((normalLanesBlocked || (urgentCurrentBlock && !altUsefulNow && altGapNow < currentGap + 10) || maxSafeMph < cruiseMph * 0.80) && this._oppositeLaneEmpty(oppositeSightDist)){
+          desiredLane = oppLane;
+          this.cutupState.laneLock = oppLane;
+          this.cutupState.laneLockUntil = now + 4.5;
+          this.cutupState.decisionCooldownUntil = now + 0.8;
+          desiredMph = Math.max(desiredMph, cruiseMph);
+        } else if(altUsefulNow){
+          desiredLane = altLane;
+          this.cutupState.laneLock = altLane;
+          this.cutupState.laneLockUntil = now + 5.0;
+          this.cutupState.decisionCooldownUntil = now + 0.9;
+          desiredMph = Math.max(desiredMph, cruiseMph);
+        } else {
+          desiredMph = Math.min(desiredMph, maxSafeMph);
+        }
+      }
+      if(laneChanging){
+        const committedLane = this.targetLane;
+        const oppositeUnsafe = committedLane < 0 && !this._oppositeLaneEmpty(Math.max(70, oppositeSightDist * 0.45));
+        const keepCommit = desiredLane !== committedLane &&
+          Math.abs(this.lane - committedLane) > 0.45 &&
+          reason !== 'pedestrian-stop' &&
+          !oppositeUnsafe;
+        if(keepCommit){
+          desiredLane = committedLane;
+          this.cutupState.laneLock = committedLane;
+          this.cutupState.laneLockUntil = Math.max(this.cutupState.laneLockUntil || 0, now + 1.2);
+          this.cutupState.decisionCooldownUntil = Math.max(this.cutupState.decisionCooldownUntil || 0, now + 0.8);
+          if(reason === 'cruise' || reason === 'following' || reason === 'cutup') reason = this.reason;
+        }
+      }
+    } else if(currentAhead){
+      const a = currentAhead.actor, d = currentAhead.distance;
+      // Follow distance: cut-up uses stopping-distance formula; normal uses 2.5s time-gap rule
+      const stopDist = (this.speed * this.speed) / (2 * (aggressive ? 18 : 4.5));
+      const followDist   = aggressive ? Math.max(8,  stopDist * 0.55 + 6)   : Math.max(15, this.speed * 3.0 + 6);
+      const followWindow = aggressive ? Math.max(35, stopDist * 1.1)         : Math.max(35, followDist * 1.2);
+      if(d < followDist + followWindow){
+        const aMph = msToMph(a.speed);
+        if(d < followDist){
+          desiredMph = Math.min(desiredMph, Math.max(0, aMph + (aggressive ? 4 : -3)));
+        } else {
+          // Blend smoothly from cruiseMph at the far edge down to car-ahead speed at followDist
+          const t = (d - followDist) / followWindow;
+          desiredMph = Math.min(desiredMph, lerp(aMph + (aggressive ? 4 : -3), cruiseMph, clamp(t, 0, 1)));
+        }
+        if(!nearest) nearest = {kind:'car', label:a.label, distance:d};
+        if(reason === 'cruise' || reason === 'destination' || reason === 'cutup') reason = 'following';
+        // Overtake: cut-up always tries; normal only when car ahead is much slower with a big clear gap
+        if(a.moving && (aggressive ? d > 8 : aMph < this.targetMph - 15) && d > (aggressive ? 8 : 18)){
+          if(this.laneClear(altLane, aggressive ? cutupLaneLead : 70, aggressive ? cutupLaneRear : 16, aggressive ? cutupLaneMargin : 0.1)){
+            desiredLane = altLane;
+            reason = 'overtaking';
+            desiredMph = cruiseMph;
+          }
+        } else if(!a.moving && d < 18){
+          // Static obstacle (parked car) — must change lanes
+          const altLane = currentLane === innerLane ? outerLane : innerLane;
+          if(this.laneClear(altLane, aggressive ? Math.max(24, cutupLaneLead * 0.75) : 30, aggressive ? Math.max(8, cutupLaneRear * 0.75) : 10, aggressive ? cutupLaneMargin : 0.1)){
+            desiredLane = altLane;
+            reason = 'avoiding';
+          } else {
+            desiredMph = Math.min(desiredMph, aggressive ? 12 : 6);
+          }
+        }
+      }
+    }
+
+    // After overtaking, return to the inner lane aggressively. The slow car we
+    // just passed is typically ~6-12 m behind in the inner lane, so the rear
+    // check was rejecting the return. Loosened to 22 m ahead / 3 m behind.
+    if(!aggressive && currentLane === outerLane && reason !== 'overtaking' && reason !== 'avoiding'){
+      const aheadInner = this.closestActorAhead(innerLane, 35);
+      if((!aheadInner || aheadInner.distance > (aggressive ? 16 : 22)) && this.laneClear(innerLane, aggressive ? 16 : 22, aggressive ? 2 : 3)){
+        desiredLane = innerLane;
+        if(reason === 'cruise' || reason === 'destination' || reason === 'cutup') reason = 'lane-return';
+      }
+    }
+
+    if(laneChanging && !aggressive){
+      if(desiredLane !== this.targetLane) desiredLane = this.targetLane;
+      if((reason === 'cruise' || reason === 'following') && (this.reason === 'overtaking' || this.reason === 'avoiding' || this.reason === 'lane-return')){
+        reason = this.reason;
+      }
+    }
+
+    // Corner braking — F1 physics-based late braking for cut-up, cautious for normal
+    {
+      const inter = this.road.nextIntersection(this.progress);
+      if(inter.turn !== 'straight'){
+        if(aggressive){
+          // Physics: compute max speed you can be going now and still reach cornerMinMs at distZ=0
+          // with 18 m/s² decel. Shift by 8 m reaction buffer so braking starts slightly early.
+          const cornerMinMs = mphToMs(38);
+          const dist = Math.max(0, inter.distZ - 16);
+          const maxMs = Math.sqrt(cornerMinMs * cornerMinMs + 2 * cutupBrakeDecel * dist);
+          desiredMph = Math.min(desiredMph, msToMph(maxMs));
+        } else if(inter.distZ < 80){
+          const cornerCap = clamp(inter.distZ * 0.6, 18, this.limitMph);
+          desiredMph = Math.min(desiredMph, cornerCap);
+        }
+      }
+    }
+
+    return {desiredLane, desiredMph:Math.max(0,desiredMph), reason, nearest};
+  }
+
+  // ──── VEHICLE / CAMERA UPDATE ────
+  updateVehicle(dt){
+    if(this.paused){
+      this.speed = lerp(this.speed, 0, 1 - Math.exp(-dt*3));
+      this.state = 'Paused';
+      this.nearest = null;
+      this.reason = 'cruise';
+      return null;
+    }
+    const analysis = this.plan(dt);
+
+    // Intersection signal
+    const inter = this.road.nextIntersection(this.progress);
+    if(inter.turn !== 'straight' && inter.distZ < 55){
+      this.turnSignal = inter.turn;
+      this._intersectionLabel = `Turning ${inter.turn} at intersection`;
+    } else if(inter.distZ > 70 || inter.turn === 'straight'){
+      if(this._intersectionLabel){
+        this._intersectionLabel = null;
+        if(Math.abs(this.targetLane - this.lane) < .3) this.turnSignal = 'none';
+      }
+    }
+
+    this.targetLane = analysis.desiredLane;
+
+    // ── Lateral ───────────────────────────────────────────────────────────────
+    // Single critically-damped spring for both modes (ζ≈1, no oscillation).
+    // maxLat limits peak lateral velocity: normal ~5s lane change, cut-up ~2.5s.
+    const laneErr         = this.targetLane - this.lane;
+    const speedForLateral = Math.max(this.speed, mphToMs(8));
+    const cutupMode       = this.driveMode === 'cutup';
+    const aggressivePass  = cutupMode && (analysis.reason === 'cutup' || analysis.reason === 'overtaking' || analysis.reason === 'avoiding');
+    const urgentLaneShift = aggressivePass && analysis.nearest?.kind === 'car' && analysis.nearest.distance < Math.max(24, 18 + this.speed * 0.55);
+    const maxLat          = urgentLaneShift ? 2.7 : aggressivePass ? 1.95 : 0.75;  // m/s — natural lane-change rates
+    // Critical damping: laneDamping = 2*sqrt(laneSpring) → ζ=1.0, zero overshoot/ringing
+    // Cut-up uses stiffer spring so lane change completes in ~1.8s vs ~2.7s for normal
+    const laneSpring      = cutupMode ? (urgentLaneShift ? 13.0 : 8.8) : 3.0;
+    const laneDamping     = cutupMode ? (urgentLaneShift ? 7.22 : 5.94) : 3.46;
+    this.laneVel += (laneErr * laneSpring - this.laneVel * laneDamping) * dt;
+    const laneChangeBlocker = Math.abs(laneErr) > 0.2 ? this._closestLaneChangeBlocker(this.targetLane, cutupMode ? 16 : 10, cutupMode ? 5 : 3) : null;
+    if(laneChangeBlocker){
+      const committedEnough = Math.abs(this.lane - this.targetLane) < 0.55;
+      const blockerAheadish = laneChangeBlocker.distance > -1.5;
+      if(!committedEnough && blockerAheadish){
+        const fallbackLane = this.snappedLane(this.lane);
+        this.targetLane = fallbackLane;
+        this.laneVel = 0;
+        if(cutupMode){
+          this.cutupState.laneLock = fallbackLane;
+          this.cutupState.laneLockUntil = Math.max(this.cutupState.laneLockUntil || 0, this._logT + 1.2);
+          this.cutupState.decisionCooldownUntil = Math.max(this.cutupState.decisionCooldownUntil || 0, this._logT + 0.9);
+        }
+      } else {
+        this.laneVel *= 0.3;
+      }
+      if(laneChangeBlocker.distance < 8){
+        this.speed = Math.min(this.speed, laneChangeBlocker.actor.speed + 1.0);
+        this._smoothMph = Math.min(this._smoothMph ?? msToMph(this.speed), msToMph(this.speed));
+      }
+    }
+    // Emergency lateral evasion: if physically in oncoming zone with oncoming traffic close,
+    // override the spring and slam toward outerLane — the hard limiter stops forward progress
+    // but without this the car just sits still while the oncoming car passes through it.
+    if(this.lane < 0.2){
+      const outerLanePos = this.road.laneW / 2;
+      const egoHW = (this.egoCar?.userData?.width || 2.0) / 2;
+      for(const a of this.actors){
+        if(!a.oncoming) continue;
+        const dz = a.z - this.progress;
+        if(dz < 0 || dz > 55) continue;
+        if(Math.abs(a.lateral - this.lane) >= egoHW + (a.mesh?.userData?.width||2.0)/2 + 0.3) continue;
+        // Oncoming car laterally overlapping — force emergency move to outerLane
+        if(cutupMode){ this.cutupState.laneLock = null; this.cutupState.laneLockUntil = 0; }
+        this.targetLane = outerLanePos;
+        this.laneVel = 3.5;  // hard lateral push regardless of maxLat
+        break;
+      }
+    }
+    const laneVelCap = this.lane < 0.2 ? 3.5 : maxLat;
+    this.laneVel  = clamp(this.laneVel, -laneVelCap, laneVelCap);
+    const prevLane = this.lane;
+    this.lane += this.laneVel * dt;
+    this.lane = clamp(this.lane, -(this.road.laneW + this.road.shoulder), this.road.laneW * 2 + this.road.shoulder);
+    this.laneVelocity = this.laneVel;
+    // Steering yaw — τ=0.18s low-pass: yaw glides in/out, never snaps
+    const rawSteerYaw = clamp(Math.atan2(this.laneVel, Math.max(speedForLateral, 1.5)), -.20, .20);
+    this.steerYaw = lerp(this.steerYaw, rawSteerYaw, 1 - Math.exp(-dt * 5.5));
+
+    // Lane-change signal (only if not already showing intersection signal)
+    if(!this._intersectionLabel){
+      if(Math.abs(laneErr) > .25) this.turnSignal = laneErr < 0 ? 'left' : 'right';
+      else if(Math.abs(laneErr) < .15) this.turnSignal = 'none';
+    }
+
+    // ── Longitudinal ─────────────────────────────────────────────────────────
+    const prevProgress = this.progress;
+    const cutupPhysics = cutupMode;
+    const accelRate    = cutupPhysics ? 7.4  : 2.6;  // m/s²
+    const decelRate    = cutupPhysics ? 8.5  : 3.8;  // m/s²
+    const limiterDecel = cutupPhysics ? 12.5 : 6.0;  // m/s²
+    // Normal mode: low-pass filter on desired speed removes micro-oscillations from
+    // the follow-distance logic without delaying genuine emergency braking.
+    if(this._smoothMph == null) this._smoothMph = analysis.desiredMph;
+    if(!cutupPhysics){
+      const urgentBrake = analysis.desiredMph < this._smoothMph - 8;
+      this._smoothMph = lerp(this._smoothMph, analysis.desiredMph,
+                             1 - Math.exp(-dt * (urgentBrake ? 18 : 2.5)));
+    } else {
+      // Cut-up: fast filter (~0.2s TC) prevents 80→0 snap while physics braking handles the rest
+      const urgentBrake = analysis.desiredMph < this._smoothMph - 20;
+      this._smoothMph = lerp(this._smoothMph, analysis.desiredMph,
+                             1 - Math.exp(-dt * (urgentBrake ? 25 : 9)));
+    }
+    const targetSpd = mphToMs(this._smoothMph);
+    if(targetSpd > this.speed){
+      this.speed = Math.min(targetSpd, this.speed + accelRate * dt);
+    } else {
+      this.speed = Math.max(targetSpd, this.speed - decelRate * dt);
+    }
+    const nextProgress = this.progress + this.speed * dt;
+    const limiter = this._limitEgoProgress(nextProgress, this.targetLane);
+    if(limiter){
+      this.progress = Math.max(prevProgress, limiter.maxProgress);
+      const matchedSpeed = limiter.actor.oncoming ? 0 : limiter.actor.speed;
+      this.speed = Math.max(matchedSpeed, this.speed - limiterDecel * dt);
+      this._smoothMph = Math.min(this._smoothMph, msToMph(this.speed));
+      analysis.reason = 'following';
+      analysis.nearest = {kind:'car', label:limiter.actor.label, distance:Math.max(0, limiter.actor.z - this.progress)};
+    } else {
+      const pedLimiter = this._limitPedestrianProgress(nextProgress, this.lane);
+      if(pedLimiter){
+        this.progress = Math.max(prevProgress, pedLimiter.maxProgress);
+        this.speed = Math.max(0, this.speed - limiterDecel * dt);
+        this._smoothMph = Math.min(this._smoothMph, msToMph(this.speed));
+        analysis.reason = 'pedestrian-stop';
+        analysis.nearest = {kind:'pedestrian', label:'pedestrian', distance:Math.max(0, this._pedestrianRoadZ(pedLimiter.ped) - this.progress)};
+      } else {
+        this.progress = nextProgress;
+      }
+    }
+
+    if(this.driveMode === 'cutup' && this.cutupState?.targetActorId){
+      const targetActor = this.actors.find(a => a.id === this.cutupState.targetActorId);
+      if(targetActor && targetActor.z < this.progress - 12){
+        this.cutupState.passedUntil.set(targetActor.id, this._logT + 4.5);
+        this.cutupState.targetActorId = null;
+      }
+    }
+
+    // State text
+    let s = 'Cruising';
+    if(this._intersectionLabel) s = this._intersectionLabel;
+    else if(analysis.reason === 'red-light' && analysis.desiredMph < 1) s = 'Stopped at red light';
+    else if(analysis.reason === 'red-light') s = 'Slowing for red light';
+    else if(analysis.reason === 'stop-sign' && analysis.desiredMph < 1) s = 'Stopped at stop sign';
+    else if(analysis.reason === 'stop-sign') s = 'Slowing for stop sign';
+    else if(analysis.reason === 'pedestrian-stop') s = 'Yielding to pedestrian';
+    else if(analysis.reason === 'pedestrian') s = 'Pedestrian near crosswalk';
+    else if(analysis.reason === 'cleared-stop') s = 'Proceeding through intersection';
+    else if(analysis.reason === 'overtaking') s = `Overtaking (${this.turnSignal})`;
+    else if(analysis.reason === 'avoiding') s = `Avoiding obstacle (${this.turnSignal})`;
+    else if(analysis.reason === 'lane-return') s = 'Returning to inner lane';
+    else if(analysis.reason === 'following') s = 'Following traffic';
+    else if(analysis.reason === 'cutup') s = 'Cut-up traffic';
+    else if(analysis.reason === 'destination') s = `Approaching ${this.destination?.label || 'destination'}`;
+    else if(analysis.reason === 'arrival') s = `Arriving at ${this.destination?.label || 'destination'}`;
+    this.state = s;
+    this.reason = analysis.reason;
+    this.nearest = analysis.nearest;
+
+    if(analysis.reason === 'arrival' && this.destination && this.speed < mphToMs(.6) && !this._arrivalLatched){
+      this._arrivalLatched = true;
+      this.paused = true;
+      this._addLog(`Arrived at ${this.destination.label}`);
+      this._showArrivalToast(`${this.destination.label} reached`);
+    }
+
+    // Decision log
+    this._maybeLogDecision(analysis);
+
+    return analysis;
+  }
+
+  _maybeLogDecision(a){
+    let msg = null;
+    if(a.reason === 'overtaking') msg = `Slower vehicle ahead, signaling ${this.turnSignal} to pass`;
+    else if(a.reason === 'avoiding') msg = `Obstacle ahead, changing to ${this.road.laneName(this.targetLane)} lane`;
+    else if(a.reason === 'red-light') msg = 'Red light detected, decelerating';
+    else if(a.reason === 'yellow-light') msg = 'Yellow light, reducing speed';
+    else if(a.reason === 'stop-sign') msg = 'Stop sign detected, preparing full stop';
+    else if(a.reason === 'pedestrian' || a.reason === 'pedestrian-stop') msg = 'Pedestrian detected near crosswalk, yielding';
+    else if(a.reason === 'lane-return') msg = 'Path clear, returning to inner lane';
+    else if(a.reason === 'following') msg = 'Maintaining safe following distance';
+    else if(a.reason === 'cutup' && this.speed > mphToMs(10)) msg = 'Cut-up mode, pushing through traffic';
+    else if(a.reason === 'destination') msg = `Approaching ${this.destination?.label || 'destination'}`;
+    else if(a.reason === 'arrival') msg = `Final approach to ${this.destination?.label || 'destination'}`;
+    else if(a.reason === 'cruise' && this.speed > mphToMs(10)) msg = 'Path clear, cruising';
+    if(msg && msg !== this._lastLog){
+      this._addLog(msg);
+      this._lastLog = msg;
+    }
+  }
+
+  // ──── Planned-route polyline ────
+  // Draws a cyan tube along the road from the car out ~160 m ahead, blending
+  // from the current lane toward the planner's target lane over the first 28 m so
+  // pending lane changes (overtakes, lane-return, intersection turns) are visible.
+  _currentRouteLane(){
+    const plannerLane = this.driveMode === 'cutup' && this.cutupState?.laneLock != null ? this.cutupState.laneLock : this.targetLane;
+    if(this._routeLaneDisplay == null){
+      this._routeLaneDisplay = plannerLane;
+      this._routeLaneCandidate = plannerLane;
+      this._routeLaneCandidateSince = this._logT;
+      return plannerLane;
+    }
+    if(this._routeLaneCandidate == null || Math.abs(plannerLane - this._routeLaneCandidate) > 0.05){
+      this._routeLaneCandidate = plannerLane;
+      this._routeLaneCandidateSince = this._logT;
+    }
+    const crossingCenter = (plannerLane < 0) !== (this._routeLaneDisplay < 0);
+    const stableDelay = crossingCenter ? 1.05 : 0.6;
+    const candidateStable = (this._logT - (this._routeLaneCandidateSince || 0)) > stableDelay;
+    const laneCommitted = Math.abs(this.lane - plannerLane) < 0.65 || Math.abs(this.targetLane - plannerLane) < 0.08;
+    const oppCommitted = plannerLane < 0 && (this.lane < 0.15 || this.targetLane < 0);
+    if(laneCommitted || oppCommitted || candidateStable){
+      this._routeLaneDisplay = plannerLane;
+    }
+    return this._routeLaneDisplay;
+  }
+
+  updateRoute(){
+    // dispose previous frame's geometry/material to avoid leaks
+    while(this.routeGroup.children.length){
+      const m = this.routeGroup.children.pop();
+      if(m.geometry) m.geometry.dispose();
+      if(m.material) m.material.dispose();
+    }
+    // Don't render the 3D route line in avstack — its planner map already shows it
+    if(this.mode === 'avstack') return;
+    const pts = [];
+    const horizon = this.destination ? clamp(this.destination.targetZ - this.progress + 12, 30, 240) : 160;
+    const blendDist = this.driveMode === 'cutup' ? 12 : 28;
+    const routeLane = this._currentRouteLane();
+    // Denser sampling in the first 40 m so the corner-smoothing zone gets enough
+    // control points for the tube to faithfully trace the arc.
+    for(let d = 1; d <= horizon; d += (d < 40 ? 1.2 : 3)){
+      const t = Math.min(1, d / blendDist);
+      const lateral = lerp(this.lane, routeLane, t);
+      const wp = this.road.point(this.progress + d, lateral);
+      pts.push(new THREE.Vector3(wp.x, 0.16, wp.z));
+    }
+    if(pts.length < 2) return;
+    // 'centripetal' Catmull–Rom doesn't overshoot at sharp control-point clusters
+    // (which the default 'catmullrom' type can do, producing visible bulges where
+    // the corner samples bunch up).
+    const curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal');
+    const geo = new THREE.TubeGeometry(curve, Math.max(40, pts.length-1), 0.18, 6, false);
+    const mat = new THREE.MeshBasicMaterial({color: 0x4ee7ff, transparent: true, opacity: 0.78, depthWrite: false});
+    const tube = new THREE.Mesh(geo, mat);
+    this.routeGroup.add(tube);
+  }
+
+  updateActors(dt){
+    // Pass 1: compute each NPC's effective speed based on cars ahead in the same
+    // lane/direction (no more phasing through each other or the ego).
+    const FOLLOW_GAP = 7.5;   // metres at which the NPC fully stops behind a slower car
+    const FOLLOW_SOFT = 8.0;  // metres of soft-brake distance above FOLLOW_GAP
+    for(const a of this.actors){
+      if(!a.moving){ a._effSpeed = 0; continue; }
+      const trafficPlan = this._actorTrafficPlan(a, dt);
+      const baseSpeed = mphToMs(trafficPlan.desiredMph);
+      let nearestDz = Infinity;
+      const actorWidth = a.mesh?.userData?.width || 2.0;
+      // Other NPCs in the same direction + lane
+      for(const b of this.actors){
+        if(b === a || b.oncoming !== a.oncoming) continue;
+        if(Math.abs(b.lateral - a.lateral) > 1.6) continue;
+        const dz = a.oncoming ? (a.z - b.z) : (b.z - a.z);
+        if(dz > 0.2 && dz < nearestDz) nearestDz = dz;
+      }
+      // Pedestrians crossing the actor's lane
+      for(const p of this.pedestrians){
+        if(!this._pedestrianBlocksLane(p, a.lateral, actorWidth)) continue;
+        const pz = this._pedestrianRoadZ(p);
+        const dz = a.oncoming ? (a.z - pz) : (pz - a.z);
+        if(dz > 0.2 && dz < nearestDz) nearestDz = dz;
+      }
+      // Treat the ego as an obstacle for same-direction traffic
+      if(!a.oncoming){
+        if(this._laneConflict(a, this.lane, .1)){
+          const dz = this.progress - a.z;
+          if(dz > 0.2 && dz < nearestDz) nearestDz = dz;
+        }
+      }
+      if(nearestDz === Infinity){ a._effSpeed = a.speed; }
+      else if(nearestDz < FOLLOW_GAP){ a._effSpeed = 0; }
+      else if(nearestDz < FOLLOW_GAP + FOLLOW_SOFT){ a._effSpeed = baseSpeed * (nearestDz - FOLLOW_GAP) / FOLLOW_SOFT; }
+      else { a._effSpeed = baseSpeed; }
+      a._trafficReason = trafficPlan.reason;
+      a._trafficNearest = trafficPlan.nearest;
+    }
+    // Pass 2: advance and place
+    for(const a of this.actors){
+      if(a.moving){
+        const s = a._effSpeed != null ? a._effSpeed : a.speed;
+        if(a.oncoming) a.z -= s*dt;
+        else a.z += s*dt;
+      }
+      const p = this.road.point(a.z, a.lateral);
+      a.mesh.position.copy(p);
+      a.mesh.rotation.y = this.road.yaw(a.z) + (a.oncoming ? Math.PI : 0);
+    }
+    // Cleanup behind ego
+    for(let i=this.actors.length-1; i>=0; i--){
+      if(this.actors[i].z < this.progress - 60){
+        this.dynamicGroup.remove(this.actors[i].mesh);
+        this.actors.splice(i,1);
+      }
+    }
+    // Update controls
+    for(const c of this.controls){
+      const anchorZ = c.z + (c.anchorOffset || 0);
+      if(c.type === 'stoplight'){
+        const seg = this.road._seg(anchorZ);
+        const node = Math.abs(seg.a.cumZ - anchorZ) <= Math.abs(seg.b.cumZ - anchorZ) ? seg.a : seg.b;
+        c.mesh.position.set(node.x, 0, node.z);
+        c.mesh.rotation.y = node.h;
+        const s = this.lightState(c);
+        const lampSets = c.mesh.userData.lampSets || (c.mesh.userData.lamps ? [c.mesh.userData.lamps] : []);
+        for(const set of lampSets){
+          for(const [name, lamp] of Object.entries(set)){
+            const on = name === s;
+            lamp.userData.mat.color.setHex(on ? lamp.userData.baseColor : 0x14181c);
+            lamp.userData.haloMat.color.setHex(on ? lamp.userData.baseColor : 0x000000);
+            lamp.userData.haloMat.opacity = on ? 0.55 : 0;
+          }
+        }
+      } else {
+        const edge = this.road.width*.5 + 1.5;
+        const p = this.road.point(anchorZ, edge);
+        const y = this.road.yaw(anchorZ);
+        c.mesh.position.copy(p);
+        c.mesh.rotation.y = y;
+      }
+    }
+    for(const p of this.pedestrians){
+      p.across += p.dir * p.speed * dt;
+      const base = this.road.point(p.z, 0);
+      const yaw = this.road.yaw(p.z);
+      const right = {x:Math.cos(yaw), z:-Math.sin(yaw)};
+      const fwd = {x:Math.sin(yaw), z:Math.cos(yaw)};
+      p.mesh.position.set(base.x + right.x*p.across + fwd.x*p.alongOffset, 0, base.z + right.z*p.across + fwd.z*p.alongOffset);
+      p.mesh.rotation.y = yaw + (p.dir < 0 ? Math.PI/2 : -Math.PI/2);
+    }
+    for(let i=this.controls.length-1; i>=0; i--){
+      if(this.controls[i].z < this.progress - 30){
+        this.dynamicGroup.remove(this.controls[i].mesh);
+        this.controls.splice(i,1);
+      }
+    }
+    const pedLimit = this.road.width*.5 + this.road.sidewalk + 2.5;
+    for(let i=this.pedestrians.length-1; i>=0; i--){
+      const p = this.pedestrians[i];
+      if(p.z < this.progress - 40 || p.z > this.progress + 260 || Math.abs(p.across) > pedLimit){
+        this.dynamicGroup.remove(p.mesh);
+        this.pedestrians.splice(i,1);
+      }
+    }
+    this._resolveEgoActorOverlap();
+    this._resolveEgoPedestrianOverlap();
+    this.spawnAhead();
+  }
+
+  _resolveEgoActorOverlap(){
+    const egoLen = this.egoCar?.userData?.length || 4.5;
+    const egoW = this.egoCar?.userData?.width || 2.0;
+    const laneMin = -(this.road.laneW + this.road.shoulder);
+    const laneMax = this.road.laneW * 2 + this.road.shoulder;
+    for(const a of this.actors){
+      const actorLen = a.mesh?.userData?.length || 4.5;
+      const actorW = a.mesh?.userData?.width || 2.0;
+      const halfLen = (egoLen + actorLen) * 0.5 + (a.oncoming ? 2.8 : 3.2);
+      const halfLat = (egoW + actorW) * 0.5 + 0.42;
+      const dz = this.progress - a.z;
+      const dLat = this.lane - a.lateral;
+      if(Math.abs(dz) >= halfLen || Math.abs(dLat) >= halfLat) continue;
+      const pushLong = halfLen - Math.abs(dz);
+      const pushLat = halfLat - Math.abs(dLat);
+      const sideContact = !a.oncoming && Math.abs(dz) < halfLen * 0.75 && pushLat > 0.12;
+      if(a.oncoming || dz <= 0){
+        this.progress = Math.min(this.progress, a.z - halfLen);
+        this.speed = Math.min(this.speed, a.oncoming ? 0 : a.speed);
+      } else if(sideContact){
+        this.speed = Math.min(this.speed, a.speed);
+        const fallbackLane = this.snappedLane(this.lane);
+        this.targetLane = fallbackLane;
+        const dir = dLat <= 0 ? -1 : 1;
+        this.lane = clamp(this.lane + dir * Math.max(pushLat, 0.18), laneMin, laneMax);
+        this.laneVel = 0;
+      } else {
+        const dir = dLat <= 0 ? -1 : 1;
+        this.lane = clamp(this.lane + dir * pushLat, laneMin, laneMax);
+        this.laneVel = 0;
+      }
+      if(this.driveMode === 'cutup'){
+        if(a.oncoming){
+          this.cutupState.laneLock = null;
+          this.cutupState.laneLockUntil = 0;
+        } else if(sideContact){
+          const fallbackLane = this.snappedLane(this.lane);
+          this.cutupState.laneLock = fallbackLane;
+          this.cutupState.laneLockUntil = Math.max(this.cutupState.laneLockUntil || 0, this._logT + 1.4);
+          this.cutupState.decisionCooldownUntil = Math.max(this.cutupState.decisionCooldownUntil || 0, this._logT + 1.0);
+        } else {
+          this.cutupState.laneLock = this.targetLane;
+          this.cutupState.laneLockUntil = Math.max(this.cutupState.laneLockUntil || 0, this._logT + 1.0);
+        }
+      }
+      this._smoothMph = Math.min(this._smoothMph ?? msToMph(this.speed), msToMph(this.speed));
+    }
+  }
+
+  _resolveEgoPedestrianOverlap(){
+    const egoLen = this.egoCar?.userData?.length || 4.5;
+    const egoW = this.egoCar?.userData?.width || 2.0;
+    for(const p of this.pedestrians){
+      const pedZ = this._pedestrianRoadZ(p);
+      const pedHalfLen = (p.mesh?.userData?.length || 0.55) * 0.5;
+      const pedHalfW = (p.mesh?.userData?.width || 0.55) * 0.5;
+      const halfLen = egoLen * 0.5 + pedHalfLen + 1.4;
+      const halfLat = egoW * 0.5 + pedHalfW + 0.2;
+      const dz = pedZ - this.progress;
+      const dLat = p.across - this.lane;
+      if(Math.abs(dz) >= halfLen || Math.abs(dLat) >= halfLat) continue;
+      this.progress = Math.min(this.progress, pedZ - halfLen);
+      this.speed = 0;
+      this.laneVel = 0;
+      this.targetLane = this.snappedLane(this.lane);
+      if(this.driveMode === 'cutup'){
+        this.cutupState.laneLock = this.targetLane;
+        this.cutupState.laneLockUntil = Math.max(this.cutupState.laneLockUntil || 0, this._logT + 1.2);
+        this.cutupState.decisionCooldownUntil = Math.max(this.cutupState.decisionCooldownUntil || 0, this._logT + 1.0);
+      }
+      this._smoothMph = 0;
+    }
+  }
+
+  updateInfiniteCity(){
+    const p = this.road.point(this.progress, 0);
+    const moved = Math.hypot(p.x - this._lastCityCx, p.z - this._lastCityCz);
+    if(moved > 150) this.rebuildCity();
+  }
+
+  updateCamera(){
+    const p = this.road.point(this.progress, this.lane);
+    const yaw = this.road.yaw(this.progress);
+    this.egoCar.position.copy(p);
+    this.egoCar.position.y = 0;
+    const fpvMode = this.mode==='sensor' || this.mode==='fusion' || this.mode==='avstack';
+    this.egoCar.rotation.y = yaw + (fpvMode ? 0 : this.steerYaw);
+    this.egoCar.visible = !fpvMode;
+
+    const fx = Math.sin(yaw), fz = Math.cos(yaw);
+    let pos, target;
+    if(fpvMode){
+      const cH = this.egoCar.userData.camHeight || 1.2;
+      const cZ = this.egoCar.userData.camZ || 1.6;
+      pos = new THREE.Vector3(p.x + fx*cZ, cH, p.z + fz*cZ);
+      // Target uses the car's CURRENT heading, not road.point(progress+60). If we
+      // looked ahead along the route the target would land past the intersection
+      // and inherit the post-turn yaw, causing the camera to pre-pan toward the
+      // new direction before the car gets there.
+      target = new THREE.Vector3(p.x + fx*55, 0.9, p.z + fz*55);
+      this.camera.up.set(0,1,0);
+    } else if(this.mode === 'chase'){
+      // Pulled-back rear view: 10 m behind at 2.8 m up, looking 32 m ahead at 1.4 m.
+      // Tilt ≈ 2.5° — basically level. The car appears centered with the road clearly
+      // extending into the distance, not perched on a giant flat plaza viewed from
+      // above. Steep top-down angles were reading as a side view.
+      const back = 10, up = 2.8, fwd = 32, tH = 1.4;
+      pos = new THREE.Vector3(p.x - fx*back, up, p.z - fz*back);
+      target = new THREE.Vector3(p.x + fx*fwd, tH, p.z + fz*fwd);
+      this.camera.up.set(0,1,0);
+    } else { // top — ego-aligned overhead: car's right side = screen right (US right-hand traffic)
+      pos = new THREE.Vector3(p.x, 100, p.z);
+      target = new THREE.Vector3(p.x, 0, p.z);
+      // camera.up = -fwd so that camera_right = ego's right, making the right lane appear on the right.
+      this.camera.up.set(-Math.sin(yaw), 0, -Math.cos(yaw));
+    }
+
+    // ALL modes snap so the camera never lags the car's rotation. Without this the
+    // camera trails the heading by ~10 frames during turns and renders the car at
+    // an off-axis angle (looks "sideways"). Lerp removed entirely.
+    this.camera.position.copy(pos);
+    this.cameraTarget.copy(target);
+    this._cameraSnap = false;
+    this.camera.lookAt(this.cameraTarget);
+
+    this.ground.position.x = p.x;
+    this.ground.position.z = p.z;
+  }
+
+  // ──── HUD / OVERLAY / MINIMAP ────
+  updateHUD(){
+    $('hSpeed').textContent = `${Math.round(msToMph(this.speed))} mph`;
+    $('hState').textContent = this.state;
+    const sig = $('hSignal');
+    sig.textContent = this.turnSignal === 'none' ? '—' : this.turnSignal.toUpperCase();
+    sig.className = 'value signal-' + this.turnSignal;
+    $('hLimit').textContent = `${this.limitMph} mph`;
+    // Sidebar telemetry
+    $('tSpeed').textContent = `${Math.round(msToMph(this.speed))} mph`;
+    $('tLane').textContent = this.road.laneName(this.lane);
+    const deg = Math.round((this.road.yaw(this.progress) * 180/Math.PI + 720) % 360);
+    $('tHeading').textContent = `${deg}°`;
+    const inter = this.road.nextIntersection(this.progress);
+    $('tNext').textContent = inter.turn === 'straight' ? `straight ${Math.round(inter.distZ)}m` : `${inter.turn} ${Math.round(inter.distZ)}m`;
+    $('tDest').textContent = this.destination ? `${this.destination.label} ${Math.max(0, Math.round(this.destination.targetZ - this.progress))}m` : (this.driveMode === 'cutup' ? 'Cut-up traffic' : 'Infinite drive');
+    $('tNearest').textContent = this.nearest ? `${this.nearest.label} ${Math.round(this.nearest.distance)}m` : 'Clear';
+    $('tReason').textContent = this.reason;
+    // Status row chips
+    const sDrive = $('sDrive');
+    $('sDriveText').textContent = this.state;
+    sDrive.classList.remove('warn','bad');
+    if(this.state.startsWith('Stopped')) sDrive.classList.add('bad');
+    else if(this.state.startsWith('Slowing') || this.state.startsWith('Overtaking') || this.state.startsWith('Avoiding') || this.state.startsWith('Turning')) sDrive.classList.add('warn');
+    const sPath = $('sPath');
+    sPath.classList.remove('warn','bad');
+    if(this.nearest && this.nearest.distance < 18) sPath.classList.add('bad');
+    else if(this.nearest && this.nearest.distance < 35) sPath.classList.add('warn');
+  }
+
+  _projectOverlayRect(mesh, W, H){
+    mesh.updateWorldMatrix(true, true);
+    const box3 = new THREE.Box3().setFromObject(mesh);
+    if(!Number.isFinite(box3.min.x) || !Number.isFinite(box3.max.x)) return null;
+    const corners = [
+      new THREE.Vector3(box3.min.x, box3.min.y, box3.min.z),
+      new THREE.Vector3(box3.min.x, box3.min.y, box3.max.z),
+      new THREE.Vector3(box3.min.x, box3.max.y, box3.min.z),
+      new THREE.Vector3(box3.min.x, box3.max.y, box3.max.z),
+      new THREE.Vector3(box3.max.x, box3.min.y, box3.min.z),
+      new THREE.Vector3(box3.max.x, box3.min.y, box3.max.z),
+      new THREE.Vector3(box3.max.x, box3.max.y, box3.min.z),
+      new THREE.Vector3(box3.max.x, box3.max.y, box3.max.z),
+    ];
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity, visible = 0;
+    for(const corner of corners){
+      const proj = corner.project(this.camera);
+      if(proj.z < -1 || proj.z > 1) continue;
+      const sx = (proj.x + 1) * 0.5 * W;
+      const sy = (-proj.y + 1) * 0.5 * H;
+      minX = Math.min(minX, sx);
+      minY = Math.min(minY, sy);
+      maxX = Math.max(maxX, sx);
+      maxY = Math.max(maxY, sy);
+      visible++;
+    }
+    if(!visible) return null;
+    const pad = 3;
+    return {
+      left: minX - pad,
+      top: minY - pad,
+      width: Math.max(16, maxX - minX + pad*2),
+      height: Math.max(12, maxY - minY + pad*2)
+    };
+  }
+
+  _showArrivalToast(msg){
+    const now = performance.now();
+    this._arrivalToastUntil = now + 3200;
+    const el = $('arrivalToast');
+    if(el) el.textContent = msg;
+  }
+
+  updateArrivalToast(){
+    const el = $('arrivalToast');
+    if(!el) return;
+    const show = performance.now() < this._arrivalToastUntil;
+    el.classList.toggle('show', show);
+  }
+
+  updateOverlay(){
+    const ov = $('overlay');
+    ov.innerHTML = '';
+    if(this.mode === 'top') return;
+    const rect = this.stage.getBoundingClientRect();
+    const W = rect.width, H = rect.height;
+    const usePerception = this.mode === 'sensor' || this.mode === 'fusion' || this.mode === 'avstack';
+    const frame = this.perception?.frame || {cameraDetections: [], tracks: []};
+    if(usePerception){
+      const items = this.mode === 'sensor' ? (frame.cameraDetections || frame.detections || []) : frame.tracks;
+      for(const item of items){
+        const boxRect = this._projectWorldBox(item.center, item.size, item.yaw, W, H);
+        if(!boxRect) continue;
+        if(boxRect.left > W + 50 || boxRect.left + boxRect.width < -50 || boxRect.top > H + 50 || boxRect.top + boxRect.height < -50) continue;
+        const box = document.createElement('div');
+        box.className = 'det ' + item.kind;
+        const conf = item.confidence ?? 0.5;
+        const risk = item.risk ?? 0;
+        box.classList.add(conf > 0.75 ? 'high' : conf > 0.45 ? 'med' : 'low');
+        if(risk > 0.72) box.classList.add('high');
+        if(item.color) box.style.borderColor = item.color;
+        if(item.confidence != null) box.style.opacity = `${clamp(0.40 + item.confidence * 0.52, 0.40, 0.98)}`;
+        box.style.left = `${boxRect.left}px`;
+        box.style.top = `${boxRect.top}px`;
+        box.style.width = `${boxRect.width}px`;
+        box.style.height = `${boxRect.height}px`;
+        const lbl = document.createElement('span');
+        const dist = item.range ?? item.latestRange ?? 0;
+        const support = this.mode === 'sensor'
+          ? `cam ${Math.round((item.confidence || 0) * 100)}%`
+          : `${item.support != null ? item.support : 0}/3`;
+        lbl.textContent = `${item.label} ${Math.round(dist)}m · ${support}`;
+        box.appendChild(lbl);
+        ov.appendChild(box);
+      }
+    } else {
+      const candidates = [];
+      for(const a of this.actors){
+        const dz = a.z - this.progress;
+        if(dz < 1 || dz > 90) continue;
+        candidates.push({kind:'car', mesh:a.mesh, label:a.label, distance:dz});
+      }
+      for(const p of this.pedestrians){
+        const dz = p.z - this.progress;
+        if(dz < 1 || dz > 70) continue;
+        candidates.push({kind:'pedestrian', mesh:p.mesh, label:'pedestrian', distance:dz});
+      }
+      for(const item of candidates){
+        const boxRect = this._projectOverlayRect(item.mesh, W, H);
+        if(!boxRect) continue;
+        if(boxRect.left > W + 50 || boxRect.left + boxRect.width < -50 || boxRect.top > H + 50 || boxRect.top + boxRect.height < -50) continue;
+        const box = document.createElement('div');
+        box.className = 'det ' + item.kind;
+        box.style.left = `${boxRect.left}px`;
+        box.style.top = `${boxRect.top}px`;
+        box.style.width = `${boxRect.width}px`;
+        box.style.height = `${boxRect.height}px`;
+        const lbl = document.createElement('span');
+        lbl.textContent = `${item.label} ${Math.round(item.distance)}m`;
+        box.appendChild(lbl);
+        ov.appendChild(box);
+      }
+    }
+    for(const c of this.controls){
+      const dz = c.z - this.progress;
+      if(dz < 0 || dz > 90) continue;
+      let label = c.type;
+      if(c.type === 'stoplight') label = `${this.lightState(c)} light`;
+      else if(c.type === 'stop') label = 'stop sign';
+      else if(c.type === 'speedlimit') label = `limit ${c.value}`;
+      if(c.type === 'stoplight' && c.mesh.userData?.signalHeads?.length){
+        for(const head of c.mesh.userData.signalHeads){
+          const boxRect = this._projectOverlayRect(head, W, H);
+          if(!boxRect) continue;
+          const box = document.createElement('div');
+          box.className = 'det stoplight';
+          box.style.left = `${boxRect.left}px`;
+          box.style.top = `${boxRect.top}px`;
+          box.style.width = `${boxRect.width}px`;
+          box.style.height = `${boxRect.height}px`;
+          const lbl = document.createElement('span');
+          lbl.textContent = `${label} ${Math.round(dz)}m`;
+          box.appendChild(lbl);
+          ov.appendChild(box);
+        }
+      } else {
+        const boxRect = this._projectOverlayRect(c.mesh, W, H);
+        if(!boxRect) continue;
+        const box = document.createElement('div');
+        box.className = 'det ' + c.type;
+        box.style.left = `${boxRect.left}px`;
+        box.style.top = `${boxRect.top}px`;
+        box.style.width = `${boxRect.width}px`;
+        box.style.height = `${boxRect.height}px`;
+        const lbl = document.createElement('span');
+        lbl.textContent = `${label} ${Math.round(dz)}m`;
+        box.appendChild(lbl);
+        ov.appendChild(box);
+      }
+    }
+  }
+
+  updateMinimap(){
+    const ctx = this.miniCtx;
+    const W = 340, H = 340;
+    ctx.fillStyle = '#020812';
+    ctx.fillRect(0,0,W,H);
+    const cp = this.egoCar.position;
+    const cYaw = this.road.yaw(this.progress);
+    // Project world (dx,dz) onto the ego's local axes:
+    //   right = dx*cos(yaw) - dz*sin(yaw)
+    //   forward = dx*sin(yaw) + dz*cos(yaw)
+    // Then place right on +screen-X and forward on +screen-Y-up. The previous
+    // version used sin/cos of -yaw which inverted both axes — east-of-ego
+    // ended up on screen-left and ahead-of-ego ended up on screen-bottom.
+    // Match the chase-camera left/right visual convention on the small HUD map.
+    const sinY = Math.sin(cYaw), cosY = Math.cos(cYaw);
+    const routeHorizon = this.destination ? clamp(this.destination.targetZ - this.progress + 24, 80, 520) : 240;
+    let maxRight = 22, maxFwd = 40, minFwd = -24;
+    for(let dz=-20; dz<=routeHorizon; dz+=6){
+      const t = clamp(dz/28, 0, 1);
+      const lateral = lerp(this.lane, this.targetLane, t);
+      const wp = this.road.point(this.progress + dz, lateral);
+      const dx = wp.x - cp.x, dzw = wp.z - cp.z;
+      const right = dx*cosY - dzw*sinY;
+      const fwd   = dx*sinY + dzw*cosY;
+      maxRight = Math.max(maxRight, Math.abs(right));
+      maxFwd = Math.max(maxFwd, fwd);
+      minFwd = Math.min(minFwd, fwd);
+    }
+    const scaleX = (W*0.46) / Math.max(24, maxRight + 6);
+    const scaleUp = (H*0.66) / Math.max(40, maxFwd + 8);
+    const scaleDown = (H*0.22) / Math.max(18, Math.abs(minFwd) + 6);
+    const scale = Math.min(scaleX, scaleUp, scaleDown);
+    const toMap = (wx, wz) => {
+      const dx = wx - cp.x, dz = wz - cp.z;
+      const right = dx*cosY - dz*sinY;
+      const fwd   = dx*sinY + dz*cosY;
+      return {x: W/2 + right*scale, y: H*.72 - fwd*scale};
+    };
+    // Draw grid roads in view
+    const B = this.road.BLOCK;
+    const radius = Math.max(220, routeHorizon + 40);
+    ctx.strokeStyle = 'rgba(95,115,140,.62)';
+    ctx.lineWidth = 6;
+    const i0 = Math.floor((cp.x - radius)/B), i1 = Math.ceil((cp.x + radius)/B);
+    const j0 = Math.floor((cp.z - radius)/B), j1 = Math.ceil((cp.z + radius)/B);
+    for(let i=i0; i<=i1; i++){
+      const a = toMap(i*B, j0*B), b = toMap(i*B, j1*B);
+      ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+    }
+    for(let j=j0; j<=j1; j++){
+      const a = toMap(i0*B, j*B), b = toMap(i1*B, j*B);
+      ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+    }
+    // Route polyline
+    ctx.strokeStyle = 'rgba(247,200,74,.85)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    let first = true;
+    for(let dz=-20; dz<=routeHorizon; dz+=6){
+      const t = clamp(dz/28, 0, 1);
+      const lateral = lerp(this.lane, this.targetLane, t);
+      const wp = this.road.point(this.progress + dz, lateral);
+      const m = toMap(wp.x, wp.z);
+      first ? (ctx.moveTo(m.x,m.y), first=false) : ctx.lineTo(m.x,m.y);
+    }
+    ctx.stroke();
+    // Actors
+    for(const a of this.actors){
+      const dz = a.z - this.progress;
+      if(dz < -40 || dz > 240) continue;
+      const wp = a.mesh.position;
+      const m = toMap(wp.x, wp.z);
+      ctx.fillStyle = a.oncoming ? '#ff5c7a' : a.moving ? '#a7c3d9' : '#8a9aae';
+      ctx.beginPath(); ctx.arc(m.x, m.y, 3.2, 0, TAU); ctx.fill();
+    }
+    for(const p of this.pedestrians){
+      const dz = p.z - this.progress;
+      if(dz < -20 || dz > 160) continue;
+      const wp = p.mesh.position;
+      const m = toMap(wp.x, wp.z);
+      ctx.fillStyle = '#ff7aa8';
+      ctx.beginPath(); ctx.arc(m.x, m.y, 2.8, 0, TAU); ctx.fill();
+    }
+    // Controls
+    for(const c of this.controls){
+      const dz = c.z - this.progress;
+      if(dz < -10 || dz > 240) continue;
+      const wp = c.mesh.position;
+      const m = toMap(wp.x, wp.z);
+      if(c.type === 'stoplight'){
+        const s = this.lightState(c);
+        ctx.fillStyle = s==='red'?'#ff3344': s==='yellow'?'#ffd066':'#42f58c';
+      } else if(c.type === 'stop'){
+        ctx.fillStyle = '#ff5c7a';
+      } else {
+        ctx.fillStyle = '#4ee7ff';
+      }
+      ctx.beginPath(); ctx.arc(m.x, m.y, 4.0, 0, TAU); ctx.fill();
+    }
+    // Ego (always pointing UP since map is rotated by yaw)
+    ctx.fillStyle = '#42f58c';
+    ctx.strokeStyle = 'rgba(255,255,255,.9)';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(W/2, H*.72 - 8);
+    ctx.lineTo(W/2 - 5, H*.72 + 4);
+    ctx.lineTo(W/2, H*.72 + 1);
+    ctx.lineTo(W/2 + 5, H*.72 + 4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    // Compass label
+    ctx.fillStyle = 'rgba(190,210,230,.6)';
+    ctx.font = '10px ui-monospace,Consolas,monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('↑ AHEAD', 8, 14);
+    ctx.textAlign = 'right';
+    ctx.fillText(`${Math.round(msToMph(this.speed))} mph`, W-8, 14);
+    ctx.textAlign = 'left';
+    ctx.fillStyle = 'rgba(140,160,180,.5)';
+    ctx.fillText(`${Math.round(this.progress)}m`, 8, H-8);
+  }
+
+  _addLog(msg){
+    if(msg === this._lastLog) return;
+    const m = String(Math.floor(this._logT/60)).padStart(2,'0');
+    const s = String(Math.floor(this._logT%60)).padStart(2,'0');
+    this._logEntries.unshift({t:`${m}:${s}`, msg});
+    if(this._logEntries.length > 16) this._logEntries.length = 16;
+    const html = this._logEntries.map(e => `<div class="row"><span class="t">${e.t}</span>${e.msg}</div>`).join('');
+    $('logFeed').innerHTML = html;
+  }
+
+  animate(){
+    requestAnimationFrame(() => this.animate());
+    const dt = Math.min(.05, this.clock.getDelta());
+    if(!this.paused) this._logT += dt;
+    this.updateVehicle(dt);
+    this.updateActors(dt);
+    this.updateInfiniteCity();
+    this.updateRoute();
+    this.updateCamera();
+    this.updatePerception(dt);
+    this.updateHUD();
+    this.updateArrivalToast();
+    this.updateOverlay();
+    this.updateMinimap();
+    this.renderer.render(this.scene, this.camera);
+    if(this.mode==='fusion') this.updateFusionOverlay();
+    if(this.mode==='avstack') this.updateAVStackOverlay();
+  }
+
+  // ──── Fusion view: LIDAR-style scatter + telemetry HUD on top of sensor cam ────
+  updateFusionOverlay(){
+    const cv = $('fusionCanvas'); if(!cv) return;
+    const ctx = cv.getContext('2d');
+    const rect = this.stage.getBoundingClientRect();
+    if(cv.width !== rect.width || cv.height !== rect.height){ cv.width = rect.width; cv.height = rect.height; }
+    const W = cv.width, H = cv.height;
+    ctx.clearRect(0,0,W,H);
+    const frame = this.perception?.frame || {cameraDetections: [], lidarReturns: [], radarReturns: [], tracks: [], stats: {detections: 0, cameraHits: 0, lidarHits: 0, radarHits: 0, tracks: 0, avgConfidence: 0, avgLatencyMs: 0, avgRisk: 0}};
+    let pointCount = 0;
+    const drawPoint = (x, y, z, rgba, size=2) => {
+      const proj = new THREE.Vector3(x, y, z).project(this.camera);
+      if(proj.z < -1 || proj.z > 1) return false;
+      const sx = (proj.x + 1) * 0.5 * W;
+      const sy = (-proj.y + 1) * 0.5 * H;
+      if(sx < 0 || sx >= W || sy < 0 || sy >= H) return false;
+      ctx.fillStyle = rgba;
+      ctx.fillRect(sx, sy, size, size);
+      return true;
+    };
+
+    const lidarPoints = frame.lidarReturns || [];
+    for(const ret of lidarPoints){
+      const alpha = clamp(0.18 + ret.intensity * 0.58, 0.12, 0.82);
+      const col = ret.kind === 'pedestrian' ? `rgba(255,135,173,${alpha})` : `rgba(121,223,255,${alpha})`;
+      if(drawPoint(ret.x, ret.y, ret.z, col, ret.kind === 'pedestrian' ? 2 : 2.4)) pointCount++;
+    }
+
+    if(!lidarPoints.length && frame.cameraDetections){
+      for(const det of frame.cameraDetections){
+        const center = new THREE.Vector3(det.center.x, det.center.y, det.center.z);
+        const proj = center.clone().project(this.camera);
+        if(proj.z < -1 || proj.z > 1) continue;
+        const sx = (proj.x + 1) * 0.5 * W;
+        const sy = (-proj.y + 1) * 0.5 * H;
+        if(sx < 0 || sx >= W || sy < 0 || sy >= H) continue;
+        const col = det.classLabel === 'pedestrian' ? `rgba(255,135,173,${0.35 + det.confidence * 0.2})` : `rgba(121,223,255,${0.25 + det.confidence * 0.22})`;
+        ctx.fillStyle = col;
+        ctx.fillRect(sx, sy, 2, 2);
+        pointCount++;
+      }
+    }
+
+    ctx.save();
+    ctx.font = '11px ui-monospace,Consolas,monospace';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    for(const track of frame.tracks){
+      const box = this._projectWorldBox(track.center, track.size, track.yaw, W, H);
+      if(!box) continue;
+      const risk = clamp(track.risk || 0, 0, 1);
+      const uncertainty = clamp(track.uncertainty || 0, 0, 1);
+      const confidence = clamp(track.confidence || 0.5, 0.15, 1);
+      const trackColor = risk > 0.7 ? '#ff7890' : track.classLabel === 'pedestrian' ? '#ff87ad' : '#79dfff';
+      ctx.globalAlpha = clamp(0.20 + confidence * 0.60, 0.24, 0.96);
+      ctx.shadowBlur = 10 * risk;
+      ctx.shadowColor = risk > 0.6 ? 'rgba(255,120,144,.32)' : 'rgba(121,223,255,.16)';
+      ctx.strokeStyle = trackColor;
+      ctx.lineWidth = track.classLabel === 'pedestrian' ? 1.35 : 1.85;
+      ctx.setLineDash(uncertainty > 0.55 ? [7, 4] : []);
+      ctx.strokeRect(box.left, box.top, box.width, box.height);
+      ctx.shadowBlur = 0;
+      const flags = [];
+      if(track.support) flags.push(`${track.support}f`);
+      if(track.intent) flags.push(track.intent);
+      if(risk > 0.65) flags.push('risk');
+      const text = `${track.label} ${Math.round(track.latestRange ?? 0)}m${flags.length ? ` · ${flags.join(' ')}` : ''}`;
+      const textWidth = ctx.measureText(text).width;
+      const pad = 4;
+      const labelY = Math.max(0, box.top - 16);
+      if(box.width > textWidth + pad * 2 + 2){
+        ctx.fillStyle = 'rgba(6,16,28,.82)';
+        ctx.fillRect(box.left, labelY, textWidth + pad * 2, 14);
+        ctx.fillStyle = '#edf4f8';
+        ctx.fillText(text, box.left + pad, labelY + 1);
+      }
+    }
+    ctx.restore();
+
+    // HUD content
+    const hud = $('fusionHud');
+    if(hud) hud.innerHTML = `
+      <div class="hud-row"><span class="k">SENSOR</span><span class="v">FUSION</span></div>
+      <div class="hud-row"><span class="k">Points</span><span class="v">${pointCount}</span></div>
+      <div class="hud-row"><span class="k">Cam / Lidar / Radar</span><span class="v">${frame.stats.cameraHits || 0} / ${frame.stats.lidarHits || 0} / ${frame.stats.radarHits || 0}</span></div>
+      <div class="hud-row"><span class="k">Detections</span><span class="v">${frame.stats.detections}</span></div>
+      <div class="hud-row"><span class="k">Tracks</span><span class="v">${frame.stats.tracks}</span></div>
+      <div class="hud-row"><span class="k">Avg conf</span><span class="v">${Math.round(frame.stats.avgConfidence * 100)}%</span></div>
+      <div class="hud-row"><span class="k">Avg risk</span><span class="v">${Math.round((frame.stats.avgRisk || 0) * 100)}%</span></div>
+      <div class="hud-row"><span class="k">Lag</span><span class="v">${Math.round(frame.stats.avgLatencyMs)} ms</span></div>
+      <div class="hud-row"><span class="k">Speed</span><span class="v">${Math.round(msToMph(this.speed))} mph</span></div>
+      <div class="hud-row"><span class="k">State</span><span class="v">${this.state}</span></div>
+      <div class="hud-row"><span class="k">Signal</span><span class="v">${this.turnSignal==='none'?'—':this.turnSignal.toUpperCase()}</span></div>`;
+  }
+
+  // ──── AV Stack: split view — planner map in upper half, sensor cam in lower half ────
+  updateAVStackOverlay(){
+    const cv = $('avStackCanvas'); if(!cv) return;
+    const ctx = cv.getContext('2d');
+    const rect = this.stage.getBoundingClientRect();
+    if(cv.width !== rect.width || cv.height !== rect.height){ cv.width = rect.width; cv.height = rect.height; }
+    const W = cv.width, H = cv.height;
+    ctx.clearRect(0,0,W,H);
+    const mapH = Math.floor(H * 0.45);
+    const rgba = (hex, alpha) => {
+      const value = typeof hex === 'number' ? hex : parseInt(String(hex).replace('#',''), 16);
+      return `rgba(${(value >> 16) & 255}, ${(value >> 8) & 255}, ${value & 255}, ${alpha})`;
+    };
+
+    // --- TOP HALF: planner map. Everything between here and ctx.restore() is
+    // CLIPPED to the top region so grid lines, route, and dots cannot bleed
+    // into the sensor camera area below.
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, W, mapH);
+    ctx.clip();
+
+    // Opaque background so the 3D render doesn't show through the map panel
+    ctx.fillStyle = '#06101c';
+    ctx.fillRect(0, 0, W, mapH);
+
+    const scale = 1.8;
+    const ep = this.egoCar.position;
+    const eYaw = this.road.yaw(this.progress);
+    // Same projection fix as the minimap — right/forward in ego frame.
+    const sinY = Math.sin(eYaw), cosY = Math.cos(eYaw);
+    const toMap = (wx, wz) => {
+      const dx = wx - ep.x, dz = wz - ep.z;
+      const right = dx*cosY - dz*sinY;
+      const fwd   = dx*sinY + dz*cosY;
+      return { x: W/2 - right*scale, y: mapH*0.78 - fwd*scale };
+    };
+    // Grid roads
+    const B = this.road.BLOCK, radius = 220;
+    const i0=Math.floor((ep.x-radius)/B), i1=Math.ceil((ep.x+radius)/B);
+    const j0=Math.floor((ep.z-radius)/B), j1=Math.ceil((ep.z+radius)/B);
+    ctx.strokeStyle = 'rgba(85,105,130,.55)'; ctx.lineWidth = 9;
+    for(let i=i0;i<=i1;i++){ const a=toMap(i*B,j0*B), b=toMap(i*B,j1*B); ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); }
+    for(let j=j0;j<=j1;j++){ const a=toMap(i0*B,j*B), b=toMap(i1*B,j*B); ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); }
+    // Lane centerlines (thin) for the route
+    ctx.strokeStyle = 'rgba(140,160,185,.35)'; ctx.lineWidth = 1;
+    for(let i=i0;i<=i1;i++){ const a=toMap(i*B,j0*B), b=toMap(i*B,j1*B); ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); }
+    for(let j=j0;j<=j1;j++){ const a=toMap(i0*B,j*B), b=toMap(i1*B,j*B); ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); }
+
+    // Route polyline (yellow = planner's chosen path)
+    ctx.strokeStyle = 'rgba(247,200,74,.95)'; ctx.lineWidth = 3;
+    ctx.beginPath();
+    let first = true;
+    const routeBlendDist = this.driveMode === 'cutup' ? 12 : 28;
+    const routeLane = this._currentRouteLane();
+    for(let dz=-15; dz<=240; dz+=4){
+      const t = clamp(dz/routeBlendDist, 0, 1);
+      const lateral = lerp(this.lane, routeLane, t);
+      const wp = this.road.point(this.progress + dz, lateral);
+      const m = toMap(wp.x, wp.z);
+      first ? (ctx.moveTo(m.x, m.y), first=false) : ctx.lineTo(m.x, m.y);
+    }
+    ctx.stroke();
+
+    const frame = this.perception?.frame || {cameraDetections: [], lidarReturns: [], radarReturns: [], tracks: [], stats: {detections: 0, cameraHits: 0, lidarHits: 0, radarHits: 0, tracks: 0, avgConfidence: 0, avgLatencyMs: 0, avgRisk: 0}};
+    const drawFootprint = (center, size, yaw, fill, stroke, alpha, shrink=1) => {
+      const halfW = size.width * 0.5 * shrink;
+      const halfL = size.length * 0.5 * shrink;
+      const c = Math.cos(yaw), s = Math.sin(yaw);
+      const corners = [];
+      for(const sx of [-1, 1]){
+        for(const sz of [-1, 1]){
+          const x = center.x + sx * halfW * c + sz * halfL * s;
+          const z = center.z - sx * halfW * s + sz * halfL * c;
+          corners.push(toMap(x, z));
+        }
+      }
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      ctx.moveTo(corners[0].x, corners[0].y);
+      for(let i=1; i<corners.length; i++) ctx.lineTo(corners[i].x, corners[i].y);
+      ctx.closePath();
+      ctx.fillStyle = fill;
+      ctx.fill();
+      ctx.strokeStyle = stroke;
+      ctx.stroke();
+    };
+
+    const drawCarIcon = (center, size, yaw, fill, stroke, alpha, shrink=1, accent = null) => {
+      const m = toMap(center.x, center.z);
+      const heading = eYaw - yaw;
+      const pxScale = scale;
+      const bodyW = Math.max(5.5, size.width * pxScale * 0.92 * shrink);
+      const bodyL = Math.max(9.5, size.length * pxScale * 0.95 * shrink);
+      const cabinW = bodyW * 0.58;
+      const cabinL = bodyL * 0.46;
+      const roofTop = -bodyL * 0.18;
+      const roofBottom = bodyL * 0.20;
+      const bodyRadius = Math.min(bodyW, bodyL) * 0.24;
+      const glassFill = 'rgba(8,18,28,.84)';
+      const trimFill = 'rgba(255,255,255,.18)';
+      const lightFill = accent || '#f2f6fb';
+      const rearLightFill = 'rgba(255,92,122,.95)';
+
+      const roundedRect = (x, y, w, h, r) => {
+        const rr = Math.min(r, Math.abs(w) * 0.5, Math.abs(h) * 0.5);
+        ctx.beginPath();
+        ctx.moveTo(x + rr, y);
+        ctx.lineTo(x + w - rr, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+        ctx.lineTo(x + w, y + h - rr);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+        ctx.lineTo(x + rr, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - rr);
+        ctx.lineTo(x, y + rr);
+        ctx.quadraticCurveTo(x, y, x + rr, y);
+        ctx.closePath();
+      };
+
+      ctx.save();
+      ctx.translate(m.x, m.y);
+      ctx.rotate(heading);
+      ctx.globalAlpha = alpha;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+
+      // Body shell.
+      ctx.fillStyle = fill;
+      ctx.strokeStyle = stroke;
+      ctx.lineWidth = 1.5;
+      roundedRect(-bodyW / 2, -bodyL / 2, bodyW, bodyL, bodyRadius);
+      ctx.fill();
+      ctx.stroke();
+
+      // Roof / cabin glass.
+      ctx.fillStyle = glassFill;
+      roundedRect(-cabinW / 2, roofTop, cabinW, cabinL, bodyRadius * 0.72);
+      ctx.fill();
+
+      // Narrow center spine so the marker reads like a car instead of a blob.
+      ctx.fillStyle = trimFill;
+      roundedRect(-bodyW * 0.10, -bodyL * 0.34, bodyW * 0.20, bodyL * 0.68, bodyRadius * 0.25);
+      ctx.fill();
+
+      // Front and rear lights.
+      ctx.fillStyle = lightFill;
+      ctx.fillRect(-bodyW * 0.36, -bodyL * 0.50 + bodyRadius * 0.12, bodyW * 0.18, Math.max(0.12, bodyL * 0.02));
+      ctx.fillRect(bodyW * 0.18, -bodyL * 0.50 + bodyRadius * 0.12, bodyW * 0.18, Math.max(0.12, bodyL * 0.02));
+      ctx.fillStyle = rearLightFill;
+      ctx.fillRect(-bodyW * 0.42, bodyL * 0.50 - bodyRadius * 0.55, bodyW * 0.20, Math.max(0.16, bodyL * 0.025));
+      ctx.fillRect(bodyW * 0.22, bodyL * 0.50 - bodyRadius * 0.55, bodyW * 0.20, Math.max(0.16, bodyL * 0.025));
+
+      // Soft edge trim at the front and rear to echo the reference look.
+      ctx.fillStyle = 'rgba(255,255,255,.10)';
+      roundedRect(-bodyW * 0.44, -bodyL * 0.42, bodyW * 0.88, bodyL * 0.84, bodyRadius * 0.88);
+      ctx.strokeStyle = 'rgba(0,0,0,.12)';
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+
+      ctx.restore();
+    };
+
+    for(const track of frame.tracks){
+      const conf = clamp(track.confidence || 0.5, 0.15, 1);
+      const risk = clamp(track.risk || 0, 0, 1);
+      const uncertainty = clamp(track.uncertainty || 0, 0, 1);
+      const trackColor = risk > 0.72 ? '#ff7890' : track.classLabel === 'pedestrian' ? '#ff87ad' : '#79dfff';
+      const fillColor = risk > 0.72
+        ? `rgba(213,92,120,${0.18 * conf})`
+        : track.classLabel === 'pedestrian'
+          ? `rgba(255,135,173,${0.11 * conf})`
+          : `rgba(175,74,96,${0.80 * conf})`;
+      const strokeColor = risk > 0.72 ? 'rgba(98,22,38,.92)' : 'rgba(63,28,38,.92)';
+
+      const trail = track.history || [];
+      if(trail.length > 1){
+        ctx.globalAlpha = 0.22 * conf;
+        ctx.strokeStyle = trackColor;
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        let started = false;
+        for(const pt of trail){
+          const m = toMap(pt.x, pt.z);
+          if(!started){ ctx.moveTo(m.x, m.y); started = true; }
+          else ctx.lineTo(m.x, m.y);
+        }
+        ctx.stroke();
+      }
+
+      if(track.classLabel === 'pedestrian'){
+        drawFootprint(track.center, track.size, track.yaw, fillColor, trackColor, 0.55 * conf, 0.82);
+      } else {
+        drawCarIcon(track.center, track.size, track.yaw, fillColor, strokeColor, 0.72 * conf, 0.92, risk > 0.72 ? '#ffd7de' : '#edf4f8');
+      }
+
+      ctx.globalAlpha = 0.30 * conf;
+      const futurePath = track.predictedPath || [];
+      if(futurePath.length){
+        ctx.setLineDash([5, 4]);
+        ctx.strokeStyle = trackColor;
+        ctx.lineWidth = 1.15;
+        ctx.beginPath();
+        let started = false;
+        for(const step of futurePath){
+          const m = toMap(step.x, step.z);
+          if(!started){ ctx.moveTo(m.x, m.y); started = true; }
+          else ctx.lineTo(m.x, m.y);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+        for(const step of futurePath){
+          if(track.classLabel === 'pedestrian'){
+            drawFootprint(
+              {x: step.x, z: step.z},
+              track.size,
+              track.yaw,
+              fillColor,
+              trackColor,
+              0.14 * conf,
+              0.70
+            );
+          } else {
+            drawCarIcon(
+              {x: step.x, z: step.z},
+              track.size,
+              track.yaw,
+              fillColor,
+              strokeColor,
+              0.10 * conf,
+              0.78,
+              risk > 0.72 ? '#ffd7de' : '#edf4f8'
+            );
+          }
+        }
+      } else {
+        const futureSteps = [0.5, 1.0, 1.5, 2.0];
+        let prev = null;
+        for(const step of futureSteps){
+          const future = {
+            x: track.center.x + (track.velocity.x || 0) * step,
+            z: track.center.z + (track.velocity.z || 0) * step,
+          };
+          const m = toMap(future.x, future.z);
+          if(prev){
+            ctx.strokeStyle = trackColor;
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(prev.x, prev.y);
+            ctx.lineTo(m.x, m.y);
+            ctx.stroke();
+          }
+          if(track.classLabel === 'pedestrian'){
+            drawFootprint(future, track.size, track.yaw, fillColor, trackColor, 0.18 * conf, 0.72);
+          } else {
+            drawCarIcon(future, track.size, track.yaw, fillColor, strokeColor, 0.12 * conf, 0.76, risk > 0.72 ? '#ffd7de' : '#edf4f8');
+          }
+          prev = m;
+        }
+      }
+
+    }
+
+    ctx.globalAlpha = 1;
+    // Live traffic layer — actual vehicles are drawn as footprints so the map
+    // reads like a planner view instead of a sparse tracker scatter.
+    for(const a of this.actors){
+      if(!a.mesh?.position) continue;
+      const dz = a.z - this.progress;
+      if(dz < -16 || dz > 220) continue;
+      const body = a.mesh.userData || {};
+      const color = a.oncoming ? 0xcb5d77 : 0xa84f67;
+      drawCarIcon(
+        a.mesh.position,
+        {width: (body.width || 2) * 1.12, length: (body.length || 4) * 1.12, height: body.height || 1.4},
+        a.mesh.rotation.y,
+        rgba(color, 0.88),
+        'rgba(58,20,30,.92)',
+        0.92,
+        1.02,
+        a.oncoming ? '#ffd7de' : '#edf4f8'
+      );
+    }
+
+    // Ego car marker, styled to match the top-down reference image.
+    const egoSize = this.egoCar.userData || {};
+    drawCarIcon(
+      {x: ep.x, z: ep.z},
+      {width: (egoSize.width || 2.1) * 1.12, length: (egoSize.length || 4.6) * 1.12, height: egoSize.height || 1.4},
+      eYaw,
+      'rgba(237,244,248,.92)',
+      'rgba(255,255,255,.98)',
+      0.98,
+      1.06,
+      '#f6fbff'
+    );
+    // Controls
+    for(const c of this.controls){
+      const dz = c.z - this.progress;
+      if(dz < -10 || dz > 240) continue;
+      const wp = c.mesh.position;
+      const m = toMap(wp.x, wp.z);
+      if(c.type==='stoplight'){ const s = this.lightState(c); ctx.fillStyle = s==='red'?'#ff3344':s==='yellow'?'#ffd066':'#42f58c'; }
+      else if(c.type==='stop'){ ctx.fillStyle = '#ff5c7a'; }
+      else { ctx.fillStyle = '#4ee7ff'; }
+      ctx.beginPath(); ctx.arc(m.x, m.y, 5, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.lineWidth = 1; ctx.stroke();
+    }
+
+    ctx.restore(); // end clip
+
+    // --- DIVIDER + labels (outside clip so they sit on top of everything) ---
+    ctx.strokeStyle = 'rgba(78,231,255,.65)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, mapH); ctx.lineTo(W, mapH); ctx.stroke();
+
+    // Top panel label
+    ctx.fillStyle = 'rgba(78,231,255,.92)';
+    ctx.font = 'bold 12px ui-monospace,Consolas,monospace';
+    ctx.textAlign = 'left'; ctx.fillText('PLANNER MAP — live traffic / prediction', 12, mapH - 12);
+    ctx.textAlign = 'right'; ctx.fillText(this.state, W-12, mapH - 12);
+    // Bottom panel label (sits on the divider just below)
+    ctx.textAlign = 'left'; ctx.fillText('SENSOR CAMERA — forward-looking', 12, mapH + 18);
+    ctx.textAlign = 'right'; ctx.fillText(`${Math.round(msToMph(this.speed))} mph · limit ${this.limitMph}`, W-12, mapH + 18);
+  }
+}
+
+window.addEventListener('load', () => {
+  try { window.__sim = new Sim(); }
+  catch(e){
+    const err = document.getElementById('err');
+    if(err){ err.textContent = 'Simulation error:\n' + (e.stack||e); err.style.display='block'; }
+    console.error(e);
+  }
+});
+
+})();
+</script>
+</body>
+</html>

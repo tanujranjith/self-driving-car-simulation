@@ -1,0 +1,38 @@
+{
+  "name": "self-driving-sim",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test:game": "node C:/Users/tanuj/.codex/skills/develop-web-game/scripts/web_game_playwright_client.js",
+    "test:asset": "node --experimental-default-type=module --loader ./playwright-loader.mjs scripts/verify-local-asset.mjs",
+    "test:semi": "node --experimental-default-type=module --loader ./playwright-loader.mjs scripts/verify-semi-articulation.mjs",
+    "test:luxury": "node --experimental-default-type=module --loader ./playwright-loader.mjs scripts/capture-luxury-sedan.mjs",
+    "test:minivan": "node --experimental-default-type=module --loader ./playwright-loader.mjs scripts/capture-minivan.mjs",
+    "test:coupe": "node --experimental-default-type=module --loader ./playwright-loader.mjs scripts/capture-coupe.mjs",
+    "test:water-tower": "node --experimental-default-type=module --loader ./playwright-loader.mjs scripts/capture-water-tower.mjs",
+    "test:wind-turbine": "node --experimental-default-type=module --loader ./playwright-loader.mjs scripts/capture-wind-turbine.mjs",
+    "test:renderer-effects": "node --experimental-default-type=module --loader ./playwright-loader.mjs scripts/verify-renderer-effects.mjs",
+    "test:rail-crossing": "node --experimental-default-type=module --loader ./playwright-loader.mjs scripts/capture-rail-crossing.mjs",
+    "test:rail-crossing-behavior": "node --experimental-default-type=module --loader ./playwright-loader.mjs scripts/verify-rail-crossing-behavior.mjs",
+    "test:rail-crossing-scenario": "node --experimental-default-type=module --loader ./playwright-loader.mjs scripts/verify-rail-crossing-scenario.mjs",
+    "test:headway": "node --experimental-default-type=module --loader ./playwright-loader.mjs scripts/verify-adaptive-headway.mjs",
+    "test:traffic-headway": "node --experimental-default-type=module --loader ./playwright-loader.mjs scripts/verify-traffic-headway.mjs",
+    "test:driving": "node --experimental-default-type=module --loader ./playwright-loader.mjs scripts/verify-driving.mjs",
+    "test:roundabout": "node --experimental-default-type=module --loader ./playwright-loader.mjs scripts/capture-roundabout.mjs",
+    "test:tunnel": "node --experimental-default-type=module --loader ./playwright-loader.mjs scripts/capture-tunnel-portal.mjs",
+    "test:scenario-authoring": "node --experimental-default-type=module --loader ./playwright-loader.mjs scripts/verify-scenario-authoring.mjs",
+    "test:scenario": "node --experimental-default-type=module --loader ./playwright-loader.mjs scripts/verify-scenarios.mjs",
+    "test:world": "node --experimental-default-type=module --loader ./playwright-loader.mjs scripts/verify-world-models.mjs"
+  },
+  "dependencies": {
+    "three": "^0.160.1"
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0",
+    "vite": "^6.3.5",
+    "typescript": "^5.9.2"
+  }
+}

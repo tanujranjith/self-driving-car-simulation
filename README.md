@@ -1,60 +1,92 @@
 # Self-Driving Car Simulation
 
-An interactive browser-based 3D autonomous-perception simulator that explores how a self-driving vehicle interprets a changing road environment. Built with Three.js, the project combines a real-time 3D road scene with simulated perception systems, sensor overlays, telemetry, and live event logging in a compact browser experience.
+An interactive browser-based 3D autonomous-driving and perception simulator built with Three.js and Vite. Explore traffic behavior, vehicle handling, road environments, and simulated sensors through live telemetry and multiple camera views.
 
 ## Overview
 
-The simulator is designed to make autonomous-vehicle perception easier to visualize. Instead of only showing a car moving through a scene, it exposes the information an autonomous system might use to understand the world around it, including camera detections, LiDAR and radar data, lane awareness, tracked objects, and fused sensor information.
-
-The main experience runs directly in the browser with no backend or build system required.
+The current simulator is `merged.html`, backed by the modules in `src/` and local models in `public/`. Vite serves the project during development and bundles the modules and assets for deployment. No backend is required.
 
 ## Features
 
-- Real-time 3D road environment rendered with **Three.js**
-- Camera-style object detection boxes and perception overlays
-- Simulated **LiDAR** and **radar** sensor visualization
-- Sensor-fusion view combining multiple perception sources
-- Lane and road-awareness visualization
-- Adjustable target speed
-- Multiple traffic / scenario difficulty settings
-- Configurable time-of-day and weather conditions
-- Live telemetry and autonomous-system status
-- Minimap and driving HUD
-- Real-time event / diagnostics log
-- Multiple camera and visualization controls
-- Responsive interface for different screen sizes
+- Autonomous, assisted, and human control with vehicle-specific steering, acceleration, braking, grip, and body motion
+- Traffic following, smooth lane changes, curvature anticipation, and vehicle-size-aware collision clearance
+- A varied vehicle fleet with procedural models, animated wheels and lights, and attributed local GLB assets
+- Streamed downtown, suburban, rural, highway, and night-city environments
+- Weather, road-surface conditions, day-night cycles, animated landmarks, and rail crossings
+- Camera detection boxes, simulated LiDAR and radar, sensor fusion, route overlays, and multiple camera views
+- Authored scenario presets, a custom scenario editor, scoring, replay, and live safety/comfort telemetry
+- Deterministic stepping and browser regression scripts
 
 ## Controls
 
-The left control panel lets you change the driving environment and perception display while the simulation is running. You can adjust speed, traffic conditions, time of day, weather, and sensor-related visualization options to see how the scene and autonomous-perception output respond.
+Use **Start**, **Pause**, and **Reset** in the left panel. Select a map, vehicle, control source, scenario, and sensor overlays to explore their effects.
+
+In assist or human mode, use **W / Up** for throttle, **S / Down** for braking, and **A / Left** or **D / Right** to steer.
 
 ## Project Structure
 
 ```text
 self-driving-car-simulation/
-├── Self driving simulation.html   # Main simulator and deployed entry point
-├── different-version.html         # Alternate grid-city simulation experiment
-├── merged.html                    # Alternate / merged simulation iteration
-├── vercel.json                    # Routes the deployment root to the main simulator
+├── index.html                    # Redirects to the current simulator
+├── merged.html                   # Simulator interface and runtime integration
+├── src/                          # Driving, traffic, world, rendering, and sensor modules
+├── public/                       # Static assets, GLB models, and attribution
+├── scripts/                      # Browser regressions and model capture scripts
+├── package.json                  # Development, build, and verification commands
+├── vite.config.js                # Production HTML entry points
+├── vercel.json                   # Vite build and homepage routing
+├── Self driving simulation.html  # Preserved earlier prototype
+├── different-version.html        # Preserved alternate prototype
+├── progress.md                   # Implementation notes and verification history
 └── README.md
 ```
 
 ## Running Locally
 
-Clone the repository:
+Install Node.js and npm, then clone and start the project:
 
 ```bash
 git clone https://github.com/tanujranjith/self-driving-car-simulation.git
 cd self-driving-car-simulation
+npm ci
+npm run dev
 ```
 
-Then open `Self driving simulation.html` in a modern desktop browser.
+Open the local URL printed by Vite, normally `http://127.0.0.1:5173/`.
 
-The simulator loads Three.js from a CDN, so an internet connection is required for the library to load unless you replace it with a local copy.
+The main Three.js runtime currently loads from a CDN, so the simulation needs an internet connection. Local GLB assets are served by Vite.
+
+## Production Build
+
+```bash
+npm run build
+npm run preview -- --port 4174
+```
+
+The build is written to `dist/`. Preview the built simulator at `http://127.0.0.1:4174/`.
+
+## Verification
+
+Install the Chromium browser used by Playwright:
+
+```bash
+npx playwright install chromium
+```
+
+With the production preview running on port 4174, run the existing regressions in a second terminal:
+
+```bash
+npm run test:driving
+npm run test:traffic-headway
+npm run test:scenario
+npm run test:world
+```
+
+The scripts default to `http://127.0.0.1:4174/merged.html`; set `SIM_URL` to use another server. Screenshots and verification artifacts are written to `output/`. Additional focused model and scenario checks are listed in `package.json`.
 
 ## Deployment
 
-The included `vercel.json` rewrites the site root to `Self driving simulation.html`, allowing the project to be deployed as a static Vercel site without an additional application framework.
+The included `vercel.json` selects Vite, installs dependencies with `npm ci`, runs `npm run build`, and serves `dist/`. The site root points to the current `merged.html` simulator. The preserved prototype HTML files remain in the repository.
 
 ## Tech
 
@@ -62,7 +94,11 @@ The included `vercel.json` rewrites the site root to `Self driving simulation.ht
 - CSS
 - JavaScript
 - Three.js
+- Vite
+- Playwright browser regression scripts
 - Canvas-based overlays and HUD rendering
+
+See `public/assets/vehicles/ATTRIBUTION.md` and `public/assets/actors/ATTRIBUTION.md` for model sources and licenses.
 
 ## Purpose
 
